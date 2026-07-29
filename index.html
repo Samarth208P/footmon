@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FootMon — World Cup Squad Builder on Monad</title>
+  <meta name="description" content="Build your dream World Cup squad, compete on-chain, and win MON prizes every hour on Monad Testnet." />
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+
+  <!-- Ethers v6 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.1/ethers.umd.min.js"></script>
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div id="app">
+
+  <!-- ══════════ NAV ══════════════════════════════════════════════════════ -->
+  <nav class="navbar">
+    <div class="navbar-logo">
+      <span class="logo-icon">⚽</span>
+      <span>FootMon</span>
+      <span class="logo-mon">MONAD</span>
+    </div>
+    <div class="navbar-right">
+      <button id="btnConnect">🦊 Connect Wallet</button>
+      <div id="walletBadge"></div>
+    </div>
+  </nav>
+
+  <!-- ══════════ SCREEN 1: FORMATION PICKER ══════════════════════════════ -->
+  <section id="screenFormation" class="screen">
+
+    <!-- Left: controls -->
+    <aside class="formation-panel">
+
+      <div>
+        <p class="section-label">Formation</p>
+        <div class="btn-group">
+          <button class="btn-formation active" data-formation="4-3-3">4-3-3</button>
+          <button class="btn-formation" data-formation="4-4-2">4-4-2</button>
+          <button class="btn-formation" data-formation="4-2-3-1">4-2-3-1</button>
+          <button class="btn-formation" data-formation="4-2-4">4-2-4</button>
+          <button class="btn-formation" data-formation="3-5-2">3-5-2</button>
+          <button class="btn-formation" data-formation="5-3-2">5-3-2</button>
+          <button class="btn-formation" data-formation="4-5-1">4-5-1</button>
+          <button class="btn-formation" data-formation="3-4-3">3-4-3</button>
+        </div>
+      </div>
+
+      <div>
+        <p class="section-label">Style</p>
+        <div class="btn-group">
+          <button class="btn-style" data-style="defensive">🛡 Defensive</button>
+          <button class="btn-style active" data-style="balanced">⚖ Balanced</button>
+          <button class="btn-style" data-style="attacking">⚔ Attacking</button>
+        </div>
+      </div>
+
+      <div class="formation-spacer"></div>
+
+      <div class="formation-info">
+        <p class="section-label">How it works</p>
+        <p class="info-text">
+          Pick a formation, roll for a nation &amp; year, build your 11.<br/>
+          3 free rolls · <span class="info-highlight">0.001 MON</span> per extra.
+        </p>
+      </div>
+
+      <button id="btnStart">Start Rolling 🎲</button>
+
+    </aside>
+
+    <!-- Right: live pitch preview -->
+    <div class="formation-pitch-wrap">
+      <div class="pitch" id="pitchFormation"></div>
+    </div>
+
+  </section>
+
+  <!-- ══════════ SCREEN 2: PLAY ════════════════════════════════════════════ -->
+  <section id="screenPlay" class="screen" style="display:none">
+
+    <!-- Left: drawn info + player list -->
+    <aside class="play-left">
+
+      <!-- EMPTY STATE: Ready for next roll -->
+      <div id="draftEmptyState" class="draft-empty">
+        <div class="draft-empty-icon">🎲</div>
+        <h3 class="draft-empty-title">Draft Next Player</h3>
+        <p class="draft-empty-desc">Roll to draw a random World Cup nation &amp; year.</p>
+        <button id="btnPlayRoll" class="btn-play-roll">Roll 🎲</button>
+      </div>
+
+      <!-- ACTIVE STATE: Nation drawn, select player -->
+      <div id="draftActiveState" class="draft-active">
+        <!-- Drawn nation -->
+        <div class="drawn-card">
+          <div id="drawnFlag" class="drawn-flag"></div>
+          <div id="drawnNation" class="drawn-nation"></div>
+          <div id="drawnYear"   class="drawn-year"></div>
+        </div>
+
+        <!-- Reroll -->
+        <div class="reroll-section">
+          <div class="reroll-header">
+            <span class="rolls-left-label" id="rollsLeft"></span>
+            <span class="roll-cost-badge" id="rollCostBadge">0.001 MON / roll</span>
+          </div>
+          <div class="reroll-btns">
+            <button class="btn-reroll" id="btnNation">↺ Nation</button>
+            <button class="btn-reroll" id="btnYear">↺ Year</button>
+          </div>
+        </div>
+
+        <!-- Player list -->
+        <div class="player-list-header">Pick a Player</div>
+        <div class="pos-filters" id="posFilters"></div>
+        <div id="playerList"></div>
+      </div>
+
+    </aside>
+
+    <!-- Centre: pitch -->
+    <div class="pitch-wrap">
+      <div class="pitch" id="pitchPlay"></div>
+    </div>
+
+    <!-- Right: scorecard -->
+    <aside class="play-right">
+
+      <div class="scorecard-header">
+        <p class="scorecard-title">Team Stats</p>
+        <div class="sc-avg-row">
+          <span class="sc-avg" id="scAvg">—</span>
+          <span class="sc-assigned" id="scAssigned">0 / 11</span>
+        </div>
+        <div class="sc-bars">
+          <div class="sc-bar-row">
+            <span class="sc-bar-label">ATK</span>
+            <div class="sc-bar-track">
+              <div class="sc-bar-fill" id="scAttack" style="width:0%"></div>
+            </div>
+          </div>
+          <div class="sc-bar-row">
+            <span class="sc-bar-label">DEF</span>
+            <div class="sc-bar-track">
+              <div class="sc-bar-fill" id="scDefense" style="width:0%"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="scRows"></div>
+
+      <div class="scorecard-actions">
+        <button id="btnSubmit" disabled title="Fill all 11 slots to submit">Submit Score</button>
+        <button id="btnLeaderboard">🏆 Leaderboard</button>
+      </div>
+
+    </aside>
+
+  </section>
+
+  <!-- ══════════ LEADERBOARD OVERLAY ══════════════════════════════════════ -->
+  <div id="leaderboardOverlay">
+    <div class="lb-panel">
+      <div class="lb-nav">
+        <span class="lb-nav-title">🏆 Leaderboard · Hourly Prize</span>
+        <button id="btnCloseLb" title="Close">✕</button>
+      </div>
+      <div id="lbBody"></div>
+    </div>
+  </div>
+
+  <!-- Toast container -->
+  <div id="toastWrap"></div>
+
+</div>
+
+<!-- ── Scripts (order matters) ─────────────────────────────────────────── -->
+<script src="js/config.js"></script>
+<script src="js/data.js"></script>
+<script src="js/wallet.js"></script>
+<script src="js/contract.js"></script>
+<script src="js/pitch.js"></script>
+<script src="js/game.js"></script>
+<script src="js/leaderboard.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>

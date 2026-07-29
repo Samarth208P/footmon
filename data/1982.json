@@ -1,0 +1,8849 @@
+{
+  "year": 1982,
+  "nations": {
+    "DZA": {
+      "name": "Algeria",
+      "flag": "",
+      "squad": [
+        {
+          "id": "mehdi_cerbah_1982",
+          "name": "Mehdi Cerbah",
+          "positions": [
+            "GK"
+          ],
+          "rating": 76,
+          "stats": {
+            "att": 10,
+            "mid": 28,
+            "def": 48,
+            "gk": 81
+          }
+        },
+        {
+          "id": "mahmoud_guendouz_1982",
+          "name": "Mahmoud Guendouz",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 76,
+          "stats": {
+            "att": 48,
+            "mid": 63,
+            "def": 78,
+            "gk": 10
+          }
+        },
+        {
+          "id": "mustafa_kouici_1982",
+          "name": "Mustafa Kouici",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 72,
+          "stats": {
+            "att": 44,
+            "mid": 59,
+            "def": 74,
+            "gk": 10
+          }
+        },
+        {
+          "id": "nourredine_kourichi_1982",
+          "name": "Nourredine Kourichi",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 76,
+          "stats": {
+            "att": 48,
+            "mid": 63,
+            "def": 78,
+            "gk": 10
+          }
+        },
+        {
+          "id": "chaabane_merzekane_1982",
+          "name": "Chaabane Merzekane",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 76,
+          "stats": {
+            "att": 48,
+            "mid": 63,
+            "def": 78,
+            "gk": 10
+          }
+        },
+        {
+          "id": "ali_bencheikh_1982",
+          "name": "Ali Bencheikh",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 73,
+          "stats": {
+            "att": 75,
+            "mid": 59,
+            "def": 38,
+            "gk": 10
+          }
+        },
+        {
+          "id": "salah_assad_1982",
+          "name": "Salah Assad",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 80,
+          "stats": {
+            "att": 82,
+            "mid": 66,
+            "def": 45,
+            "gk": 10
+          }
+        },
+        {
+          "id": "ali_fergani_1982",
+          "name": "Ali Fergani",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 77,
+          "stats": {
+            "att": 68,
+            "mid": 79,
+            "def": 64,
+            "gk": 10
+          }
+        },
+        {
+          "id": "tedj_bensaoula_1982",
+          "name": "Tedj Bensaoula",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 78,
+          "stats": {
+            "att": 80,
+            "mid": 64,
+            "def": 43,
+            "gk": 10
+          }
+        },
+        {
+          "id": "lakhdar_belloumi_1982",
+          "name": "Lakhdar Belloumi",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 77,
+          "stats": {
+            "att": 69,
+            "mid": 79,
+            "def": 64,
+            "gk": 10
+          }
+        },
+        {
+          "id": "rabah_madjer_1982",
+          "name": "Rabah Madjer",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 79,
+          "stats": {
+            "att": 81,
+            "mid": 65,
+            "def": 44,
+            "gk": 10
+          }
+        },
+        {
+          "id": "salah_larbes_1982",
+          "name": "Salah Larbes",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 75,
+          "stats": {
+            "att": 66,
+            "mid": 77,
+            "def": 61,
+            "gk": 10
+          }
+        },
+        {
+          "id": "hocine_yahi_1982",
+          "name": "Hocine Yahi",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 74,
+          "stats": {
+            "att": 65,
+            "mid": 76,
+            "def": 60,
+            "gk": 10
+          }
+        },
+        {
+          "id": "djamel_zidane_1982",
+          "name": "Djamel Zidane",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 76,
+          "stats": {
+            "att": 78,
+            "mid": 62,
+            "def": 41,
+            "gk": 10
+          }
+        },
+        {
+          "id": "mustapha_dahleb_1982",
+          "name": "Mustapha Dahleb",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 76,
+          "stats": {
+            "att": 67,
+            "mid": 78,
+            "def": 63,
+            "gk": 10
+          }
+        },
+        {
+          "id": "faouzi_mansouri_1982",
+          "name": "Faouzi Mansouri",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 76,
+          "stats": {
+            "att": 48,
+            "mid": 63,
+            "def": 78,
+            "gk": 10
+          }
+        },
+        {
+          "id": "abdelkader_horr_1982",
+          "name": "Abdelkader Horr",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 72,
+          "stats": {
+            "att": 44,
+            "mid": 59,
+            "def": 74,
+            "gk": 10
+          }
+        },
+        {
+          "id": "karim_maroc_1982",
+          "name": "Karim Maroc",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 74,
+          "stats": {
+            "att": 65,
+            "mid": 76,
+            "def": 60,
+            "gk": 10
+          }
+        },
+        {
+          "id": "djamel_tlemcani_1982",
+          "name": "Djamel Tlemçani",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 74,
+          "stats": {
+            "att": 65,
+            "mid": 76,
+            "def": 60,
+            "gk": 10
+          }
+        },
+        {
+          "id": "abdelmajid_bourebbou_1982",
+          "name": "Abdelmajid Bourebbou",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 74,
+          "stats": {
+            "att": 76,
+            "mid": 60,
+            "def": 39,
+            "gk": 10
+          }
+        },
+        {
+          "id": "mourad_amara_1982",
+          "name": "Mourad Amara",
+          "positions": [
+            "GK"
+          ],
+          "rating": 73,
+          "stats": {
+            "att": 10,
+            "mid": 25,
+            "def": 45,
+            "gk": 78
+          }
+        },
+        {
+          "id": "yacine_bentalaa_1982",
+          "name": "Yacine Bentalaa",
+          "positions": [
+            "GK"
+          ],
+          "rating": 72,
+          "stats": {
+            "att": 10,
+            "mid": 24,
+            "def": 44,
+            "gk": 77
+          }
+        }
+      ]
+    },
+    "ARG": {
+      "name": "Argentina",
+      "flag": "🇦🇷",
+      "squad": [
+        {
+          "id": "osvaldo_ardiles_1982",
+          "name": "Osvaldo Ardiles",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 81,
+          "stats": {
+            "att": 73,
+            "mid": 83,
+            "def": 68,
+            "gk": 10
+          }
+        },
+        {
+          "id": "hector_baley_1982",
+          "name": "Héctor Baley",
+          "positions": [
+            "GK"
+          ],
+          "rating": 73,
+          "stats": {
+            "att": 10,
+            "mid": 25,
+            "def": 45,
+            "gk": 78
+          }
+        },
+        {
+          "id": "juan_barbas_1982",
+          "name": "Juan Barbas",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 75,
+          "stats": {
+            "att": 66,
+            "mid": 77,
+            "def": 61,
+            "gk": 10
+          }
+        },
+        {
+          "id": "daniel_bertoni_1982",
+          "name": "Daniel Bertoni",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 83,
+          "stats": {
+            "att": 85,
+            "mid": 69,
+            "def": 48,
+            "gk": 10
+          }
+        },
+        {
+          "id": "gabriel_calderon_1982",
+          "name": "Gabriel Calderón",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 78,
+          "stats": {
+            "att": 80,
+            "mid": 64,
+            "def": 43,
+            "gk": 10
+          }
+        },
+        {
+          "id": "ramon_diaz_1982",
+          "name": "Ramón Díaz",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 78,
+          "stats": {
+            "att": 80,
+            "mid": 64,
+            "def": 43,
+            "gk": 10
+          }
+        },
+        {
+          "id": "ubaldo_fillol_1982",
+          "name": "Ubaldo Fillol",
+          "positions": [
+            "GK"
+          ],
+          "rating": 80,
+          "stats": {
+            "att": 10,
+            "mid": 32,
+            "def": 52,
+            "gk": 85
+          }
+        },
+        {
+          "id": "luis_galvan_1982",
+          "name": "Luis Galván",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 79,
+          "stats": {
+            "att": 51,
+            "mid": 66,
+            "def": 81,
+            "gk": 10
+          }
+        },
+        {
+          "id": "americo_gallego_1982",
+          "name": "Américo Gallego",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 79,
+          "stats": {
+            "att": 70,
+            "mid": 81,
+            "def": 66,
+            "gk": 10
+          }
+        },
+        {
+          "id": "diego_maradona_1982",
+          "name": "Diego Maradona",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 95,
+          "stats": {
+            "att": 88,
+            "mid": 97,
+            "def": 82,
+            "gk": 10
+          }
+        },
+        {
+          "id": "mario_kempes_1982",
+          "name": "Mario Kempes",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 86,
+          "stats": {
+            "att": 88,
+            "mid": 72,
+            "def": 51,
+            "gk": 10
+          }
+        },
+        {
+          "id": "patricio_hernandez_1982",
+          "name": "Patricio Hernández",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 73,
+          "stats": {
+            "att": 64,
+            "mid": 75,
+            "def": 59,
+            "gk": 10
+          }
+        },
+        {
+          "id": "julio_olarticoechea_1982",
+          "name": "Julio Olarticoechea",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 73,
+          "stats": {
+            "att": 45,
+            "mid": 60,
+            "def": 75,
+            "gk": 10
+          }
+        },
+        {
+          "id": "jorge_olguin_1982",
+          "name": "Jorge Olguín",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 79,
+          "stats": {
+            "att": 51,
+            "mid": 66,
+            "def": 81,
+            "gk": 10
+          }
+        },
+        {
+          "id": "daniel_passarella_1982",
+          "name": "Daniel Passarella",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 88,
+          "stats": {
+            "att": 64,
+            "mid": 75,
+            "def": 90,
+            "gk": 10
+          }
+        },
+        {
+          "id": "nery_pumpido_1982",
+          "name": "Nery Pumpido",
+          "positions": [
+            "GK"
+          ],
+          "rating": 73,
+          "stats": {
+            "att": 10,
+            "mid": 25,
+            "def": 45,
+            "gk": 78
+          }
+        },
+        {
+          "id": "santiago_santamaria_1982",
+          "name": "Santiago Santamaría",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 75,
+          "stats": {
+            "att": 77,
+            "mid": 61,
+            "def": 40,
+            "gk": 10
+          }
+        },
+        {
+          "id": "alberto_tarantini_1982",
+          "name": "Alberto Tarantini",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 79,
+          "stats": {
+            "att": 51,
+            "mid": 66,
+            "def": 81,
+            "gk": 10
+          }
+        },
+        {
+          "id": "enzo_trossero_1982",
+          "name": "Enzo Trossero",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 72,
+          "stats": {
+            "att": 44,
+            "mid": 59,
+            "def": 74,
+            "gk": 10
+          }
+        },
+        {
+          "id": "jorge_valdano_1982",
+          "name": "Jorge Valdano",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 76,
+          "stats": {
+            "att": 78,
+            "mid": 62,
+            "def": 41,
+            "gk": 10
+          }
+        },
+        {
+          "id": "jose_daniel_valencia_1982",
+          "name": "José Daniel Valencia",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 74,
+          "stats": {
+            "att": 65,
+            "mid": 76,
+            "def": 60,
+            "gk": 10
+          }
+        },
+        {
+          "id": "jose_van_tuyne_1982",
+          "name": "José Van Tuyne",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 72,
+          "stats": {
+            "att": 44,
+            "mid": 59,
+            "def": 74,
+            "gk": 10
+          }
+        }
+      ]
+    },
+    "AUT": {
+      "name": "Austria",
+      "flag": "🇦🇹",
+      "squad": [
+        {
+          "id": "friedrich_koncilia_1982",
+          "name": "Friedrich Koncilia",
+          "positions": [
+            "GK"
+          ],
+          "rating": 79,
+          "stats": {
+            "att": 10,
+            "mid": 31,
+            "def": 51,
+            "gk": 84
+          }
+        },
+        {
+          "id": "bernd_krauss_1982",
+          "name": "Bernd Krauss",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 78,
+          "stats": {
+            "att": 50,
+            "mid": 65,
+            "def": 80,
+            "gk": 10
+          }
+        },
+        {
+          "id": "erich_obermayer_1982",
+          "name": "Erich Obermayer",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 79,
+          "stats": {
+            "att": 51,
+            "mid": 66,
+            "def": 81,
+            "gk": 10
+          }
+        },
+        {
+          "id": "josef_degeorgi_1982",
+          "name": "Josef Degeorgi",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 77,
+          "stats": {
+            "att": 49,
+            "mid": 64,
+            "def": 79,
+            "gk": 10
+          }
+        },
+        {
+          "id": "bruno_pezzey_1982",
+          "name": "Bruno Pezzey",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 81,
+          "stats": {
+            "att": 55,
+            "mid": 68,
+            "def": 83,
+            "gk": 10
+          }
+        },
+        {
+          "id": "roland_hattenberger_1982",
+          "name": "Roland Hattenberger",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 79,
+          "stats": {
+            "att": 70,
+            "mid": 81,
+            "def": 66,
+            "gk": 10
+          }
+        },
+        {
+          "id": "walter_schachner_1982",
+          "name": "Walter Schachner",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 83,
+          "stats": {
+            "att": 85,
+            "mid": 69,
+            "def": 48,
+            "gk": 10
+          }
+        },
+        {
+          "id": "herbert_prohaska_1982",
+          "name": "Herbert Prohaska",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 80,
+          "stats": {
+            "att": 71,
+            "mid": 82,
+            "def": 68,
+            "gk": 10
+          }
+        },
+        {
+          "id": "hans_krankl_1982",
+          "name": "Hans Krankl",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 80,
+          "stats": {
+            "att": 82,
+            "mid": 66,
+            "def": 45,
+            "gk": 10
+          }
+        },
+        {
+          "id": "reinhold_hintermaier_1982",
+          "name": "Reinhold Hintermaier",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 80,
+          "stats": {
+            "att": 72,
+            "mid": 82,
+            "def": 67,
+            "gk": 10
+          }
+        },
+        {
+          "id": "kurt_jara_1982",
+          "name": "Kurt Jara",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 75,
+          "stats": {
+            "att": 66,
+            "mid": 77,
+            "def": 61,
+            "gk": 10
+          }
+        },
+        {
+          "id": "anton_pichler_1982",
+          "name": "Anton Pichler",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 73,
+          "stats": {
+            "att": 45,
+            "mid": 60,
+            "def": 75,
+            "gk": 10
+          }
+        },
+        {
+          "id": "max_hagmayr_1982",
+          "name": "Max Hagmayr",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 74,
+          "stats": {
+            "att": 76,
+            "mid": 60,
+            "def": 39,
+            "gk": 10
+          }
+        },
+        {
+          "id": "ernst_baumeister_1982",
+          "name": "Ernst Baumeister",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 77,
+          "stats": {
+            "att": 68,
+            "mid": 79,
+            "def": 64,
+            "gk": 10
+          }
+        },
+        {
+          "id": "johann_dihanich_1982",
+          "name": "Johann Dihanich",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 73,
+          "stats": {
+            "att": 64,
+            "mid": 75,
+            "def": 59,
+            "gk": 10
+          }
+        },
+        {
+          "id": "gerald_messlender_1982",
+          "name": "Gerald Messlender",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 72,
+          "stats": {
+            "att": 44,
+            "mid": 59,
+            "def": 74,
+            "gk": 10
+          }
+        },
+        {
+          "id": "johann_pregesbauer_1982",
+          "name": "Johann Pregesbauer",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 73,
+          "stats": {
+            "att": 45,
+            "mid": 60,
+            "def": 75,
+            "gk": 10
+          }
+        },
+        {
+          "id": "gernot_jurtin_1982",
+          "name": "Gernot Jurtin",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 74,
+          "stats": {
+            "att": 76,
+            "mid": 60,
+            "def": 39,
+            "gk": 10
+          }
+        },
+        {
+          "id": "heribert_weber_1982",
+          "name": "Heribert Weber",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 76,
+          "stats": {
+            "att": 48,
+            "mid": 63,
+            "def": 78,
+            "gk": 10
+          }
+        },
+        {
+          "id": "kurt_welzl_1982",
+          "name": "Kurt Welzl",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 75,
+          "stats": {
+            "att": 77,
+            "mid": 61,
+            "def": 40,
+            "gk": 10
+          }
+        },
+        {
+          "id": "herbert_feurer_1982",
+          "name": "Herbert Feurer",
+          "positions": [
+            "GK"
+          ],
+          "rating": 72,
+          "stats": {
+            "att": 10,
+            "mid": 24,
+            "def": 44,
+            "gk": 77
+          }
+        },
+        {
+          "id": "klaus_lindenberger_1982",
+          "name": "Klaus Lindenberger",
+          "positions": [
+            "GK"
+          ],
+          "rating": 73,
+          "stats": {
+            "att": 10,
+            "mid": 25,
+            "def": 45,
+            "gk": 78
+          }
+        }
+      ]
+    },
+    "BEL": {
+      "name": "Belgium",
+      "flag": "🇧🇪",
+      "squad": [
+        {
+          "id": "jean_marie_pfaff_1982",
+          "name": "Jean-Marie Pfaff",
+          "positions": [
+            "GK"
+          ],
+          "rating": 76,
+          "stats": {
+            "att": 10,
+            "mid": 28,
+            "def": 48,
+            "gk": 81
+          }
+        },
+        {
+          "id": "eric_gerets_1982",
+          "name": "Eric Gerets",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 77,
+          "stats": {
+            "att": 49,
+            "mid": 64,
+            "def": 79,
+            "gk": 10
+          }
+        },
+        {
+          "id": "luc_millecamps_1982",
+          "name": "Luc Millecamps",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 78,
+          "stats": {
+            "att": 50,
+            "mid": 65,
+            "def": 80,
+            "gk": 10
+          }
+        },
+        {
+          "id": "walter_meeuws_1982",
+          "name": "Walter Meeuws",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 77,
+          "stats": {
+            "att": 49,
+            "mid": 64,
+            "def": 79,
+            "gk": 10
+          }
+        },
+        {
+          "id": "michel_renquin_1982",
+          "name": "Michel Renquin",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 75,
+          "stats": {
+            "att": 47,
+            "mid": 62,
+            "def": 77,
+            "gk": 10
+          }
+        },
+        {
+          "id": "franky_vercauteren_1982",
+          "name": "Franky Vercauteren",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 80,
+          "stats": {
+            "att": 82,
+            "mid": 66,
+            "def": 45,
+            "gk": 10
+          }
+        },
+        {
+          "id": "jos_daerden_1982",
+          "name": "Jos Daerden",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 73,
+          "stats": {
+            "att": 64,
+            "mid": 75,
+            "def": 59,
+            "gk": 10
+          }
+        },
+        {
+          "id": "wilfried_van_moer_1982",
+          "name": "Wilfried Van Moer",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 76,
+          "stats": {
+            "att": 67,
+            "mid": 78,
+            "def": 62,
+            "gk": 10
+          }
+        },
+        {
+          "id": "erwin_vandenbergh_1982",
+          "name": "Erwin Vandenbergh",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 81,
+          "stats": {
+            "att": 83,
+            "mid": 67,
+            "def": 46,
+            "gk": 10
+          }
+        },
+        {
+          "id": "ludo_coeck_1982",
+          "name": "Ludo Coeck",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 81,
+          "stats": {
+            "att": 73,
+            "mid": 83,
+            "def": 68,
+            "gk": 10
+          }
+        },
+        {
+          "id": "jan_ceulemans_1982",
+          "name": "Jan Ceulemans",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 81,
+          "stats": {
+            "att": 72,
+            "mid": 83,
+            "def": 68,
+            "gk": 10
+          }
+        },
+        {
+          "id": "theo_custers_1982",
+          "name": "Theo Custers",
+          "positions": [
+            "GK"
+          ],
+          "rating": 73,
+          "stats": {
+            "att": 10,
+            "mid": 25,
+            "def": 45,
+            "gk": 78
+          }
+        },
+        {
+          "id": "francois_van_der_elst_1982",
+          "name": "François Van Der Elst",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 75,
+          "stats": {
+            "att": 77,
+            "mid": 61,
+            "def": 40,
+            "gk": 10
+          }
+        },
+        {
+          "id": "marc_baecke_1982",
+          "name": "Marc Baecke",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 77,
+          "stats": {
+            "att": 49,
+            "mid": 64,
+            "def": 79,
+            "gk": 10
+          }
+        },
+        {
+          "id": "maurits_de_schrijver_1982",
+          "name": "Maurits De Schrijver",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 75,
+          "stats": {
+            "att": 47,
+            "mid": 62,
+            "def": 77,
+            "gk": 10
+          }
+        },
+        {
+          "id": "gerard_plessers_1982",
+          "name": "Gerard Plessers",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 74,
+          "stats": {
+            "att": 46,
+            "mid": 61,
+            "def": 76,
+            "gk": 10
+          }
+        },
+        {
+          "id": "rene_verheyen_1982",
+          "name": "René Verheyen",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 74,
+          "stats": {
+            "att": 65,
+            "mid": 76,
+            "def": 60,
+            "gk": 10
+          }
+        },
+        {
+          "id": "raymond_mommens_1982",
+          "name": "Raymond Mommens",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 74,
+          "stats": {
+            "att": 76,
+            "mid": 60,
+            "def": 39,
+            "gk": 10
+          }
+        },
+        {
+          "id": "marc_millecamps_1982",
+          "name": "Marc Millecamps",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 74,
+          "stats": {
+            "att": 65,
+            "mid": 76,
+            "def": 60,
+            "gk": 10
+          }
+        },
+        {
+          "id": "guy_vandersmissen_1982",
+          "name": "Guy Vandersmissen",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 78,
+          "stats": {
+            "att": 69,
+            "mid": 80,
+            "def": 65,
+            "gk": 10
+          }
+        },
+        {
+          "id": "alexandre_czerniatynski_1982",
+          "name": "Alexandre Czerniatynski",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 81,
+          "stats": {
+            "att": 83,
+            "mid": 67,
+            "def": 46,
+            "gk": 10
+          }
+        },
+        {
+          "id": "jacky_munaron_1982",
+          "name": "Jacky Munaron",
+          "positions": [
+            "GK"
+          ],
+          "rating": 74,
+          "stats": {
+            "att": 10,
+            "mid": 26,
+            "def": 46,
+            "gk": 79
+          }
+        }
+      ]
+    },
+    "BRA": {
+      "name": "Brazil",
+      "flag": "🇧🇷",
+      "squad": [
+        {
+          "id": "waldir_peres_1982",
+          "name": "Waldir Peres",
+          "positions": [
+            "GK"
+          ],
+          "rating": 80,
+          "stats": {
+            "att": 10,
+            "mid": 32,
+            "def": 52,
+            "gk": 85
+          }
+        },
+        {
+          "id": "leandro_1982",
+          "name": "Leandro",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 78,
+          "stats": {
+            "att": 50,
+            "mid": 65,
+            "def": 80,
+            "gk": 10
+          }
+        },
+        {
+          "id": "oscar_1982",
+          "name": "Oscar",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 82,
+          "stats": {
+            "att": 56,
+            "mid": 69,
+            "def": 84,
+            "gk": 10
+          }
+        },
+        {
+          "id": "luizinho_1982",
+          "name": "Luizinho",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 78,
+          "stats": {
+            "att": 50,
+            "mid": 65,
+            "def": 80,
+            "gk": 10
+          }
+        },
+        {
+          "id": "toninho_cerezo_1982",
+          "name": "Toninho Cerezo",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 79,
+          "stats": {
+            "att": 70,
+            "mid": 81,
+            "def": 66,
+            "gk": 10
+          }
+        },
+        {
+          "id": "junior_1982",
+          "name": "Júnior",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 81,
+          "stats": {
+            "att": 55,
+            "mid": 68,
+            "def": 83,
+            "gk": 10
+          }
+        },
+        {
+          "id": "paulo_isidoro_1982",
+          "name": "Paulo Isidoro",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 76,
+          "stats": {
+            "att": 67,
+            "mid": 78,
+            "def": 62,
+            "gk": 10
+          }
+        },
+        {
+          "id": "socrates_1982",
+          "name": "Sócrates",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 87,
+          "stats": {
+            "att": 80,
+            "mid": 89,
+            "def": 74,
+            "gk": 10
+          }
+        },
+        {
+          "id": "serginho_1982",
+          "name": "Serginho",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 82,
+          "stats": {
+            "att": 84,
+            "mid": 68,
+            "def": 47,
+            "gk": 10
+          }
+        },
+        {
+          "id": "zico_1982",
+          "name": "Zico",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 93,
+          "stats": {
+            "att": 88,
+            "mid": 95,
+            "def": 80,
+            "gk": 10
+          }
+        },
+        {
+          "id": "eder_1982",
+          "name": "Éder",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 82,
+          "stats": {
+            "att": 84,
+            "mid": 68,
+            "def": 47,
+            "gk": 10
+          }
+        },
+        {
+          "id": "paulo_sergio_1982",
+          "name": "Paulo Sérgio",
+          "positions": [
+            "GK"
+          ],
+          "rating": 72,
+          "stats": {
+            "att": 10,
+            "mid": 24,
+            "def": 44,
+            "gk": 77
+          }
+        },
+        {
+          "id": "edevaldo_1982",
+          "name": "Edevaldo",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 73,
+          "stats": {
+            "att": 45,
+            "mid": 60,
+            "def": 75,
+            "gk": 10
+          }
+        },
+        {
+          "id": "juninho_1982",
+          "name": "Juninho",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 72,
+          "stats": {
+            "att": 44,
+            "mid": 59,
+            "def": 74,
+            "gk": 10
+          }
+        },
+        {
+          "id": "falcao_1982",
+          "name": "Falcão",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 92,
+          "stats": {
+            "att": 86,
+            "mid": 94,
+            "def": 80,
+            "gk": 10
+          }
+        },
+        {
+          "id": "edinho_1982",
+          "name": "Edinho",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 74,
+          "stats": {
+            "att": 46,
+            "mid": 61,
+            "def": 76,
+            "gk": 10
+          }
+        },
+        {
+          "id": "pedrinho_1982",
+          "name": "Pedrinho",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 72,
+          "stats": {
+            "att": 44,
+            "mid": 59,
+            "def": 74,
+            "gk": 10
+          }
+        },
+        {
+          "id": "batista_1982",
+          "name": "Batista",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 74,
+          "stats": {
+            "att": 65,
+            "mid": 76,
+            "def": 60,
+            "gk": 10
+          }
+        },
+        {
+          "id": "renato_1982",
+          "name": "Renato",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 73,
+          "stats": {
+            "att": 64,
+            "mid": 75,
+            "def": 59,
+            "gk": 10
+          }
+        },
+        {
+          "id": "roberto_dinamite_1982",
+          "name": "Roberto Dinamite",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 74,
+          "stats": {
+            "att": 76,
+            "mid": 60,
+            "def": 39,
+            "gk": 10
+          }
+        },
+        {
+          "id": "dirceu_1982",
+          "name": "Dirceu",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 76,
+          "stats": {
+            "att": 67,
+            "mid": 78,
+            "def": 62,
+            "gk": 10
+          }
+        },
+        {
+          "id": "carlos_1982",
+          "name": "Carlos",
+          "positions": [
+            "GK"
+          ],
+          "rating": 73,
+          "stats": {
+            "att": 10,
+            "mid": 25,
+            "def": 45,
+            "gk": 78
+          }
+        }
+      ]
+    },
+    "CMR": {
+      "name": "Cameroon",
+      "flag": "🇨🇲",
+      "squad": [
+        {
+          "id": "thomas_n_kono_1982",
+          "name": "Thomas N'Kono",
+          "positions": [
+            "GK"
+          ],
+          "rating": 77,
+          "stats": {
+            "att": 10,
+            "mid": 29,
+            "def": 49,
+            "gk": 82
+          }
+        },
+        {
+          "id": "michel_kaham_1982",
+          "name": "Michel Kaham",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 76,
+          "stats": {
+            "att": 48,
+            "mid": 63,
+            "def": 78,
+            "gk": 10
+          }
+        },
+        {
+          "id": "edmond_enoka_1982",
+          "name": "Edmond Enoka",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 72,
+          "stats": {
+            "att": 44,
+            "mid": 59,
+            "def": 74,
+            "gk": 10
+          }
+        },
+        {
+          "id": "rene_n_djeya_1982",
+          "name": "René N'Djeya",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 76,
+          "stats": {
+            "att": 48,
+            "mid": 63,
+            "def": 78,
+            "gk": 10
+          }
+        },
+        {
+          "id": "elie_onana_1982",
+          "name": "Elie Onana",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 76,
+          "stats": {
+            "att": 48,
+            "mid": 63,
+            "def": 78,
+            "gk": 10
+          }
+        },
+        {
+          "id": "emmanuel_kunde_1982",
+          "name": "Emmanuel Kundé",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 76,
+          "stats": {
+            "att": 48,
+            "mid": 63,
+            "def": 78,
+            "gk": 10
+          }
+        },
+        {
+          "id": "ephrem_m_bom_1982",
+          "name": "Ephrem M'Bom",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 77,
+          "stats": {
+            "att": 68,
+            "mid": 79,
+            "def": 64,
+            "gk": 10
+          }
+        },
+        {
+          "id": "gregoire_m_bida_1982",
+          "name": "Grégoire M'Bida",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 78,
+          "stats": {
+            "att": 70,
+            "mid": 80,
+            "def": 65,
+            "gk": 10
+          }
+        },
+        {
+          "id": "roger_milla_1982",
+          "name": "Roger Milla",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 78,
+          "stats": {
+            "att": 80,
+            "mid": 64,
+            "def": 43,
+            "gk": 10
+          }
+        },
+        {
+          "id": "jean_pierre_tokoto_1982",
+          "name": "Jean-Pierre Tokoto",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 76,
+          "stats": {
+            "att": 67,
+            "mid": 78,
+            "def": 62,
+            "gk": 10
+          }
+        },
+        {
+          "id": "charles_toube_1982",
+          "name": "Charles Toubé",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 73,
+          "stats": {
+            "att": 64,
+            "mid": 75,
+            "def": 59,
+            "gk": 10
+          }
+        },
+        {
+          "id": "joseph_antoine_bell_1982",
+          "name": "Joseph-Antoine Bell",
+          "positions": [
+            "GK"
+          ],
+          "rating": 73,
+          "stats": {
+            "att": 10,
+            "mid": 25,
+            "def": 45,
+            "gk": 78
+          }
+        },
+        {
+          "id": "paul_bahoken_1982",
+          "name": "Paul Bahoken",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 74,
+          "stats": {
+            "att": 76,
+            "mid": 60,
+            "def": 39,
+            "gk": 10
+          }
+        },
+        {
+          "id": "theophile_abega_1982",
+          "name": "Théophile Abega",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 77,
+          "stats": {
+            "att": 68,
+            "mid": 79,
+            "def": 64,
+            "gk": 10
+          }
+        },
+        {
+          "id": "francois_n_doumbe_1982",
+          "name": "François N'Doumbé",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 72,
+          "stats": {
+            "att": 44,
+            "mid": 59,
+            "def": 74,
+            "gk": 10
+          }
+        },
+        {
+          "id": "ibrahim_aoudou_1982",
+          "name": "Ibrahim Aoudou",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 76,
+          "stats": {
+            "att": 48,
+            "mid": 63,
+            "def": 78,
+            "gk": 10
+          }
+        },
+        {
+          "id": "joseph_kamga_1982",
+          "name": "Joseph Kamga",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 73,
+          "stats": {
+            "att": 64,
+            "mid": 75,
+            "def": 59,
+            "gk": 10
+          }
+        },
+        {
+          "id": "jacques_n_guea_1982",
+          "name": "Jacques N'Guea",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 76,
+          "stats": {
+            "att": 78,
+            "mid": 62,
+            "def": 41,
+            "gk": 10
+          }
+        },
+        {
+          "id": "joseph_enanga_1982",
+          "name": "Joseph Enanga",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 73,
+          "stats": {
+            "att": 64,
+            "mid": 75,
+            "def": 59,
+            "gk": 10
+          }
+        },
+        {
+          "id": "oscar_eyobo_1982",
+          "name": "Oscar Eyobo",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 73,
+          "stats": {
+            "att": 75,
+            "mid": 59,
+            "def": 38,
+            "gk": 10
+          }
+        },
+        {
+          "id": "ernest_ebongue_1982",
+          "name": "Ernest Ebongué",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 73,
+          "stats": {
+            "att": 75,
+            "mid": 59,
+            "def": 38,
+            "gk": 10
+          }
+        },
+        {
+          "id": "simon_tchobang_1982",
+          "name": "Simon Tchobang",
+          "positions": [
+            "GK"
+          ],
+          "rating": 72,
+          "stats": {
+            "att": 10,
+            "mid": 24,
+            "def": 44,
+            "gk": 77
+          }
+        }
+      ]
+    },
+    "CHL": {
+      "name": "Chile",
+      "flag": "",
+      "squad": [
+        {
+          "id": "oscar_wirth_1982",
+          "name": "Oscar Wirth",
+          "positions": [
+            "GK"
+          ],
+          "rating": 72,
+          "stats": {
+            "att": 10,
+            "mid": 24,
+            "def": 44,
+            "gk": 77
+          }
+        },
+        {
+          "id": "lizardo_garrido_1982",
+          "name": "Lizardo Garrido",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 75,
+          "stats": {
+            "att": 47,
+            "mid": 62,
+            "def": 77,
+            "gk": 10
+          }
+        },
+        {
+          "id": "rene_valenzuela_1982",
+          "name": "René Valenzuela",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 76,
+          "stats": {
+            "att": 48,
+            "mid": 63,
+            "def": 78,
+            "gk": 10
+          }
+        },
+        {
+          "id": "vladimir_bigorra_1982",
+          "name": "Vladimir Bigorra",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 76,
+          "stats": {
+            "att": 48,
+            "mid": 63,
+            "def": 78,
+            "gk": 10
+          }
+        },
+        {
+          "id": "elias_figueroa_1982",
+          "name": "Elías Figueroa",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 77,
+          "stats": {
+            "att": 49,
+            "mid": 64,
+            "def": 79,
+            "gk": 10
+          }
+        },
+        {
+          "id": "rodolfo_dubo_1982",
+          "name": "Rodolfo Dubó",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 77,
+          "stats": {
+            "att": 68,
+            "mid": 79,
+            "def": 64,
+            "gk": 10
+          }
+        },
+        {
+          "id": "eduardo_bonvallet_1982",
+          "name": "Eduardo Bonvallet",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 77,
+          "stats": {
+            "att": 68,
+            "mid": 79,
+            "def": 64,
+            "gk": 10
+          }
+        },
+        {
+          "id": "carlos_rivas_1982",
+          "name": "Carlos Rivas",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 73,
+          "stats": {
+            "att": 64,
+            "mid": 75,
+            "def": 59,
+            "gk": 10
+          }
+        },
+        {
+          "id": "juan_carlos_letelier_1982",
+          "name": "Juan Carlos Letelier",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 76,
+          "stats": {
+            "att": 78,
+            "mid": 62,
+            "def": 41,
+            "gk": 10
+          }
+        },
+        {
+          "id": "mario_soto_1982",
+          "name": "Mario Soto",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 74,
+          "stats": {
+            "att": 46,
+            "mid": 61,
+            "def": 76,
+            "gk": 10
+          }
+        },
+        {
+          "id": "gustavo_moscoso_1982",
+          "name": "Gustavo Moscoso",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 78,
+          "stats": {
+            "att": 80,
+            "mid": 64,
+            "def": 43,
+            "gk": 10
+          }
+        },
+        {
+          "id": "marco_cornez_1982",
+          "name": "Marco Cornez",
+          "positions": [
+            "GK"
+          ],
+          "rating": 72,
+          "stats": {
+            "att": 10,
+            "mid": 24,
+            "def": 44,
+            "gk": 77
+          }
+        },
+        {
+          "id": "carlos_caszely_1982",
+          "name": "Carlos Caszely",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 76,
+          "stats": {
+            "att": 78,
+            "mid": 62,
+            "def": 41,
+            "gk": 10
+          }
+        },
+        {
+          "id": "raul_ormeno_1982",
+          "name": "Raúl Ormeño",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 73,
+          "stats": {
+            "att": 64,
+            "mid": 75,
+            "def": 59,
+            "gk": 10
+          }
+        },
+        {
+          "id": "patricio_yanez_1982",
+          "name": "Patricio Yáñez",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 77,
+          "stats": {
+            "att": 79,
+            "mid": 63,
+            "def": 42,
+            "gk": 10
+          }
+        },
+        {
+          "id": "manuel_rojas_1982",
+          "name": "Manuel Rojas",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 74,
+          "stats": {
+            "att": 65,
+            "mid": 76,
+            "def": 60,
+            "gk": 10
+          }
+        },
+        {
+          "id": "oscar_rojas_1982",
+          "name": "Oscar Rojas",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 72,
+          "stats": {
+            "att": 44,
+            "mid": 59,
+            "def": 74,
+            "gk": 10
+          }
+        },
+        {
+          "id": "mario_galindo_1982",
+          "name": "Mario Galindo",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 74,
+          "stats": {
+            "att": 46,
+            "mid": 61,
+            "def": 76,
+            "gk": 10
+          }
+        },
+        {
+          "id": "enzo_escobar_1982",
+          "name": "Enzo Escobar",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 72,
+          "stats": {
+            "att": 44,
+            "mid": 59,
+            "def": 74,
+            "gk": 10
+          }
+        },
+        {
+          "id": "miguel_angel_neira_1982",
+          "name": "Miguel Ángel Neira",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 78,
+          "stats": {
+            "att": 70,
+            "mid": 80,
+            "def": 65,
+            "gk": 10
+          }
+        },
+        {
+          "id": "miguel_angel_gamboa_1982",
+          "name": "Miguel Ángel Gamboa",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 75,
+          "stats": {
+            "att": 77,
+            "mid": 61,
+            "def": 40,
+            "gk": 10
+          }
+        },
+        {
+          "id": "mario_osben_1982",
+          "name": "Mario Osbén",
+          "positions": [
+            "GK"
+          ],
+          "rating": 76,
+          "stats": {
+            "att": 10,
+            "mid": 28,
+            "def": 48,
+            "gk": 81
+          }
+        }
+      ]
+    },
+    "CSK": {
+      "name": "Czechoslovakia",
+      "flag": "🇨🇿",
+      "squad": [
+        {
+          "id": "stanislav_seman_1982",
+          "name": "Stanislav Seman",
+          "positions": [
+            "GK"
+          ],
+          "rating": 73,
+          "stats": {
+            "att": 10,
+            "mid": 25,
+            "def": 45,
+            "gk": 78
+          }
+        },
+        {
+          "id": "frantisek_jakubec_1982",
+          "name": "František Jakubec",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 72,
+          "stats": {
+            "att": 44,
+            "mid": 59,
+            "def": 74,
+            "gk": 10
+          }
+        },
+        {
+          "id": "jan_fiala_1982",
+          "name": "Jan Fiala",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 76,
+          "stats": {
+            "att": 48,
+            "mid": 63,
+            "def": 78,
+            "gk": 10
+          }
+        },
+        {
+          "id": "ladislav_jurkemik_1982",
+          "name": "Ladislav Jurkemik",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 75,
+          "stats": {
+            "att": 47,
+            "mid": 62,
+            "def": 77,
+            "gk": 10
+          }
+        },
+        {
+          "id": "jozef_barmos_1982",
+          "name": "Jozef Barmoš",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 76,
+          "stats": {
+            "att": 48,
+            "mid": 63,
+            "def": 78,
+            "gk": 10
+          }
+        },
+        {
+          "id": "rostislav_vojacek_1982",
+          "name": "Rostislav Vojáček",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 75,
+          "stats": {
+            "att": 47,
+            "mid": 62,
+            "def": 77,
+            "gk": 10
+          }
+        },
+        {
+          "id": "jan_kozak_1982",
+          "name": "Ján Kozák",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 73,
+          "stats": {
+            "att": 64,
+            "mid": 75,
+            "def": 59,
+            "gk": 10
+          }
+        },
+        {
+          "id": "antonin_panenka_1982",
+          "name": "Antonín Panenka",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 77,
+          "stats": {
+            "att": 70,
+            "mid": 79,
+            "def": 63,
+            "gk": 10
+          }
+        },
+        {
+          "id": "ladislav_vizek_1982",
+          "name": "Ladislav Vízek",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 77,
+          "stats": {
+            "att": 79,
+            "mid": 63,
+            "def": 42,
+            "gk": 10
+          }
+        },
+        {
+          "id": "tomas_kriz_1982",
+          "name": "Tomáš Kříž",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 76,
+          "stats": {
+            "att": 78,
+            "mid": 62,
+            "def": 41,
+            "gk": 10
+          }
+        },
+        {
+          "id": "zdenek_nehoda_1982",
+          "name": "Zdeněk Nehoda",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 77,
+          "stats": {
+            "att": 79,
+            "mid": 63,
+            "def": 42,
+            "gk": 10
+          }
+        },
+        {
+          "id": "premysl_bicovsky_1982",
+          "name": "Přemysl Bičovský",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 75,
+          "stats": {
+            "att": 66,
+            "mid": 77,
+            "def": 61,
+            "gk": 10
+          }
+        },
+        {
+          "id": "jan_berger_1982",
+          "name": "Jan Berger",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 76,
+          "stats": {
+            "att": 67,
+            "mid": 78,
+            "def": 63,
+            "gk": 10
+          }
+        },
+        {
+          "id": "libor_radimec_1982",
+          "name": "Libor Radimec",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 75,
+          "stats": {
+            "att": 47,
+            "mid": 62,
+            "def": 77,
+            "gk": 10
+          }
+        },
+        {
+          "id": "jozef_kukucka_1982",
+          "name": "Jozef Kukučka",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 73,
+          "stats": {
+            "att": 45,
+            "mid": 60,
+            "def": 75,
+            "gk": 10
+          }
+        },
+        {
+          "id": "pavel_chaloupka_1982",
+          "name": "Pavel Chaloupka",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 74,
+          "stats": {
+            "att": 65,
+            "mid": 76,
+            "def": 60,
+            "gk": 10
+          }
+        },
+        {
+          "id": "frantisek_stambachr_1982",
+          "name": "František Štambachr",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 74,
+          "stats": {
+            "att": 65,
+            "mid": 76,
+            "def": 60,
+            "gk": 10
+          }
+        },
+        {
+          "id": "petr_janecka_1982",
+          "name": "Petr Janečka",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 77,
+          "stats": {
+            "att": 79,
+            "mid": 63,
+            "def": 42,
+            "gk": 10
+          }
+        },
+        {
+          "id": "marian_masny_1982",
+          "name": "Marián Masný",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 75,
+          "stats": {
+            "att": 77,
+            "mid": 61,
+            "def": 40,
+            "gk": 10
+          }
+        },
+        {
+          "id": "vlastimil_petrzela_1982",
+          "name": "Vlastimil Petržela",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 74,
+          "stats": {
+            "att": 76,
+            "mid": 60,
+            "def": 39,
+            "gk": 10
+          }
+        },
+        {
+          "id": "zdenek_hruska_1982",
+          "name": "Zdeněk Hruška",
+          "positions": [
+            "GK"
+          ],
+          "rating": 73,
+          "stats": {
+            "att": 10,
+            "mid": 25,
+            "def": 45,
+            "gk": 78
+          }
+        },
+        {
+          "id": "karel_stromsik_1982",
+          "name": "Karel Stromšík",
+          "positions": [
+            "GK"
+          ],
+          "rating": 74,
+          "stats": {
+            "att": 10,
+            "mid": 26,
+            "def": 46,
+            "gk": 79
+          }
+        }
+      ]
+    },
+    "SLV": {
+      "name": "El Salvador",
+      "flag": "🇸🇻",
+      "squad": [
+        {
+          "id": "luis_guevara_mora_1982",
+          "name": "Luis Guevara Mora",
+          "positions": [
+            "GK"
+          ],
+          "rating": 76,
+          "stats": {
+            "att": 10,
+            "mid": 28,
+            "def": 48,
+            "gk": 81
+          }
+        },
+        {
+          "id": "mario_castillo_1982",
+          "name": "Mario Castillo",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 73,
+          "stats": {
+            "att": 45,
+            "mid": 60,
+            "def": 75,
+            "gk": 10
+          }
+        },
+        {
+          "id": "jose_francisco_jovel_1982",
+          "name": "José Francisco Jovel",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 76,
+          "stats": {
+            "att": 48,
+            "mid": 63,
+            "def": 78,
+            "gk": 10
+          }
+        },
+        {
+          "id": "carlos_recinos_1982",
+          "name": "Carlos Recinos",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 76,
+          "stats": {
+            "att": 48,
+            "mid": 63,
+            "def": 78,
+            "gk": 10
+          }
+        },
+        {
+          "id": "ramon_fagoaga_1982",
+          "name": "Ramón Fagoaga",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 74,
+          "stats": {
+            "att": 46,
+            "mid": 61,
+            "def": 76,
+            "gk": 10
+          }
+        },
+        {
+          "id": "joaquin_ventura_1982",
+          "name": "Joaquín Ventura",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 77,
+          "stats": {
+            "att": 68,
+            "mid": 79,
+            "def": 64,
+            "gk": 10
+          }
+        },
+        {
+          "id": "silvio_aquino_1982",
+          "name": "Silvio Aquino",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 73,
+          "stats": {
+            "att": 64,
+            "mid": 75,
+            "def": 59,
+            "gk": 10
+          }
+        },
+        {
+          "id": "jose_luis_rugamas_1982",
+          "name": "José Luis Rugamas",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 76,
+          "stats": {
+            "att": 67,
+            "mid": 78,
+            "def": 63,
+            "gk": 10
+          }
+        },
+        {
+          "id": "ever_hernandez_1982",
+          "name": "Ever Hernández",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 74,
+          "stats": {
+            "att": 76,
+            "mid": 60,
+            "def": 39,
+            "gk": 10
+          }
+        },
+        {
+          "id": "norberto_huezo_1982",
+          "name": "Norberto Huezo",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 77,
+          "stats": {
+            "att": 68,
+            "mid": 79,
+            "def": 64,
+            "gk": 10
+          }
+        },
+        {
+          "id": "jorge_gonzalez_1982",
+          "name": "Jorge González",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 77,
+          "stats": {
+            "att": 79,
+            "mid": 63,
+            "def": 42,
+            "gk": 10
+          }
+        },
+        {
+          "id": "francisco_osorto_1982",
+          "name": "Francisco Osorto",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 75,
+          "stats": {
+            "att": 47,
+            "mid": 62,
+            "def": 77,
+            "gk": 10
+          }
+        },
+        {
+          "id": "jose_maria_rivas_1982",
+          "name": "José María Rivas",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 77,
+          "stats": {
+            "att": 79,
+            "mid": 63,
+            "def": 42,
+            "gk": 10
+          }
+        },
+        {
+          "id": "luis_ramirez_zapata_1982",
+          "name": "Luis Ramírez Zapata",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 78,
+          "stats": {
+            "att": 80,
+            "mid": 64,
+            "def": 43,
+            "gk": 10
+          }
+        },
+        {
+          "id": "jaime_rodriguez_1982",
+          "name": "Jaime Rodríguez",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 76,
+          "stats": {
+            "att": 48,
+            "mid": 63,
+            "def": 78,
+            "gk": 10
+          }
+        },
+        {
+          "id": "mauricio_alfaro_1982",
+          "name": "Mauricio Alfaro",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 74,
+          "stats": {
+            "att": 65,
+            "mid": 76,
+            "def": 60,
+            "gk": 10
+          }
+        },
+        {
+          "id": "guillermo_ragazzone_1982",
+          "name": "Guillermo Ragazzone",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 73,
+          "stats": {
+            "att": 75,
+            "mid": 59,
+            "def": 38,
+            "gk": 10
+          }
+        },
+        {
+          "id": "miguel_angel_diaz_1982",
+          "name": "Miguel Ángel Díaz",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 74,
+          "stats": {
+            "att": 46,
+            "mid": 61,
+            "def": 76,
+            "gk": 10
+          }
+        },
+        {
+          "id": "eduardo_hernandez_1982",
+          "name": "Eduardo Hernández",
+          "positions": [
+            "GK"
+          ],
+          "rating": 72,
+          "stats": {
+            "att": 10,
+            "mid": 24,
+            "def": 44,
+            "gk": 77
+          }
+        },
+        {
+          "id": "jose_luis_munguia_1982",
+          "name": "José Luis Munguía",
+          "positions": [
+            "GK"
+          ],
+          "rating": 72,
+          "stats": {
+            "att": 10,
+            "mid": 24,
+            "def": 44,
+            "gk": 77
+          }
+        }
+      ]
+    },
+    "ENG": {
+      "name": "England",
+      "flag": "",
+      "squad": [
+        {
+          "id": "ray_clemence_1982",
+          "name": "Ray Clemence",
+          "positions": [
+            "GK"
+          ],
+          "rating": 72,
+          "stats": {
+            "att": 10,
+            "mid": 24,
+            "def": 44,
+            "gk": 77
+          }
+        },
+        {
+          "id": "viv_anderson_1982",
+          "name": "Viv Anderson",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 73,
+          "stats": {
+            "att": 45,
+            "mid": 60,
+            "def": 75,
+            "gk": 10
+          }
+        },
+        {
+          "id": "trevor_brooking_1982",
+          "name": "Trevor Brooking",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 74,
+          "stats": {
+            "att": 65,
+            "mid": 76,
+            "def": 60,
+            "gk": 10
+          }
+        },
+        {
+          "id": "terry_butcher_1982",
+          "name": "Terry Butcher",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 78,
+          "stats": {
+            "att": 50,
+            "mid": 65,
+            "def": 80,
+            "gk": 10
+          }
+        },
+        {
+          "id": "steve_coppell_1982",
+          "name": "Steve Coppell",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 78,
+          "stats": {
+            "att": 69,
+            "mid": 80,
+            "def": 65,
+            "gk": 10
+          }
+        },
+        {
+          "id": "steve_foster_1982",
+          "name": "Steve Foster",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 73,
+          "stats": {
+            "att": 45,
+            "mid": 60,
+            "def": 75,
+            "gk": 10
+          }
+        },
+        {
+          "id": "kevin_keegan_1982",
+          "name": "Kevin Keegan",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 74,
+          "stats": {
+            "att": 76,
+            "mid": 60,
+            "def": 39,
+            "gk": 10
+          }
+        },
+        {
+          "id": "trevor_francis_1982",
+          "name": "Trevor Francis",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 82,
+          "stats": {
+            "att": 84,
+            "mid": 68,
+            "def": 47,
+            "gk": 10
+          }
+        },
+        {
+          "id": "glenn_hoddle_1982",
+          "name": "Glenn Hoddle",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 76,
+          "stats": {
+            "att": 67,
+            "mid": 78,
+            "def": 62,
+            "gk": 10
+          }
+        },
+        {
+          "id": "terry_mcdermott_1982",
+          "name": "Terry McDermott",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 73,
+          "stats": {
+            "att": 64,
+            "mid": 75,
+            "def": 59,
+            "gk": 10
+          }
+        },
+        {
+          "id": "paul_mariner_1982",
+          "name": "Paul Mariner",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 81,
+          "stats": {
+            "att": 83,
+            "mid": 67,
+            "def": 46,
+            "gk": 10
+          }
+        },
+        {
+          "id": "mick_mills_1982",
+          "name": "Mick Mills",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 78,
+          "stats": {
+            "att": 50,
+            "mid": 65,
+            "def": 80,
+            "gk": 10
+          }
+        },
+        {
+          "id": "joe_corrigan_1982",
+          "name": "Joe Corrigan",
+          "positions": [
+            "GK"
+          ],
+          "rating": 72,
+          "stats": {
+            "att": 10,
+            "mid": 24,
+            "def": 44,
+            "gk": 77
+          }
+        },
+        {
+          "id": "phil_neal_1982",
+          "name": "Phil Neal",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 74,
+          "stats": {
+            "att": 46,
+            "mid": 61,
+            "def": 76,
+            "gk": 10
+          }
+        },
+        {
+          "id": "graham_rix_1982",
+          "name": "Graham Rix",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 80,
+          "stats": {
+            "att": 71,
+            "mid": 82,
+            "def": 68,
+            "gk": 10
+          }
+        },
+        {
+          "id": "bryan_robson_1982",
+          "name": "Bryan Robson",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 82,
+          "stats": {
+            "att": 75,
+            "mid": 84,
+            "def": 69,
+            "gk": 10
+          }
+        },
+        {
+          "id": "kenny_sansom_1982",
+          "name": "Kenny Sansom",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 78,
+          "stats": {
+            "att": 50,
+            "mid": 65,
+            "def": 80,
+            "gk": 10
+          }
+        },
+        {
+          "id": "phil_thompson_1982",
+          "name": "Phil Thompson",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 78,
+          "stats": {
+            "att": 50,
+            "mid": 65,
+            "def": 80,
+            "gk": 10
+          }
+        },
+        {
+          "id": "ray_wilkins_1982",
+          "name": "Ray Wilkins",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 80,
+          "stats": {
+            "att": 71,
+            "mid": 82,
+            "def": 68,
+            "gk": 10
+          }
+        },
+        {
+          "id": "peter_withe_1982",
+          "name": "Peter Withe",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 73,
+          "stats": {
+            "att": 75,
+            "mid": 59,
+            "def": 38,
+            "gk": 10
+          }
+        },
+        {
+          "id": "tony_woodcock_1982",
+          "name": "Tony Woodcock",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 75,
+          "stats": {
+            "att": 77,
+            "mid": 61,
+            "def": 40,
+            "gk": 10
+          }
+        },
+        {
+          "id": "peter_shilton_1982",
+          "name": "Peter Shilton",
+          "positions": [
+            "GK"
+          ],
+          "rating": 80,
+          "stats": {
+            "att": 10,
+            "mid": 32,
+            "def": 52,
+            "gk": 85
+          }
+        }
+      ]
+    },
+    "FRA": {
+      "name": "France",
+      "flag": "🇫🇷",
+      "squad": [
+        {
+          "id": "dominique_baratelli_1982",
+          "name": "Dominique Baratelli",
+          "positions": [
+            "GK"
+          ],
+          "rating": 77,
+          "stats": {
+            "att": 10,
+            "mid": 29,
+            "def": 49,
+            "gk": 82
+          }
+        },
+        {
+          "id": "manuel_amoros_1982",
+          "name": "Manuel Amoros",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 85,
+          "stats": {
+            "att": 57,
+            "mid": 72,
+            "def": 87,
+            "gk": 10
+          }
+        },
+        {
+          "id": "patrick_battiston_1982",
+          "name": "Patrick Battiston",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 81,
+          "stats": {
+            "att": 53,
+            "mid": 68,
+            "def": 83,
+            "gk": 10
+          }
+        },
+        {
+          "id": "maxime_bossis_1982",
+          "name": "Maxime Bossis",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 86,
+          "stats": {
+            "att": 60,
+            "mid": 73,
+            "def": 88,
+            "gk": 10
+          }
+        },
+        {
+          "id": "gerard_janvion_1982",
+          "name": "Gérard Janvion",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 84,
+          "stats": {
+            "att": 56,
+            "mid": 71,
+            "def": 86,
+            "gk": 10
+          }
+        },
+        {
+          "id": "christian_lopez_1982",
+          "name": "Christian Lopez",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 80,
+          "stats": {
+            "att": 52,
+            "mid": 67,
+            "def": 82,
+            "gk": 10
+          }
+        },
+        {
+          "id": "philippe_mahut_1982",
+          "name": "Philippe Mahut",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 77,
+          "stats": {
+            "att": 49,
+            "mid": 64,
+            "def": 79,
+            "gk": 10
+          }
+        },
+        {
+          "id": "marius_tresor_1982",
+          "name": "Marius Trésor",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 85,
+          "stats": {
+            "att": 59,
+            "mid": 72,
+            "def": 87,
+            "gk": 10
+          }
+        },
+        {
+          "id": "bernard_genghini_1982",
+          "name": "Bernard Genghini",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 86,
+          "stats": {
+            "att": 79,
+            "mid": 88,
+            "def": 74,
+            "gk": 10
+          }
+        },
+        {
+          "id": "michel_platini_1982",
+          "name": "Michel Platini",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 87,
+          "stats": {
+            "att": 80,
+            "mid": 89,
+            "def": 74,
+            "gk": 10
+          }
+        },
+        {
+          "id": "rene_girard_1982",
+          "name": "René Girard",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 83,
+          "stats": {
+            "att": 75,
+            "mid": 85,
+            "def": 70,
+            "gk": 10
+          }
+        },
+        {
+          "id": "alain_giresse_1982",
+          "name": "Alain Giresse",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 88,
+          "stats": {
+            "att": 82,
+            "mid": 90,
+            "def": 76,
+            "gk": 10
+          }
+        },
+        {
+          "id": "jean_francois_larios_1982",
+          "name": "Jean-François Larios",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 80,
+          "stats": {
+            "att": 71,
+            "mid": 82,
+            "def": 67,
+            "gk": 10
+          }
+        },
+        {
+          "id": "jean_tigana_1982",
+          "name": "Jean Tigana",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 84,
+          "stats": {
+            "att": 75,
+            "mid": 86,
+            "def": 71,
+            "gk": 10
+          }
+        },
+        {
+          "id": "bruno_bellone_1982",
+          "name": "Bruno Bellone",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 79,
+          "stats": {
+            "att": 81,
+            "mid": 65,
+            "def": 44,
+            "gk": 10
+          }
+        },
+        {
+          "id": "alain_couriol_1982",
+          "name": "Alain Couriol",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 81,
+          "stats": {
+            "att": 83,
+            "mid": 67,
+            "def": 46,
+            "gk": 10
+          }
+        },
+        {
+          "id": "bernard_lacombe_1982",
+          "name": "Bernard Lacombe",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 82,
+          "stats": {
+            "att": 84,
+            "mid": 68,
+            "def": 47,
+            "gk": 10
+          }
+        },
+        {
+          "id": "dominique_rocheteau_1982",
+          "name": "Dominique Rocheteau",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 86,
+          "stats": {
+            "att": 88,
+            "mid": 72,
+            "def": 51,
+            "gk": 10
+          }
+        },
+        {
+          "id": "didier_six_1982",
+          "name": "Didier Six",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 86,
+          "stats": {
+            "att": 88,
+            "mid": 72,
+            "def": 51,
+            "gk": 10
+          }
+        },
+        {
+          "id": "gerard_soler_1982",
+          "name": "Gérard Soler",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 85,
+          "stats": {
+            "att": 87,
+            "mid": 71,
+            "def": 50,
+            "gk": 10
+          }
+        },
+        {
+          "id": "jean_castaneda_1982",
+          "name": "Jean Castaneda",
+          "positions": [
+            "GK"
+          ],
+          "rating": 77,
+          "stats": {
+            "att": 10,
+            "mid": 29,
+            "def": 49,
+            "gk": 82
+          }
+        },
+        {
+          "id": "jean_luc_ettori_1982",
+          "name": "Jean-Luc Ettori",
+          "positions": [
+            "GK"
+          ],
+          "rating": 83,
+          "stats": {
+            "att": 10,
+            "mid": 35,
+            "def": 55,
+            "gk": 88
+          }
+        }
+      ]
+    },
+    "HND": {
+      "name": "Honduras",
+      "flag": "",
+      "squad": [
+        {
+          "id": "salomon_nazar_1982",
+          "name": "Salomón Nazar",
+          "positions": [
+            "GK"
+          ],
+          "rating": 72,
+          "stats": {
+            "att": 10,
+            "mid": 24,
+            "def": 44,
+            "gk": 77
+          }
+        },
+        {
+          "id": "efrain_gutierrez_1982",
+          "name": "Efraín Gutiérrez",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 75,
+          "stats": {
+            "att": 47,
+            "mid": 62,
+            "def": 77,
+            "gk": 10
+          }
+        },
+        {
+          "id": "jaime_villegas_1982",
+          "name": "Jaime Villegas",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 76,
+          "stats": {
+            "att": 48,
+            "mid": 63,
+            "def": 78,
+            "gk": 10
+          }
+        },
+        {
+          "id": "fernando_bulnes_1982",
+          "name": "Fernando Bulnes",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 75,
+          "stats": {
+            "att": 47,
+            "mid": 62,
+            "def": 77,
+            "gk": 10
+          }
+        },
+        {
+          "id": "anthony_costly_1982",
+          "name": "Anthony Costly",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 76,
+          "stats": {
+            "att": 48,
+            "mid": 63,
+            "def": 78,
+            "gk": 10
+          }
+        },
+        {
+          "id": "ramon_maradiaga_1982",
+          "name": "Ramón Maradiaga",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 77,
+          "stats": {
+            "att": 68,
+            "mid": 79,
+            "def": 64,
+            "gk": 10
+          }
+        },
+        {
+          "id": "antonio_laing_1982",
+          "name": "Antonio Laing",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 76,
+          "stats": {
+            "att": 78,
+            "mid": 62,
+            "def": 41,
+            "gk": 10
+          }
+        },
+        {
+          "id": "francisco_javier_toledo_1982",
+          "name": "Francisco Javier Toledo",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 73,
+          "stats": {
+            "att": 64,
+            "mid": 75,
+            "def": 59,
+            "gk": 10
+          }
+        },
+        {
+          "id": "armando_betancourt_1982",
+          "name": "Armando Betancourt",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 77,
+          "stats": {
+            "att": 79,
+            "mid": 63,
+            "def": 42,
+            "gk": 10
+          }
+        },
+        {
+          "id": "roberto_figueroa_1982",
+          "name": "Roberto Figueroa",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 77,
+          "stats": {
+            "att": 79,
+            "mid": 63,
+            "def": 42,
+            "gk": 10
+          }
+        },
+        {
+          "id": "david_buezo_1982",
+          "name": "David Buezo",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 73,
+          "stats": {
+            "att": 64,
+            "mid": 75,
+            "def": 59,
+            "gk": 10
+          }
+        },
+        {
+          "id": "domingo_drummond_1982",
+          "name": "Domingo Drummond",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 73,
+          "stats": {
+            "att": 45,
+            "mid": 60,
+            "def": 75,
+            "gk": 10
+          }
+        },
+        {
+          "id": "prudencio_norales_1982",
+          "name": "Prudencio Norales",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 76,
+          "stats": {
+            "att": 67,
+            "mid": 78,
+            "def": 63,
+            "gk": 10
+          }
+        },
+        {
+          "id": "juan_cruz_1982",
+          "name": "Juan Cruz",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 74,
+          "stats": {
+            "att": 65,
+            "mid": 76,
+            "def": 60,
+            "gk": 10
+          }
+        },
+        {
+          "id": "hector_zelaya_1982",
+          "name": "Héctor Zelaya",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 78,
+          "stats": {
+            "att": 52,
+            "mid": 65,
+            "def": 80,
+            "gk": 10
+          }
+        },
+        {
+          "id": "roberto_bailey_1982",
+          "name": "Roberto Bailey",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 73,
+          "stats": {
+            "att": 75,
+            "mid": 59,
+            "def": 38,
+            "gk": 10
+          }
+        },
+        {
+          "id": "luis_cruz_1982",
+          "name": "Luis Cruz",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 73,
+          "stats": {
+            "att": 45,
+            "mid": 60,
+            "def": 75,
+            "gk": 10
+          }
+        },
+        {
+          "id": "carlos_caballero_1982",
+          "name": "Carlos Caballero",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 74,
+          "stats": {
+            "att": 65,
+            "mid": 76,
+            "def": 60,
+            "gk": 10
+          }
+        },
+        {
+          "id": "celso_guity_1982",
+          "name": "Celso Güity",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 73,
+          "stats": {
+            "att": 75,
+            "mid": 59,
+            "def": 38,
+            "gk": 10
+          }
+        },
+        {
+          "id": "gilberto_yearwood_1982",
+          "name": "Gilberto Yearwood",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 77,
+          "stats": {
+            "att": 68,
+            "mid": 79,
+            "def": 64,
+            "gk": 10
+          }
+        },
+        {
+          "id": "julio_cesar_arzu_1982",
+          "name": "Julio César Arzú",
+          "positions": [
+            "GK"
+          ],
+          "rating": 76,
+          "stats": {
+            "att": 10,
+            "mid": 28,
+            "def": 48,
+            "gk": 81
+          }
+        },
+        {
+          "id": "jimmy_steward_1982",
+          "name": "Jimmy Steward",
+          "positions": [
+            "GK"
+          ],
+          "rating": 72,
+          "stats": {
+            "att": 10,
+            "mid": 24,
+            "def": 44,
+            "gk": 77
+          }
+        }
+      ]
+    },
+    "HUN": {
+      "name": "Hungary",
+      "flag": "🇭🇺",
+      "squad": [
+        {
+          "id": "ferenc_meszaros_1982",
+          "name": "Ferenc Mészáros",
+          "positions": [
+            "GK"
+          ],
+          "rating": 76,
+          "stats": {
+            "att": 10,
+            "mid": 28,
+            "def": 48,
+            "gk": 81
+          }
+        },
+        {
+          "id": "gyozo_martos_1982",
+          "name": "Győző Martos",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 76,
+          "stats": {
+            "att": 48,
+            "mid": 63,
+            "def": 78,
+            "gk": 10
+          }
+        },
+        {
+          "id": "laszlo_balint_1982",
+          "name": "László Bálint",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 75,
+          "stats": {
+            "att": 47,
+            "mid": 62,
+            "def": 77,
+            "gk": 10
+          }
+        },
+        {
+          "id": "jozsef_toth_1982",
+          "name": "József Tóth",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 77,
+          "stats": {
+            "att": 51,
+            "mid": 64,
+            "def": 79,
+            "gk": 10
+          }
+        },
+        {
+          "id": "sandor_muller_1982",
+          "name": "Sándor Müller",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 76,
+          "stats": {
+            "att": 67,
+            "mid": 78,
+            "def": 63,
+            "gk": 10
+          }
+        },
+        {
+          "id": "imre_garaba_1982",
+          "name": "Imre Garaba",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 76,
+          "stats": {
+            "att": 48,
+            "mid": 63,
+            "def": 78,
+            "gk": 10
+          }
+        },
+        {
+          "id": "laszlo_fazekas_1982",
+          "name": "László Fazekas",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 80,
+          "stats": {
+            "att": 82,
+            "mid": 66,
+            "def": 45,
+            "gk": 10
+          }
+        },
+        {
+          "id": "tibor_nyilasi_1982",
+          "name": "Tibor Nyilasi",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 80,
+          "stats": {
+            "att": 82,
+            "mid": 66,
+            "def": 45,
+            "gk": 10
+          }
+        },
+        {
+          "id": "andras_torocsik_1982",
+          "name": "András Törőcsik",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 76,
+          "stats": {
+            "att": 78,
+            "mid": 62,
+            "def": 41,
+            "gk": 10
+          }
+        },
+        {
+          "id": "laszlo_kiss_1982",
+          "name": "László Kiss",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 80,
+          "stats": {
+            "att": 82,
+            "mid": 66,
+            "def": 45,
+            "gk": 10
+          }
+        },
+        {
+          "id": "gabor_poloskei_1982",
+          "name": "Gábor Pölöskei",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 80,
+          "stats": {
+            "att": 82,
+            "mid": 66,
+            "def": 45,
+            "gk": 10
+          }
+        },
+        {
+          "id": "lazar_szentes_1982",
+          "name": "Lázár Szentes",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 76,
+          "stats": {
+            "att": 78,
+            "mid": 62,
+            "def": 41,
+            "gk": 10
+          }
+        },
+        {
+          "id": "tibor_rab_1982",
+          "name": "Tibor Rab",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 74,
+          "stats": {
+            "att": 46,
+            "mid": 61,
+            "def": 76,
+            "gk": 10
+          }
+        },
+        {
+          "id": "sandor_sallai_1982",
+          "name": "Sándor Sallai",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 76,
+          "stats": {
+            "att": 48,
+            "mid": 63,
+            "def": 78,
+            "gk": 10
+          }
+        },
+        {
+          "id": "bela_bodonyi_1982",
+          "name": "Béla Bodonyi",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 73,
+          "stats": {
+            "att": 75,
+            "mid": 59,
+            "def": 38,
+            "gk": 10
+          }
+        },
+        {
+          "id": "ferenc_csongradi_1982",
+          "name": "Ferenc Csongrádi",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 74,
+          "stats": {
+            "att": 65,
+            "mid": 76,
+            "def": 60,
+            "gk": 10
+          }
+        },
+        {
+          "id": "karoly_csapo_1982",
+          "name": "Károly Csapó",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 74,
+          "stats": {
+            "att": 65,
+            "mid": 76,
+            "def": 60,
+            "gk": 10
+          }
+        },
+        {
+          "id": "attila_kerekes_1982",
+          "name": "Attila Kerekes",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 73,
+          "stats": {
+            "att": 45,
+            "mid": 60,
+            "def": 75,
+            "gk": 10
+          }
+        },
+        {
+          "id": "jozsef_varga_1982",
+          "name": "József Varga",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 77,
+          "stats": {
+            "att": 51,
+            "mid": 64,
+            "def": 79,
+            "gk": 10
+          }
+        },
+        {
+          "id": "jozsef_csuhay_1982",
+          "name": "József Csuhay",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 73,
+          "stats": {
+            "att": 45,
+            "mid": 60,
+            "def": 75,
+            "gk": 10
+          }
+        },
+        {
+          "id": "bela_katzirz_1982",
+          "name": "Béla Katzirz",
+          "positions": [
+            "GK"
+          ],
+          "rating": 72,
+          "stats": {
+            "att": 10,
+            "mid": 24,
+            "def": 44,
+            "gk": 77
+          }
+        },
+        {
+          "id": "imre_kiss_1982",
+          "name": "Imre Kiss",
+          "positions": [
+            "GK"
+          ],
+          "rating": 72,
+          "stats": {
+            "att": 10,
+            "mid": 24,
+            "def": 44,
+            "gk": 77
+          }
+        }
+      ]
+    },
+    "ITA": {
+      "name": "Italy",
+      "flag": "🇮🇹",
+      "squad": [
+        {
+          "id": "dino_zoff_1982",
+          "name": "Dino Zoff",
+          "positions": [
+            "GK"
+          ],
+          "rating": 93,
+          "stats": {
+            "att": 10,
+            "mid": 45,
+            "def": 65,
+            "gk": 98
+          }
+        },
+        {
+          "id": "franco_baresi_1982",
+          "name": "Franco Baresi",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 80,
+          "stats": {
+            "att": 52,
+            "mid": 67,
+            "def": 82,
+            "gk": 10
+          }
+        },
+        {
+          "id": "giuseppe_bergomi_1982",
+          "name": "Giuseppe Bergomi",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 84,
+          "stats": {
+            "att": 56,
+            "mid": 71,
+            "def": 86,
+            "gk": 10
+          }
+        },
+        {
+          "id": "antonio_cabrini_1982",
+          "name": "Antonio Cabrini",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 89,
+          "stats": {
+            "att": 63,
+            "mid": 76,
+            "def": 91,
+            "gk": 10
+          }
+        },
+        {
+          "id": "fulvio_collovati_1982",
+          "name": "Fulvio Collovati",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 87,
+          "stats": {
+            "att": 59,
+            "mid": 74,
+            "def": 89,
+            "gk": 10
+          }
+        },
+        {
+          "id": "claudio_gentile_1982",
+          "name": "Claudio Gentile",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 87,
+          "stats": {
+            "att": 59,
+            "mid": 74,
+            "def": 89,
+            "gk": 10
+          }
+        },
+        {
+          "id": "gaetano_scirea_1982",
+          "name": "Gaetano Scirea",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 87,
+          "stats": {
+            "att": 59,
+            "mid": 74,
+            "def": 89,
+            "gk": 10
+          }
+        },
+        {
+          "id": "pietro_vierchowod_1982",
+          "name": "Pietro Vierchowod",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 80,
+          "stats": {
+            "att": 52,
+            "mid": 67,
+            "def": 82,
+            "gk": 10
+          }
+        },
+        {
+          "id": "giancarlo_antognoni_1982",
+          "name": "Giancarlo Antognoni",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 88,
+          "stats": {
+            "att": 79,
+            "mid": 90,
+            "def": 76,
+            "gk": 10
+          }
+        },
+        {
+          "id": "giuseppe_dossena_1982",
+          "name": "Giuseppe Dossena",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 80,
+          "stats": {
+            "att": 71,
+            "mid": 82,
+            "def": 66,
+            "gk": 10
+          }
+        },
+        {
+          "id": "giampiero_marini_1982",
+          "name": "Giampiero Marini",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 85,
+          "stats": {
+            "att": 76,
+            "mid": 87,
+            "def": 72,
+            "gk": 10
+          }
+        },
+        {
+          "id": "ivano_bordon_1982",
+          "name": "Ivano Bordon",
+          "positions": [
+            "GK"
+          ],
+          "rating": 80,
+          "stats": {
+            "att": 10,
+            "mid": 32,
+            "def": 52,
+            "gk": 85
+          }
+        },
+        {
+          "id": "gabriele_oriali_1982",
+          "name": "Gabriele Oriali",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 86,
+          "stats": {
+            "att": 77,
+            "mid": 88,
+            "def": 74,
+            "gk": 10
+          }
+        },
+        {
+          "id": "marco_tardelli_1982",
+          "name": "Marco Tardelli",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 90,
+          "stats": {
+            "att": 83,
+            "mid": 92,
+            "def": 78,
+            "gk": 10
+          }
+        },
+        {
+          "id": "franco_causio_1982",
+          "name": "Franco Causio",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 83,
+          "stats": {
+            "att": 74,
+            "mid": 85,
+            "def": 69,
+            "gk": 10
+          }
+        },
+        {
+          "id": "bruno_conti_1982",
+          "name": "Bruno Conti",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 89,
+          "stats": {
+            "att": 81,
+            "mid": 91,
+            "def": 77,
+            "gk": 10
+          }
+        },
+        {
+          "id": "daniele_massaro_1982",
+          "name": "Daniele Massaro",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 81,
+          "stats": {
+            "att": 83,
+            "mid": 67,
+            "def": 46,
+            "gk": 10
+          }
+        },
+        {
+          "id": "alessandro_altobelli_1982",
+          "name": "Alessandro Altobelli",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 84,
+          "stats": {
+            "att": 86,
+            "mid": 70,
+            "def": 49,
+            "gk": 10
+          }
+        },
+        {
+          "id": "francesco_graziani_1982",
+          "name": "Francesco Graziani",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 89,
+          "stats": {
+            "att": 91,
+            "mid": 75,
+            "def": 54,
+            "gk": 10
+          }
+        },
+        {
+          "id": "paolo_rossi_1982",
+          "name": "Paolo Rossi",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 97,
+          "stats": {
+            "att": 99,
+            "mid": 83,
+            "def": 62,
+            "gk": 10
+          }
+        },
+        {
+          "id": "franco_selvaggi_1982",
+          "name": "Franco Selvaggi",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 80,
+          "stats": {
+            "att": 82,
+            "mid": 66,
+            "def": 45,
+            "gk": 10
+          }
+        },
+        {
+          "id": "giovanni_galli_1982",
+          "name": "Giovanni Galli",
+          "positions": [
+            "GK"
+          ],
+          "rating": 80,
+          "stats": {
+            "att": 10,
+            "mid": 32,
+            "def": 52,
+            "gk": 85
+          }
+        }
+      ]
+    },
+    "KWT": {
+      "name": "Kuwait",
+      "flag": "",
+      "squad": [
+        {
+          "id": "ahmed_al_tarabulsi_1982",
+          "name": "Ahmed Al-Tarabulsi",
+          "positions": [
+            "GK"
+          ],
+          "rating": 76,
+          "stats": {
+            "att": 10,
+            "mid": 28,
+            "def": 48,
+            "gk": 81
+          }
+        },
+        {
+          "id": "naeem_saad_1982",
+          "name": "Naeem Saad",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 76,
+          "stats": {
+            "att": 48,
+            "mid": 63,
+            "def": 78,
+            "gk": 10
+          }
+        },
+        {
+          "id": "mahboub_juma_a_1982",
+          "name": "Mahboub Juma'a",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 76,
+          "stats": {
+            "att": 48,
+            "mid": 63,
+            "def": 78,
+            "gk": 10
+          }
+        },
+        {
+          "id": "jamal_al_qabendi_1982",
+          "name": "Jamal Al-Qabendi",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 72,
+          "stats": {
+            "att": 44,
+            "mid": 59,
+            "def": 74,
+            "gk": 10
+          }
+        },
+        {
+          "id": "waleed_al_jasem_1982",
+          "name": "Waleed Al-Jasem",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 76,
+          "stats": {
+            "att": 48,
+            "mid": 63,
+            "def": 78,
+            "gk": 10
+          }
+        },
+        {
+          "id": "saad_al_houti_1982",
+          "name": "Saad Al-Houti",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 77,
+          "stats": {
+            "att": 68,
+            "mid": 79,
+            "def": 64,
+            "gk": 10
+          }
+        },
+        {
+          "id": "fathi_kameel_1982",
+          "name": "Fathi Kameel",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 76,
+          "stats": {
+            "att": 78,
+            "mid": 62,
+            "def": 41,
+            "gk": 10
+          }
+        },
+        {
+          "id": "abdullah_al_buloushi_1982",
+          "name": "Abdullah Al-Buloushi",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 78,
+          "stats": {
+            "att": 80,
+            "mid": 64,
+            "def": 43,
+            "gk": 10
+          }
+        },
+        {
+          "id": "jasem_yaqoub_1982",
+          "name": "Jasem Yaqoub",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 76,
+          "stats": {
+            "att": 78,
+            "mid": 62,
+            "def": 41,
+            "gk": 10
+          }
+        },
+        {
+          "id": "abdulaziz_al_anberi_1982",
+          "name": "Abdulaziz Al-Anberi",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 77,
+          "stats": {
+            "att": 79,
+            "mid": 63,
+            "def": 42,
+            "gk": 10
+          }
+        },
+        {
+          "id": "nassir_al_ghanim_1982",
+          "name": "Nassir Al-Ghanim",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 73,
+          "stats": {
+            "att": 64,
+            "mid": 75,
+            "def": 59,
+            "gk": 10
+          }
+        },
+        {
+          "id": "yussef_al_suwayed_1982",
+          "name": "Yussef Al-Suwayed",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 74,
+          "stats": {
+            "att": 65,
+            "mid": 76,
+            "def": 60,
+            "gk": 10
+          }
+        },
+        {
+          "id": "mubarak_marzouq_1982",
+          "name": "Mubarak Marzouq",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 72,
+          "stats": {
+            "att": 44,
+            "mid": 59,
+            "def": 74,
+            "gk": 10
+          }
+        },
+        {
+          "id": "abdullah_mayouf_1982",
+          "name": "Abdullah Mayouf",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 76,
+          "stats": {
+            "att": 48,
+            "mid": 63,
+            "def": 78,
+            "gk": 10
+          }
+        },
+        {
+          "id": "sami_al_hashash_1982",
+          "name": "Sami Al-Hashash",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 72,
+          "stats": {
+            "att": 44,
+            "mid": 59,
+            "def": 74,
+            "gk": 10
+          }
+        },
+        {
+          "id": "faisal_al_dakhil_1982",
+          "name": "Faisal Al-Dakhil",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 78,
+          "stats": {
+            "att": 80,
+            "mid": 64,
+            "def": 43,
+            "gk": 10
+          }
+        },
+        {
+          "id": "hamoud_al_shemmari_1982",
+          "name": "Hamoud Al-Shemmari",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 74,
+          "stats": {
+            "att": 46,
+            "mid": 61,
+            "def": 76,
+            "gk": 10
+          }
+        },
+        {
+          "id": "mohammed_karam_1982",
+          "name": "Mohammed Karam",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 76,
+          "stats": {
+            "att": 67,
+            "mid": 78,
+            "def": 63,
+            "gk": 10
+          }
+        },
+        {
+          "id": "muayad_al_haddad_1982",
+          "name": "Muayad Al-Haddad",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 73,
+          "stats": {
+            "att": 75,
+            "mid": 59,
+            "def": 38,
+            "gk": 10
+          }
+        },
+        {
+          "id": "abdulaziz_al_buloushi_1982",
+          "name": "Abdulaziz Al-Buloushi",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 73,
+          "stats": {
+            "att": 75,
+            "mid": 59,
+            "def": 38,
+            "gk": 10
+          }
+        },
+        {
+          "id": "adam_marjam_1982",
+          "name": "Adam Marjam",
+          "positions": [
+            "GK"
+          ],
+          "rating": 72,
+          "stats": {
+            "att": 10,
+            "mid": 24,
+            "def": 44,
+            "gk": 77
+          }
+        },
+        {
+          "id": "jasem_bahman_1982",
+          "name": "Jasem Bahman",
+          "positions": [
+            "GK"
+          ],
+          "rating": 72,
+          "stats": {
+            "att": 10,
+            "mid": 24,
+            "def": 44,
+            "gk": 77
+          }
+        }
+      ]
+    },
+    "NZL": {
+      "name": "New Zealand",
+      "flag": "🇳🇿",
+      "squad": [
+        {
+          "id": "richard_wilson_1982",
+          "name": "Richard Wilson",
+          "positions": [
+            "GK"
+          ],
+          "rating": 72,
+          "stats": {
+            "att": 10,
+            "mid": 24,
+            "def": 44,
+            "gk": 77
+          }
+        },
+        {
+          "id": "glenn_dods_1982",
+          "name": "Glenn Dods",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 75,
+          "stats": {
+            "att": 47,
+            "mid": 62,
+            "def": 77,
+            "gk": 10
+          }
+        },
+        {
+          "id": "ricki_herbert_1982",
+          "name": "Ricki Herbert",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 75,
+          "stats": {
+            "att": 47,
+            "mid": 62,
+            "def": 77,
+            "gk": 10
+          }
+        },
+        {
+          "id": "brian_turner_1982",
+          "name": "Brian Turner",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 74,
+          "stats": {
+            "att": 65,
+            "mid": 76,
+            "def": 60,
+            "gk": 10
+          }
+        },
+        {
+          "id": "dave_bright_1982",
+          "name": "Dave Bright",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 72,
+          "stats": {
+            "att": 44,
+            "mid": 59,
+            "def": 74,
+            "gk": 10
+          }
+        },
+        {
+          "id": "bobby_almond_1982",
+          "name": "Bobby Almond",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 75,
+          "stats": {
+            "att": 47,
+            "mid": 62,
+            "def": 77,
+            "gk": 10
+          }
+        },
+        {
+          "id": "wynton_rufer_1982",
+          "name": "Wynton Rufer",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 77,
+          "stats": {
+            "att": 79,
+            "mid": 63,
+            "def": 42,
+            "gk": 10
+          }
+        },
+        {
+          "id": "duncan_cole_1982",
+          "name": "Duncan Cole",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 76,
+          "stats": {
+            "att": 67,
+            "mid": 78,
+            "def": 62,
+            "gk": 10
+          }
+        },
+        {
+          "id": "steve_wooddin_1982",
+          "name": "Steve Wooddin",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 78,
+          "stats": {
+            "att": 80,
+            "mid": 64,
+            "def": 43,
+            "gk": 10
+          }
+        },
+        {
+          "id": "steve_sumner_1982",
+          "name": "Steve Sumner",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 78,
+          "stats": {
+            "att": 70,
+            "mid": 80,
+            "def": 65,
+            "gk": 10
+          }
+        },
+        {
+          "id": "sam_malcolmson_1982",
+          "name": "Sam Malcolmson",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 73,
+          "stats": {
+            "att": 45,
+            "mid": 60,
+            "def": 75,
+            "gk": 10
+          }
+        },
+        {
+          "id": "keith_mackay_1982",
+          "name": "Keith MacKay",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 77,
+          "stats": {
+            "att": 68,
+            "mid": 79,
+            "def": 64,
+            "gk": 10
+          }
+        },
+        {
+          "id": "kenny_cresswell_1982",
+          "name": "Kenny Cresswell",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 77,
+          "stats": {
+            "att": 68,
+            "mid": 79,
+            "def": 64,
+            "gk": 10
+          }
+        },
+        {
+          "id": "adrian_elrick_1982",
+          "name": "Adrian Elrick",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 76,
+          "stats": {
+            "att": 48,
+            "mid": 63,
+            "def": 78,
+            "gk": 10
+          }
+        },
+        {
+          "id": "john_hill_1982",
+          "name": "John Hill",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 73,
+          "stats": {
+            "att": 45,
+            "mid": 60,
+            "def": 75,
+            "gk": 10
+          }
+        },
+        {
+          "id": "glen_adam_1982",
+          "name": "Glen Adam",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 72,
+          "stats": {
+            "att": 44,
+            "mid": 59,
+            "def": 74,
+            "gk": 10
+          }
+        },
+        {
+          "id": "allan_boath_1982",
+          "name": "Allan Boath",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 77,
+          "stats": {
+            "att": 68,
+            "mid": 79,
+            "def": 64,
+            "gk": 10
+          }
+        },
+        {
+          "id": "peter_simonsen_1982",
+          "name": "Peter Simonsen",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 73,
+          "stats": {
+            "att": 64,
+            "mid": 75,
+            "def": 59,
+            "gk": 10
+          }
+        },
+        {
+          "id": "billy_mcclure_1982",
+          "name": "Billy McClure",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 73,
+          "stats": {
+            "att": 64,
+            "mid": 75,
+            "def": 59,
+            "gk": 10
+          }
+        },
+        {
+          "id": "grant_turner_1982",
+          "name": "Grant Turner",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 73,
+          "stats": {
+            "att": 64,
+            "mid": 75,
+            "def": 59,
+            "gk": 10
+          }
+        },
+        {
+          "id": "barry_pickering_1982",
+          "name": "Barry Pickering",
+          "positions": [
+            "GK"
+          ],
+          "rating": 72,
+          "stats": {
+            "att": 10,
+            "mid": 24,
+            "def": 44,
+            "gk": 77
+          }
+        },
+        {
+          "id": "frank_van_hattum_1982",
+          "name": "Frank van Hattum",
+          "positions": [
+            "GK"
+          ],
+          "rating": 76,
+          "stats": {
+            "att": 10,
+            "mid": 28,
+            "def": 48,
+            "gk": 81
+          }
+        }
+      ]
+    },
+    "NIR": {
+      "name": "Northern Ireland",
+      "flag": "",
+      "squad": [
+        {
+          "id": "pat_jennings_1982",
+          "name": "Pat Jennings",
+          "positions": [
+            "GK"
+          ],
+          "rating": 78,
+          "stats": {
+            "att": 10,
+            "mid": 30,
+            "def": 50,
+            "gk": 83
+          }
+        },
+        {
+          "id": "jimmy_nicholl_1982",
+          "name": "Jimmy Nicholl",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 79,
+          "stats": {
+            "att": 51,
+            "mid": 66,
+            "def": 81,
+            "gk": 10
+          }
+        },
+        {
+          "id": "mal_donaghy_1982",
+          "name": "Mal Donaghy",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 78,
+          "stats": {
+            "att": 50,
+            "mid": 65,
+            "def": 80,
+            "gk": 10
+          }
+        },
+        {
+          "id": "david_mccreery_1982",
+          "name": "David McCreery",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 80,
+          "stats": {
+            "att": 71,
+            "mid": 82,
+            "def": 68,
+            "gk": 10
+          }
+        },
+        {
+          "id": "chris_nicholl_1982",
+          "name": "Chris Nicholl",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 78,
+          "stats": {
+            "att": 50,
+            "mid": 65,
+            "def": 80,
+            "gk": 10
+          }
+        },
+        {
+          "id": "john_o_neill_1982",
+          "name": "John O'Neill",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 73,
+          "stats": {
+            "att": 45,
+            "mid": 60,
+            "def": 75,
+            "gk": 10
+          }
+        },
+        {
+          "id": "noel_brotherston_1982",
+          "name": "Noel Brotherston",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 75,
+          "stats": {
+            "att": 77,
+            "mid": 61,
+            "def": 40,
+            "gk": 10
+          }
+        },
+        {
+          "id": "martin_o_neill_1982",
+          "name": "Martin O'Neill",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 80,
+          "stats": {
+            "att": 71,
+            "mid": 82,
+            "def": 68,
+            "gk": 10
+          }
+        },
+        {
+          "id": "gerry_armstrong_1982",
+          "name": "Gerry Armstrong",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 84,
+          "stats": {
+            "att": 86,
+            "mid": 70,
+            "def": 49,
+            "gk": 10
+          }
+        },
+        {
+          "id": "sammy_mcilroy_1982",
+          "name": "Sammy McIlroy",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 80,
+          "stats": {
+            "att": 82,
+            "mid": 66,
+            "def": 45,
+            "gk": 10
+          }
+        },
+        {
+          "id": "billy_hamilton_1982",
+          "name": "Billy Hamilton",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 83,
+          "stats": {
+            "att": 85,
+            "mid": 69,
+            "def": 48,
+            "gk": 10
+          }
+        },
+        {
+          "id": "john_mcclelland_1982",
+          "name": "John McClelland",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 79,
+          "stats": {
+            "att": 51,
+            "mid": 66,
+            "def": 81,
+            "gk": 10
+          }
+        },
+        {
+          "id": "sammy_nelson_1982",
+          "name": "Sammy Nelson",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 74,
+          "stats": {
+            "att": 46,
+            "mid": 61,
+            "def": 76,
+            "gk": 10
+          }
+        },
+        {
+          "id": "tommy_cassidy_1982",
+          "name": "Tommy Cassidy",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 74,
+          "stats": {
+            "att": 65,
+            "mid": 76,
+            "def": 60,
+            "gk": 10
+          }
+        },
+        {
+          "id": "tommy_finney_1982",
+          "name": "Tommy Finney",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 73,
+          "stats": {
+            "att": 64,
+            "mid": 75,
+            "def": 59,
+            "gk": 10
+          }
+        },
+        {
+          "id": "norman_whiteside_1982",
+          "name": "Norman Whiteside",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 80,
+          "stats": {
+            "att": 82,
+            "mid": 66,
+            "def": 45,
+            "gk": 10
+          }
+        },
+        {
+          "id": "jim_platt_1982",
+          "name": "Jim Platt",
+          "positions": [
+            "GK"
+          ],
+          "rating": 74,
+          "stats": {
+            "att": 10,
+            "mid": 26,
+            "def": 46,
+            "gk": 79
+          }
+        },
+        {
+          "id": "johnny_jameson_1982",
+          "name": "Johnny Jameson",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 73,
+          "stats": {
+            "att": 64,
+            "mid": 75,
+            "def": 59,
+            "gk": 10
+          }
+        },
+        {
+          "id": "felix_healy_1982",
+          "name": "Felix Healy",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 74,
+          "stats": {
+            "att": 76,
+            "mid": 60,
+            "def": 39,
+            "gk": 10
+          }
+        },
+        {
+          "id": "jim_cleary_1982",
+          "name": "Jim Cleary",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 73,
+          "stats": {
+            "att": 64,
+            "mid": 75,
+            "def": 59,
+            "gk": 10
+          }
+        },
+        {
+          "id": "bobby_campbell_1982",
+          "name": "Bobby Campbell",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 73,
+          "stats": {
+            "att": 75,
+            "mid": 59,
+            "def": 38,
+            "gk": 10
+          }
+        },
+        {
+          "id": "george_dunlop_1982",
+          "name": "George Dunlop",
+          "positions": [
+            "GK"
+          ],
+          "rating": 72,
+          "stats": {
+            "att": 10,
+            "mid": 24,
+            "def": 44,
+            "gk": 77
+          }
+        }
+      ]
+    },
+    "PER": {
+      "name": "Peru",
+      "flag": "🇵🇪",
+      "squad": [
+        {
+          "id": "eusebio_acasuzo_1982",
+          "name": "Eusebio Acasuzo",
+          "positions": [
+            "GK"
+          ],
+          "rating": 72,
+          "stats": {
+            "att": 10,
+            "mid": 24,
+            "def": 44,
+            "gk": 77
+          }
+        },
+        {
+          "id": "jaime_duarte_1982",
+          "name": "Jaime Duarte",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 76,
+          "stats": {
+            "att": 48,
+            "mid": 63,
+            "def": 78,
+            "gk": 10
+          }
+        },
+        {
+          "id": "salvador_salguero_1982",
+          "name": "Salvador Salguero",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 76,
+          "stats": {
+            "att": 48,
+            "mid": 63,
+            "def": 78,
+            "gk": 10
+          }
+        },
+        {
+          "id": "hugo_gastulo_1982",
+          "name": "Hugo Gastulo",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 72,
+          "stats": {
+            "att": 44,
+            "mid": 59,
+            "def": 74,
+            "gk": 10
+          }
+        },
+        {
+          "id": "german_leguia_1982",
+          "name": "Germán Leguía",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 77,
+          "stats": {
+            "att": 68,
+            "mid": 79,
+            "def": 64,
+            "gk": 10
+          }
+        },
+        {
+          "id": "jose_velasquez_1982",
+          "name": "José Velásquez",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 78,
+          "stats": {
+            "att": 69,
+            "mid": 80,
+            "def": 65,
+            "gk": 10
+          }
+        },
+        {
+          "id": "geronimo_barbadillo_1982",
+          "name": "Gerónimo Barbadillo",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 76,
+          "stats": {
+            "att": 78,
+            "mid": 62,
+            "def": 41,
+            "gk": 10
+          }
+        },
+        {
+          "id": "cesar_cueto_1982",
+          "name": "César Cueto",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 78,
+          "stats": {
+            "att": 69,
+            "mid": 80,
+            "def": 65,
+            "gk": 10
+          }
+        },
+        {
+          "id": "julio_cesar_uribe_1982",
+          "name": "Julio César Uribe",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 76,
+          "stats": {
+            "att": 67,
+            "mid": 78,
+            "def": 63,
+            "gk": 10
+          }
+        },
+        {
+          "id": "teofilo_cubillas_1982",
+          "name": "Teófilo Cubillas",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 78,
+          "stats": {
+            "att": 69,
+            "mid": 80,
+            "def": 65,
+            "gk": 10
+          }
+        },
+        {
+          "id": "carlos_juan_oblitas_1982",
+          "name": "Carlos Juan Oblitas",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 78,
+          "stats": {
+            "att": 80,
+            "mid": 64,
+            "def": 43,
+            "gk": 10
+          }
+        },
+        {
+          "id": "jose_gonzalez_1982",
+          "name": "José González",
+          "positions": [
+            "GK"
+          ],
+          "rating": 72,
+          "stats": {
+            "att": 10,
+            "mid": 24,
+            "def": 44,
+            "gk": 77
+          }
+        },
+        {
+          "id": "oscar_arizaga_1982",
+          "name": "Oscar Arizaga",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 73,
+          "stats": {
+            "att": 64,
+            "mid": 75,
+            "def": 59,
+            "gk": 10
+          }
+        },
+        {
+          "id": "miguel_gutierrez_1982",
+          "name": "Miguel Gutiérrez",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 73,
+          "stats": {
+            "att": 64,
+            "mid": 75,
+            "def": 59,
+            "gk": 10
+          }
+        },
+        {
+          "id": "ruben_toribio_diaz_1982",
+          "name": "Rubén Toribio Díaz",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 78,
+          "stats": {
+            "att": 52,
+            "mid": 65,
+            "def": 80,
+            "gk": 10
+          }
+        },
+        {
+          "id": "jorge_olaechea_1982",
+          "name": "Jorge Olaechea",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 76,
+          "stats": {
+            "att": 48,
+            "mid": 63,
+            "def": 78,
+            "gk": 10
+          }
+        },
+        {
+          "id": "franco_navarro_1982",
+          "name": "Franco Navarro",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 73,
+          "stats": {
+            "att": 75,
+            "mid": 59,
+            "def": 38,
+            "gk": 10
+          }
+        },
+        {
+          "id": "eduardo_malasquez_1982",
+          "name": "Eduardo Malásquez",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 73,
+          "stats": {
+            "att": 64,
+            "mid": 75,
+            "def": 59,
+            "gk": 10
+          }
+        },
+        {
+          "id": "guillermo_la_rosa_1982",
+          "name": "Guillermo La Rosa",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 78,
+          "stats": {
+            "att": 80,
+            "mid": 64,
+            "def": 43,
+            "gk": 10
+          }
+        },
+        {
+          "id": "percy_rojas_1982",
+          "name": "Percy Rojas",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 74,
+          "stats": {
+            "att": 76,
+            "mid": 60,
+            "def": 39,
+            "gk": 10
+          }
+        },
+        {
+          "id": "ramon_quiroga_1982",
+          "name": "Ramón Quiroga",
+          "positions": [
+            "GK"
+          ],
+          "rating": 76,
+          "stats": {
+            "att": 10,
+            "mid": 28,
+            "def": 48,
+            "gk": 81
+          }
+        },
+        {
+          "id": "luis_reyna_1982",
+          "name": "Luis Reyna",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 73,
+          "stats": {
+            "att": 64,
+            "mid": 75,
+            "def": 59,
+            "gk": 10
+          }
+        }
+      ]
+    },
+    "POL": {
+      "name": "Poland",
+      "flag": "🇵🇱",
+      "squad": [
+        {
+          "id": "jozef_mynarczyk_1982",
+          "name": "Józef Młynarczyk",
+          "positions": [
+            "GK"
+          ],
+          "rating": 84,
+          "stats": {
+            "att": 10,
+            "mid": 36,
+            "def": 56,
+            "gk": 89
+          }
+        },
+        {
+          "id": "marek_dziuba_1982",
+          "name": "Marek Dziuba",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 82,
+          "stats": {
+            "att": 54,
+            "mid": 69,
+            "def": 84,
+            "gk": 10
+          }
+        },
+        {
+          "id": "janusz_kupcewicz_1982",
+          "name": "Janusz Kupcewicz",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 85,
+          "stats": {
+            "att": 77,
+            "mid": 87,
+            "def": 72,
+            "gk": 10
+          }
+        },
+        {
+          "id": "tadeusz_dolny_1982",
+          "name": "Tadeusz Dolny",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 76,
+          "stats": {
+            "att": 48,
+            "mid": 63,
+            "def": 78,
+            "gk": 10
+          }
+        },
+        {
+          "id": "pawe_janas_1982",
+          "name": "Paweł Janas",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 83,
+          "stats": {
+            "att": 55,
+            "mid": 70,
+            "def": 85,
+            "gk": 10
+          }
+        },
+        {
+          "id": "piotr_skrobowski_1982",
+          "name": "Piotr Skrobowski",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 76,
+          "stats": {
+            "att": 48,
+            "mid": 63,
+            "def": 78,
+            "gk": 10
+          }
+        },
+        {
+          "id": "jan_jaocha_1982",
+          "name": "Jan Jałocha",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 80,
+          "stats": {
+            "att": 52,
+            "mid": 67,
+            "def": 82,
+            "gk": 10
+          }
+        },
+        {
+          "id": "waldemar_matysik_1982",
+          "name": "Waldemar Matysik",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 85,
+          "stats": {
+            "att": 76,
+            "mid": 87,
+            "def": 73,
+            "gk": 10
+          }
+        },
+        {
+          "id": "wadysaw_zmuda_1982",
+          "name": "Władysław Żmuda",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 85,
+          "stats": {
+            "att": 57,
+            "mid": 72,
+            "def": 87,
+            "gk": 10
+          }
+        },
+        {
+          "id": "stefan_majewski_1982",
+          "name": "Stefan Majewski",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 85,
+          "stats": {
+            "att": 59,
+            "mid": 72,
+            "def": 87,
+            "gk": 10
+          }
+        },
+        {
+          "id": "wodzimierz_smolarek_1982",
+          "name": "Włodzimierz Smolarek",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 86,
+          "stats": {
+            "att": 88,
+            "mid": 72,
+            "def": 51,
+            "gk": 10
+          }
+        },
+        {
+          "id": "roman_wojcicki_1982",
+          "name": "Roman Wójcicki",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 78,
+          "stats": {
+            "att": 50,
+            "mid": 65,
+            "def": 80,
+            "gk": 10
+          }
+        },
+        {
+          "id": "andrzej_buncol_1982",
+          "name": "Andrzej Buncol",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 86,
+          "stats": {
+            "att": 78,
+            "mid": 88,
+            "def": 74,
+            "gk": 10
+          }
+        },
+        {
+          "id": "andrzej_paasz_1982",
+          "name": "Andrzej Pałasz",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 80,
+          "stats": {
+            "att": 71,
+            "mid": 82,
+            "def": 66,
+            "gk": 10
+          }
+        },
+        {
+          "id": "wodzimierz_cioek_1982",
+          "name": "Włodzimierz Ciołek",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 82,
+          "stats": {
+            "att": 84,
+            "mid": 68,
+            "def": 47,
+            "gk": 10
+          }
+        },
+        {
+          "id": "grzegorz_lato_1982",
+          "name": "Grzegorz Lato",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 86,
+          "stats": {
+            "att": 88,
+            "mid": 72,
+            "def": 51,
+            "gk": 10
+          }
+        },
+        {
+          "id": "andrzej_szarmach_1982",
+          "name": "Andrzej Szarmach",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 82,
+          "stats": {
+            "att": 84,
+            "mid": 68,
+            "def": 47,
+            "gk": 10
+          }
+        },
+        {
+          "id": "marek_kusto_1982",
+          "name": "Marek Kusto",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 81,
+          "stats": {
+            "att": 83,
+            "mid": 67,
+            "def": 46,
+            "gk": 10
+          }
+        },
+        {
+          "id": "andrzej_iwan_1982",
+          "name": "Andrzej Iwan",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 80,
+          "stats": {
+            "att": 82,
+            "mid": 66,
+            "def": 45,
+            "gk": 10
+          }
+        },
+        {
+          "id": "zbigniew_boniek_1982",
+          "name": "Zbigniew Boniek",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 90,
+          "stats": {
+            "att": 92,
+            "mid": 76,
+            "def": 55,
+            "gk": 10
+          }
+        },
+        {
+          "id": "jacek_kazimierski_1982",
+          "name": "Jacek Kazimierski",
+          "positions": [
+            "GK"
+          ],
+          "rating": 77,
+          "stats": {
+            "att": 10,
+            "mid": 29,
+            "def": 49,
+            "gk": 82
+          }
+        },
+        {
+          "id": "piotr_mowlik_1982",
+          "name": "Piotr Mowlik",
+          "positions": [
+            "GK"
+          ],
+          "rating": 76,
+          "stats": {
+            "att": 10,
+            "mid": 28,
+            "def": 48,
+            "gk": 81
+          }
+        }
+      ]
+    },
+    "SCO": {
+      "name": "Scotland",
+      "flag": "",
+      "squad": [
+        {
+          "id": "alan_rough_1982",
+          "name": "Alan Rough",
+          "positions": [
+            "GK"
+          ],
+          "rating": 77,
+          "stats": {
+            "att": 10,
+            "mid": 29,
+            "def": 49,
+            "gk": 82
+          }
+        },
+        {
+          "id": "danny_mcgrain_1982",
+          "name": "Danny McGrain",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 75,
+          "stats": {
+            "att": 47,
+            "mid": 62,
+            "def": 77,
+            "gk": 10
+          }
+        },
+        {
+          "id": "frank_gray_1982",
+          "name": "Frank Gray",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 76,
+          "stats": {
+            "att": 48,
+            "mid": 63,
+            "def": 78,
+            "gk": 10
+          }
+        },
+        {
+          "id": "graeme_souness_1982",
+          "name": "Graeme Souness",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 79,
+          "stats": {
+            "att": 71,
+            "mid": 81,
+            "def": 66,
+            "gk": 10
+          }
+        },
+        {
+          "id": "alan_hansen_1982",
+          "name": "Alan Hansen",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 76,
+          "stats": {
+            "att": 48,
+            "mid": 63,
+            "def": 78,
+            "gk": 10
+          }
+        },
+        {
+          "id": "willie_miller_1982",
+          "name": "Willie Miller",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 75,
+          "stats": {
+            "att": 47,
+            "mid": 62,
+            "def": 77,
+            "gk": 10
+          }
+        },
+        {
+          "id": "gordon_strachan_1982",
+          "name": "Gordon Strachan",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 78,
+          "stats": {
+            "att": 69,
+            "mid": 80,
+            "def": 65,
+            "gk": 10
+          }
+        },
+        {
+          "id": "kenny_dalglish_1982",
+          "name": "Kenny Dalglish",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 78,
+          "stats": {
+            "att": 80,
+            "mid": 64,
+            "def": 43,
+            "gk": 10
+          }
+        },
+        {
+          "id": "alan_brazil_1982",
+          "name": "Alan Brazil",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 75,
+          "stats": {
+            "att": 77,
+            "mid": 61,
+            "def": 40,
+            "gk": 10
+          }
+        },
+        {
+          "id": "john_wark_1982",
+          "name": "John Wark",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 79,
+          "stats": {
+            "att": 72,
+            "mid": 81,
+            "def": 66,
+            "gk": 10
+          }
+        },
+        {
+          "id": "john_robertson_1982",
+          "name": "John Robertson",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 79,
+          "stats": {
+            "att": 81,
+            "mid": 65,
+            "def": 44,
+            "gk": 10
+          }
+        },
+        {
+          "id": "george_wood_1982",
+          "name": "George Wood",
+          "positions": [
+            "GK"
+          ],
+          "rating": 72,
+          "stats": {
+            "att": 10,
+            "mid": 24,
+            "def": 44,
+            "gk": 77
+          }
+        },
+        {
+          "id": "alex_mcleish_1982",
+          "name": "Alex McLeish",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 74,
+          "stats": {
+            "att": 46,
+            "mid": 61,
+            "def": 76,
+            "gk": 10
+          }
+        },
+        {
+          "id": "david_narey_1982",
+          "name": "David Narey",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 78,
+          "stats": {
+            "att": 52,
+            "mid": 65,
+            "def": 80,
+            "gk": 10
+          }
+        },
+        {
+          "id": "joe_jordan_1982",
+          "name": "Joe Jordan",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 77,
+          "stats": {
+            "att": 79,
+            "mid": 63,
+            "def": 42,
+            "gk": 10
+          }
+        },
+        {
+          "id": "asa_hartford_1982",
+          "name": "Asa Hartford",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 75,
+          "stats": {
+            "att": 66,
+            "mid": 77,
+            "def": 61,
+            "gk": 10
+          }
+        },
+        {
+          "id": "allan_evans_1982",
+          "name": "Allan Evans",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 73,
+          "stats": {
+            "att": 45,
+            "mid": 60,
+            "def": 75,
+            "gk": 10
+          }
+        },
+        {
+          "id": "steve_archibald_1982",
+          "name": "Steve Archibald",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 78,
+          "stats": {
+            "att": 80,
+            "mid": 64,
+            "def": 43,
+            "gk": 10
+          }
+        },
+        {
+          "id": "paul_sturrock_1982",
+          "name": "Paul Sturrock",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 74,
+          "stats": {
+            "att": 76,
+            "mid": 60,
+            "def": 39,
+            "gk": 10
+          }
+        },
+        {
+          "id": "davie_provan_1982",
+          "name": "Davie Provan",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 73,
+          "stats": {
+            "att": 75,
+            "mid": 59,
+            "def": 38,
+            "gk": 10
+          }
+        },
+        {
+          "id": "george_burley_1982",
+          "name": "George Burley",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 72,
+          "stats": {
+            "att": 44,
+            "mid": 59,
+            "def": 74,
+            "gk": 10
+          }
+        },
+        {
+          "id": "jim_leighton_1982",
+          "name": "Jim Leighton",
+          "positions": [
+            "GK"
+          ],
+          "rating": 74,
+          "stats": {
+            "att": 10,
+            "mid": 26,
+            "def": 46,
+            "gk": 79
+          }
+        }
+      ]
+    },
+    "SUN": {
+      "name": "Soviet Union",
+      "flag": "🇷🇺",
+      "squad": [
+        {
+          "id": "rinat_dasayev_1982",
+          "name": "Rinat Dasayev",
+          "positions": [
+            "GK"
+          ],
+          "rating": 80,
+          "stats": {
+            "att": 10,
+            "mid": 32,
+            "def": 52,
+            "gk": 85
+          }
+        },
+        {
+          "id": "tengiz_sulakvelidze_1982",
+          "name": "Tengiz Sulakvelidze",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 77,
+          "stats": {
+            "att": 49,
+            "mid": 64,
+            "def": 79,
+            "gk": 10
+          }
+        },
+        {
+          "id": "aleksandr_chivadze_1982",
+          "name": "Aleksandr Chivadze",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 81,
+          "stats": {
+            "att": 55,
+            "mid": 68,
+            "def": 83,
+            "gk": 10
+          }
+        },
+        {
+          "id": "vagiz_khidiyatullin_1982",
+          "name": "Vagiz Khidiyatullin",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 73,
+          "stats": {
+            "att": 45,
+            "mid": 60,
+            "def": 75,
+            "gk": 10
+          }
+        },
+        {
+          "id": "sergei_baltacha_1982",
+          "name": "Sergei Baltacha",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 80,
+          "stats": {
+            "att": 54,
+            "mid": 67,
+            "def": 82,
+            "gk": 10
+          }
+        },
+        {
+          "id": "anatoliy_demyanenko_1982",
+          "name": "Anatoliy Demyanenko",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 80,
+          "stats": {
+            "att": 52,
+            "mid": 67,
+            "def": 82,
+            "gk": 10
+          }
+        },
+        {
+          "id": "ramaz_shengelia_1982",
+          "name": "Ramaz Shengelia",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 81,
+          "stats": {
+            "att": 83,
+            "mid": 67,
+            "def": 46,
+            "gk": 10
+          }
+        },
+        {
+          "id": "volodymyr_bezsonov_1982",
+          "name": "Volodymyr Bezsonov",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 81,
+          "stats": {
+            "att": 72,
+            "mid": 83,
+            "def": 68,
+            "gk": 10
+          }
+        },
+        {
+          "id": "yuri_gavrilov_1982",
+          "name": "Yuri Gavrilov",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 81,
+          "stats": {
+            "att": 73,
+            "mid": 83,
+            "def": 68,
+            "gk": 10
+          }
+        },
+        {
+          "id": "khoren_hovhannisyan_1982",
+          "name": "Khoren Hovhannisyan",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 78,
+          "stats": {
+            "att": 70,
+            "mid": 80,
+            "def": 65,
+            "gk": 10
+          }
+        },
+        {
+          "id": "oleh_blokhin_1982",
+          "name": "Oleh Blokhin",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 81,
+          "stats": {
+            "att": 83,
+            "mid": 67,
+            "def": 46,
+            "gk": 10
+          }
+        },
+        {
+          "id": "andriy_bal_1982",
+          "name": "Andriy Bal",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 80,
+          "stats": {
+            "att": 72,
+            "mid": 82,
+            "def": 67,
+            "gk": 10
+          }
+        },
+        {
+          "id": "vitaly_daraselia_1982",
+          "name": "Vitaly Daraselia",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 77,
+          "stats": {
+            "att": 68,
+            "mid": 79,
+            "def": 64,
+            "gk": 10
+          }
+        },
+        {
+          "id": "sergei_borovsky_1982",
+          "name": "Sergei Borovsky",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 76,
+          "stats": {
+            "att": 48,
+            "mid": 63,
+            "def": 78,
+            "gk": 10
+          }
+        },
+        {
+          "id": "sergey_andreyev_1982",
+          "name": "Sergey Andreyev",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 75,
+          "stats": {
+            "att": 77,
+            "mid": 61,
+            "def": 40,
+            "gk": 10
+          }
+        },
+        {
+          "id": "sergey_rodionov_1982",
+          "name": "Sergey Rodionov",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 75,
+          "stats": {
+            "att": 77,
+            "mid": 61,
+            "def": 40,
+            "gk": 10
+          }
+        },
+        {
+          "id": "leonid_buryak_1982",
+          "name": "Leonid Buryak",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 73,
+          "stats": {
+            "att": 64,
+            "mid": 75,
+            "def": 59,
+            "gk": 10
+          }
+        },
+        {
+          "id": "yuri_susloparov_1982",
+          "name": "Yuri Susloparov",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 73,
+          "stats": {
+            "att": 45,
+            "mid": 60,
+            "def": 75,
+            "gk": 10
+          }
+        },
+        {
+          "id": "vadym_yevtushenko_1982",
+          "name": "Vadym Yevtushenko",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 74,
+          "stats": {
+            "att": 65,
+            "mid": 76,
+            "def": 60,
+            "gk": 10
+          }
+        },
+        {
+          "id": "oleg_romantsev_1982",
+          "name": "Oleg Romantsev",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 72,
+          "stats": {
+            "att": 44,
+            "mid": 59,
+            "def": 74,
+            "gk": 10
+          }
+        },
+        {
+          "id": "viktor_chanov_1982",
+          "name": "Viktor Chanov",
+          "positions": [
+            "GK"
+          ],
+          "rating": 73,
+          "stats": {
+            "att": 10,
+            "mid": 25,
+            "def": 45,
+            "gk": 78
+          }
+        },
+        {
+          "id": "vyacheslav_chanov_1982",
+          "name": "Vyacheslav Chanov",
+          "positions": [
+            "GK"
+          ],
+          "rating": 72,
+          "stats": {
+            "att": 10,
+            "mid": 24,
+            "def": 44,
+            "gk": 77
+          }
+        }
+      ]
+    },
+    "ESP": {
+      "name": "Spain",
+      "flag": "🇪🇸",
+      "squad": [
+        {
+          "id": "luis_arconada_1982",
+          "name": "Luis Arconada",
+          "positions": [
+            "GK"
+          ],
+          "rating": 79,
+          "stats": {
+            "att": 10,
+            "mid": 31,
+            "def": 51,
+            "gk": 84
+          }
+        },
+        {
+          "id": "jose_antonio_camacho_1982",
+          "name": "José Antonio Camacho",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 79,
+          "stats": {
+            "att": 51,
+            "mid": 66,
+            "def": 81,
+            "gk": 10
+          }
+        },
+        {
+          "id": "rafael_gordillo_1982",
+          "name": "Rafael Gordillo",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 79,
+          "stats": {
+            "att": 51,
+            "mid": 66,
+            "def": 81,
+            "gk": 10
+          }
+        },
+        {
+          "id": "periko_alonso_1982",
+          "name": "Periko Alonso",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 80,
+          "stats": {
+            "att": 71,
+            "mid": 82,
+            "def": 68,
+            "gk": 10
+          }
+        },
+        {
+          "id": "miguel_tendillo_1982",
+          "name": "Miguel Tendillo",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 78,
+          "stats": {
+            "att": 50,
+            "mid": 65,
+            "def": 80,
+            "gk": 10
+          }
+        },
+        {
+          "id": "jose_ramon_alexanko_1982",
+          "name": "José Ramón Alexanko",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 78,
+          "stats": {
+            "att": 50,
+            "mid": 65,
+            "def": 80,
+            "gk": 10
+          }
+        },
+        {
+          "id": "juanito_1982",
+          "name": "Juanito",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 80,
+          "stats": {
+            "att": 82,
+            "mid": 66,
+            "def": 45,
+            "gk": 10
+          }
+        },
+        {
+          "id": "joaquin_1982",
+          "name": "Joaquín",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 74,
+          "stats": {
+            "att": 65,
+            "mid": 76,
+            "def": 60,
+            "gk": 10
+          }
+        },
+        {
+          "id": "jesus_maria_satrustegui_1982",
+          "name": "Jesús María Satrústegui",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 78,
+          "stats": {
+            "att": 80,
+            "mid": 64,
+            "def": 43,
+            "gk": 10
+          }
+        },
+        {
+          "id": "jesus_maria_zamora_1982",
+          "name": "Jesús María Zamora",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 79,
+          "stats": {
+            "att": 71,
+            "mid": 81,
+            "def": 66,
+            "gk": 10
+          }
+        },
+        {
+          "id": "roberto_lopez_ufarte_1982",
+          "name": "Roberto López Ufarte",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 79,
+          "stats": {
+            "att": 81,
+            "mid": 65,
+            "def": 44,
+            "gk": 10
+          }
+        },
+        {
+          "id": "santiago_urquiaga_1982",
+          "name": "Santiago Urquiaga",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 75,
+          "stats": {
+            "att": 47,
+            "mid": 62,
+            "def": 77,
+            "gk": 10
+          }
+        },
+        {
+          "id": "manuel_jimenez_1982",
+          "name": "Manuel Jiménez",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 72,
+          "stats": {
+            "att": 44,
+            "mid": 59,
+            "def": 74,
+            "gk": 10
+          }
+        },
+        {
+          "id": "antonio_maceda_1982",
+          "name": "Antonio Maceda",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 73,
+          "stats": {
+            "att": 45,
+            "mid": 60,
+            "def": 75,
+            "gk": 10
+          }
+        },
+        {
+          "id": "enrique_saura_1982",
+          "name": "Enrique Saura",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 78,
+          "stats": {
+            "att": 70,
+            "mid": 80,
+            "def": 65,
+            "gk": 10
+          }
+        },
+        {
+          "id": "tente_sanchez_1982",
+          "name": "Tente Sánchez",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 77,
+          "stats": {
+            "att": 68,
+            "mid": 79,
+            "def": 64,
+            "gk": 10
+          }
+        },
+        {
+          "id": "ricardo_gallego_1982",
+          "name": "Ricardo Gallego",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 74,
+          "stats": {
+            "att": 65,
+            "mid": 76,
+            "def": 60,
+            "gk": 10
+          }
+        },
+        {
+          "id": "pedro_uralde_1982",
+          "name": "Pedro Uralde",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 74,
+          "stats": {
+            "att": 76,
+            "mid": 60,
+            "def": 39,
+            "gk": 10
+          }
+        },
+        {
+          "id": "santillana_1982",
+          "name": "Santillana",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 76,
+          "stats": {
+            "att": 78,
+            "mid": 62,
+            "def": 41,
+            "gk": 10
+          }
+        },
+        {
+          "id": "quini_1982",
+          "name": "Quini",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 76,
+          "stats": {
+            "att": 78,
+            "mid": 62,
+            "def": 41,
+            "gk": 10
+          }
+        },
+        {
+          "id": "urruti_1982",
+          "name": "Urruti",
+          "positions": [
+            "GK"
+          ],
+          "rating": 73,
+          "stats": {
+            "att": 10,
+            "mid": 25,
+            "def": 45,
+            "gk": 78
+          }
+        },
+        {
+          "id": "miguel_angel_1982",
+          "name": "Miguel Ángel",
+          "positions": [
+            "GK"
+          ],
+          "rating": 73,
+          "stats": {
+            "att": 10,
+            "mid": 25,
+            "def": 45,
+            "gk": 78
+          }
+        }
+      ]
+    },
+    "DEU": {
+      "name": "West Germany",
+      "flag": "🇩🇪",
+      "squad": [
+        {
+          "id": "harald_schumacher_1982",
+          "name": "Harald Schumacher",
+          "positions": [
+            "GK"
+          ],
+          "rating": 85,
+          "stats": {
+            "att": 10,
+            "mid": 37,
+            "def": 57,
+            "gk": 90
+          }
+        },
+        {
+          "id": "hans_peter_briegel_1982",
+          "name": "Hans-Peter Briegel",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 85,
+          "stats": {
+            "att": 57,
+            "mid": 72,
+            "def": 87,
+            "gk": 10
+          }
+        },
+        {
+          "id": "paul_breitner_1982",
+          "name": "Paul Breitner",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 86,
+          "stats": {
+            "att": 60,
+            "mid": 73,
+            "def": 88,
+            "gk": 10
+          }
+        },
+        {
+          "id": "karlheinz_forster_1982",
+          "name": "Karlheinz Förster",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 85,
+          "stats": {
+            "att": 57,
+            "mid": 72,
+            "def": 87,
+            "gk": 10
+          }
+        },
+        {
+          "id": "bernd_forster_1982",
+          "name": "Bernd Förster",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 82,
+          "stats": {
+            "att": 54,
+            "mid": 69,
+            "def": 84,
+            "gk": 10
+          }
+        },
+        {
+          "id": "wolfgang_dremmler_1982",
+          "name": "Wolfgang Dremmler",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 85,
+          "stats": {
+            "att": 76,
+            "mid": 87,
+            "def": 73,
+            "gk": 10
+          }
+        },
+        {
+          "id": "pierre_littbarski_1982",
+          "name": "Pierre Littbarski",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 88,
+          "stats": {
+            "att": 81,
+            "mid": 90,
+            "def": 76,
+            "gk": 10
+          }
+        },
+        {
+          "id": "klaus_fischer_1982",
+          "name": "Klaus Fischer",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 87,
+          "stats": {
+            "att": 89,
+            "mid": 73,
+            "def": 52,
+            "gk": 10
+          }
+        },
+        {
+          "id": "horst_hrubesch_1982",
+          "name": "Horst Hrubesch",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 85,
+          "stats": {
+            "att": 87,
+            "mid": 71,
+            "def": 50,
+            "gk": 10
+          }
+        },
+        {
+          "id": "hansi_muller_1982",
+          "name": "Hansi Müller",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 81,
+          "stats": {
+            "att": 72,
+            "mid": 83,
+            "def": 67,
+            "gk": 10
+          }
+        },
+        {
+          "id": "karl_heinz_rummenigge_1982",
+          "name": "Karl-Heinz Rummenigge",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 97,
+          "stats": {
+            "att": 99,
+            "mid": 83,
+            "def": 62,
+            "gk": 10
+          }
+        },
+        {
+          "id": "wilfried_hannes_1982",
+          "name": "Wilfried Hannes",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 77,
+          "stats": {
+            "att": 49,
+            "mid": 64,
+            "def": 79,
+            "gk": 10
+          }
+        },
+        {
+          "id": "uwe_reinders_1982",
+          "name": "Uwe Reinders",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 82,
+          "stats": {
+            "att": 84,
+            "mid": 68,
+            "def": 47,
+            "gk": 10
+          }
+        },
+        {
+          "id": "felix_magath_1982",
+          "name": "Felix Magath",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 84,
+          "stats": {
+            "att": 75,
+            "mid": 86,
+            "def": 71,
+            "gk": 10
+          }
+        },
+        {
+          "id": "uli_stielike_1982",
+          "name": "Uli Stielike",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 84,
+          "stats": {
+            "att": 56,
+            "mid": 71,
+            "def": 86,
+            "gk": 10
+          }
+        },
+        {
+          "id": "thomas_allofs_1982",
+          "name": "Thomas Allofs",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 78,
+          "stats": {
+            "att": 80,
+            "mid": 64,
+            "def": 43,
+            "gk": 10
+          }
+        },
+        {
+          "id": "stephan_engels_1982",
+          "name": "Stephan Engels",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 78,
+          "stats": {
+            "att": 69,
+            "mid": 80,
+            "def": 64,
+            "gk": 10
+          }
+        },
+        {
+          "id": "lothar_matthaus_1982",
+          "name": "Lothar Matthäus",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 88,
+          "stats": {
+            "att": 79,
+            "mid": 90,
+            "def": 74,
+            "gk": 10
+          }
+        },
+        {
+          "id": "holger_hieronymus_1982",
+          "name": "Holger Hieronymus",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 77,
+          "stats": {
+            "att": 49,
+            "mid": 64,
+            "def": 79,
+            "gk": 10
+          }
+        },
+        {
+          "id": "manfred_kaltz_1982",
+          "name": "Manfred Kaltz",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 85,
+          "stats": {
+            "att": 57,
+            "mid": 72,
+            "def": 87,
+            "gk": 10
+          }
+        },
+        {
+          "id": "bernd_franke_1982",
+          "name": "Bernd Franke",
+          "positions": [
+            "GK"
+          ],
+          "rating": 77,
+          "stats": {
+            "att": 10,
+            "mid": 29,
+            "def": 49,
+            "gk": 82
+          }
+        },
+        {
+          "id": "eike_immel_1982",
+          "name": "Eike Immel",
+          "positions": [
+            "GK"
+          ],
+          "rating": 78,
+          "stats": {
+            "att": 10,
+            "mid": 30,
+            "def": 50,
+            "gk": 83
+          }
+        }
+      ]
+    },
+    "YUG": {
+      "name": "Yugoslavia",
+      "flag": "🇷🇸",
+      "squad": [
+        {
+          "id": "dragan_pantelic_1982",
+          "name": "Dragan Pantelić",
+          "positions": [
+            "GK"
+          ],
+          "rating": 76,
+          "stats": {
+            "att": 10,
+            "mid": 28,
+            "def": 48,
+            "gk": 81
+          }
+        },
+        {
+          "id": "ive_jerolimov_1982",
+          "name": "Ive Jerolimov",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 72,
+          "stats": {
+            "att": 44,
+            "mid": 59,
+            "def": 74,
+            "gk": 10
+          }
+        },
+        {
+          "id": "ivan_gudelj_1982",
+          "name": "Ivan Gudelj",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 78,
+          "stats": {
+            "att": 70,
+            "mid": 80,
+            "def": 65,
+            "gk": 10
+          }
+        },
+        {
+          "id": "velimir_zajec_1982",
+          "name": "Velimir Zajec",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 76,
+          "stats": {
+            "att": 48,
+            "mid": 63,
+            "def": 78,
+            "gk": 10
+          }
+        },
+        {
+          "id": "nenad_stojkovic_1982",
+          "name": "Nenad Stojković",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 76,
+          "stats": {
+            "att": 48,
+            "mid": 63,
+            "def": 78,
+            "gk": 10
+          }
+        },
+        {
+          "id": "zlatko_krmpotic_1982",
+          "name": "Zlatko Krmpotić",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 75,
+          "stats": {
+            "att": 47,
+            "mid": 62,
+            "def": 77,
+            "gk": 10
+          }
+        },
+        {
+          "id": "vladimir_petrovic_1982",
+          "name": "Vladimir Petrović",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 79,
+          "stats": {
+            "att": 71,
+            "mid": 81,
+            "def": 66,
+            "gk": 10
+          }
+        },
+        {
+          "id": "edhem_sljivo_1982",
+          "name": "Edhem Šljivo",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 77,
+          "stats": {
+            "att": 68,
+            "mid": 79,
+            "def": 64,
+            "gk": 10
+          }
+        },
+        {
+          "id": "zoran_vujovic_1982",
+          "name": "Zoran Vujović",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 72,
+          "stats": {
+            "att": 44,
+            "mid": 59,
+            "def": 74,
+            "gk": 10
+          }
+        },
+        {
+          "id": "zvonko_zivkovic_1982",
+          "name": "Zvonko Živković",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 73,
+          "stats": {
+            "att": 75,
+            "mid": 59,
+            "def": 38,
+            "gk": 10
+          }
+        },
+        {
+          "id": "zlatko_vujovic_1982",
+          "name": "Zlatko Vujović",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 78,
+          "stats": {
+            "att": 80,
+            "mid": 64,
+            "def": 43,
+            "gk": 10
+          }
+        },
+        {
+          "id": "ivan_pudar_1982",
+          "name": "Ivan Pudar",
+          "positions": [
+            "GK"
+          ],
+          "rating": 72,
+          "stats": {
+            "att": 10,
+            "mid": 24,
+            "def": 44,
+            "gk": 77
+          }
+        },
+        {
+          "id": "safet_susic_1982",
+          "name": "Safet Sušić",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 78,
+          "stats": {
+            "att": 80,
+            "mid": 64,
+            "def": 43,
+            "gk": 10
+          }
+        },
+        {
+          "id": "nikola_jovanovic_1982",
+          "name": "Nikola Jovanović",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 76,
+          "stats": {
+            "att": 48,
+            "mid": 63,
+            "def": 78,
+            "gk": 10
+          }
+        },
+        {
+          "id": "milos_hrstic_1982",
+          "name": "Miloš Hrstić",
+          "positions": [
+            "CB",
+            "LB",
+            "RB"
+          ],
+          "rating": 73,
+          "stats": {
+            "att": 45,
+            "mid": 60,
+            "def": 75,
+            "gk": 10
+          }
+        },
+        {
+          "id": "milos_sestic_1982",
+          "name": "Miloš Šestić",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 75,
+          "stats": {
+            "att": 77,
+            "mid": 61,
+            "def": 40,
+            "gk": 10
+          }
+        },
+        {
+          "id": "jurica_jerkovic_1982",
+          "name": "Jurica Jerković",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 74,
+          "stats": {
+            "att": 65,
+            "mid": 76,
+            "def": 60,
+            "gk": 10
+          }
+        },
+        {
+          "id": "stjepan_deveric_1982",
+          "name": "Stjepan Deverić",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 73,
+          "stats": {
+            "att": 75,
+            "mid": 59,
+            "def": 38,
+            "gk": 10
+          }
+        },
+        {
+          "id": "vahid_halilhodzic_1982",
+          "name": "Vahid Halilhodžić",
+          "positions": [
+            "ST",
+            "CF",
+            "LW",
+            "RW"
+          ],
+          "rating": 75,
+          "stats": {
+            "att": 77,
+            "mid": 61,
+            "def": 40,
+            "gk": 10
+          }
+        },
+        {
+          "id": "ivica_surjak_1982",
+          "name": "Ivica Šurjak",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 78,
+          "stats": {
+            "att": 69,
+            "mid": 80,
+            "def": 65,
+            "gk": 10
+          }
+        },
+        {
+          "id": "predrag_pasic_1982",
+          "name": "Predrag Pašić",
+          "positions": [
+            "CM",
+            "CDM",
+            "CAM",
+            "LM",
+            "RM"
+          ],
+          "rating": 73,
+          "stats": {
+            "att": 64,
+            "mid": 75,
+            "def": 59,
+            "gk": 10
+          }
+        },
+        {
+          "id": "ratko_svilar_1982",
+          "name": "Ratko Svilar",
+          "positions": [
+            "GK"
+          ],
+          "rating": 72,
+          "stats": {
+            "att": 10,
+            "mid": 24,
+            "def": 44,
+            "gk": 77
+          }
+        }
+      ]
+    }
+  }
+}

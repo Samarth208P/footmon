@@ -14,7 +14,7 @@ const MONAD_CHAIN = {
   blockExplorerUrls: ["https://explorer.testnet.monad.xyz"],
 };
 
-const FREE_ROLLS     = 3;
+const FREE_ROLLS     = 4;
 const ROLL_PRICE_MON = "0.001"; // MON
 
 // ─── Position Compatibility ──────────────────────────────────────────────────

@@ -552,6 +552,7 @@ function switchToScreen(screen) {
 
   if (screen === "formation") {
     Refs.screenFormation.style.display = "flex";
+    if (typeof renderFormationPitch === "function") renderFormationPitch();
   } else if (screen === "play") {
     Refs.screenPlay.style.display = "flex";
     switchMobileTab("draft");
@@ -595,6 +596,11 @@ function bootstrapApp() {
   // Logo redirect
   if (Refs.navbarLogo) {
     Refs.navbarLogo.addEventListener("click", () => {
+      if (typeof DuelManager !== "undefined" && DuelManager.hasActiveDuel()) {
+        if (!confirm("You are currently in an active 1v1 duel. Are you sure you want to quit and return home?")) {
+          return;
+        }
+      }
       const singleNav = document.getElementById("navSinglePlayer");
       const duelNav = document.getElementById("navDuelMode");
       if (singleNav) singleNav.classList.add("active");

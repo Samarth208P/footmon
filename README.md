@@ -10,19 +10,30 @@ FootMon is a fully on-chain squad-building game where players roll for World Cup
 
 ### 1. Run Locally
 ```bash
-# Any static server works (fetch() requires a server, not file://)
-python -m http.server 8080
-# → open http://localhost:8080
+npm install
+npm run dev
+# → open http://localhost:3000
 ```
 
 ### 2. Deploy the Contract
 See **[DEPLOY.md](DEPLOY.md)** for full instructions (Remix IDE recommended).
 
 ### 3. Set Contract Address
-After deployment, open `js/config.js` and set:
+After deployment, open `public/js/config.js` and set:
 ```js
 const CONTRACT_ADDRESS = "0xYourDeployedAddress";
 ```
+
+### 4. Enable Cross-Device Duels
+
+Create a `.env.local` file from `.env.example` and provide:
+
+```bash
+SUPABASE_URL=...
+SUPABASE_SERVICE_ROLE_KEY=...
+```
+
+Run the SQL in [supabase/duels-schema.sql](supabase/duels-schema.sql) against your Supabase project. Duel challenges and turn events are stored there so players on different devices can find each other and sync picks over the public internet.
 
 ---
 
@@ -51,10 +62,11 @@ const CONTRACT_ADDRESS = "0xYourDeployedAddress";
 
 ## Tech Stack
 
-- **Frontend**: Vanilla HTML + CSS + JS (no framework)
+- **Frontend**: Next.js app router with legacy browser-side game modules
 - **Blockchain**: Solidity 0.8.20 on [Monad Testnet](https://testnet.monad.xyz) (Chain ID: 10143)
 - **Web3 library**: ethers.js v6
 - **Data**: Real World Cup squad data (1970–2026) in `/data/*.json`
+- **Duel transport**: Next API routes + Supabase-backed session/event store
 
 ---
 

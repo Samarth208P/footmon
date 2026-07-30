@@ -1,33 +1,36 @@
 /**
- * FootMon — 1v1 Draft Duels Core Manager
- * Coordinates serverless on-chain duels via Session Wallets & public Nostr event relays.
+ * FootMon — 1v1 Draft Duels
+ * Cross-device/public-internet transport via Next API routes backed by Supabase.
  */
 
 const DuelManager = (() => {
-  // Config
-  const NOSTR_RELAYS = ["wss://relay.damus.io", "wss://nos.lol"];
-  const NOSTR_KIND_DUEL = 29384; // Custom event kind for FootMon duels
+  const DUEL_FORMATION = "4-3-3";
+  const DUEL_STYLE = "balanced";
+  const CHALLENGE_POLL_MS = 500;
+  const EVENT_POLL_MS = 250;
 
-  // In-memory state
   const state = {
+    instanceId: `duel_${Math.random().toString(36).slice(2, 10)}`,
     myAddress: null,
-    sessionWallet: null, // Ephemeral session wallet
-    activeDuel: null,    // Active duel state
-    socket: null,
-    relayIndex: 0,
-    relayRetryTimer: null,
-    relayManuallyClosed: false,
-    pendingMessages: [],
-    challenges: []
+    sessionWallet: null,
+    activeDuel: null,
+    pendingPickPlayer: null,
+    challengePollTimer: null,
+    eventPollTimer: null,
   };
 
-  // DOM Elements references
   const Refs = {};
 
   function init() {
-    state.myAddress = WalletManager.getAddress();
+    cacheRefs();
+    bindEvents();
+    setupSessionWallet();
+    refreshWalletState();
+    initRelay();
+    renderLobby([]);
+  }
 
-    // Cache DOM refs
+  function cacheRefs() {
     Refs.btnDuelMode = document.getElementById("navDuelMode");
     Refs.btnSinglePlayer = document.getElementById("navSinglePlayer");
     Refs.screenLobby = document.getElementById("screenDuelLobby");
@@ -38,8 +41,7 @@ const DuelManager = (() => {
     Refs.btnCreate = document.getElementById("btnCreateDuel");
     Refs.btnRefresh = document.getElementById("btnRefreshLobby");
     Refs.challengesList = document.getElementById("duelChallengesList");
-    
-    // Play refs
+
     Refs.turnBanner = document.getElementById("duelTurnBanner");
     Refs.turnText = document.getElementById("duelTurnText");
     Refs.btnRoll = document.getElementById("btnDuelRoll");
@@ -55,7 +57,6 @@ const DuelManager = (() => {
     Refs.playerList = document.getElementById("duelPlayerList");
     Refs.btnCancel = document.getElementById("btnDuelCancel");
 
-    // Stats refs
     Refs.myAvg = document.getElementById("duelMyAvg");
     Refs.myAttack = document.getElementById("duelMyAttack");
     Refs.myDefense = document.getElementById("duelMyDefense");
@@ -64,23 +65,136 @@ const DuelManager = (() => {
     Refs.opAttack = document.getElementById("duelOpAttack");
     Refs.opDefense = document.getElementById("duelOpDefense");
     Refs.opAttackBar = document.getElementById("duelOpAttackBar");
+  }
 
-    // Event bindings
+  function bindEvents() {
     if (Refs.btnDuelMode) Refs.btnDuelMode.addEventListener("click", () => switchMode("duel"));
     if (Refs.btnSinglePlayer) Refs.btnSinglePlayer.addEventListener("click", () => switchMode("single"));
     if (Refs.btnCreate) Refs.btnCreate.addEventListener("click", handleCreateChallenge);
     if (Refs.btnRefresh) Refs.btnRefresh.addEventListener("click", refreshLobby);
     if (Refs.btnCancel) Refs.btnCancel.addEventListener("click", quitActiveDuel);
-
     if (Refs.btnRoll) Refs.btnRoll.addEventListener("click", () => handleDuelRoll("full"));
     if (Refs.btnRerollNation) Refs.btnRerollNation.addEventListener("click", () => handleDuelRoll("nation"));
     if (Refs.btnRerollYear) Refs.btnRerollYear.addEventListener("click", () => handleDuelRoll("year"));
 
-    // Connect to Nostr
-    connectNostr();
+    document.addEventListener("wallet:accountChanged", (e) => {
+      state.myAddress = e.detail || null;
+      if (state.activeDuel) renderDuelBoard();
+      if (Refs.screenLobby && Refs.screenLobby.style.display !== "none") {
+        refreshLobby();
+      }
+    });
 
-    // Check existing session key
-    setupSessionWallet();
+    document.addEventListener("wallet:disconnected", () => {
+      if (state.activeDuel) return;
+      state.myAddress = null;
+      stopChallengePolling();
+      stopEventPolling();
+      renderLobby([]);
+    });
+  }
+
+  function setupSessionWallet() {
+    const key = sessionStorage.getItem("fm_session_key");
+    if (key) {
+      state.sessionWallet = new ethers.Wallet(key);
+      return;
+    }
+    const wallet = ethers.Wallet.createRandom();
+    sessionStorage.setItem("fm_session_key", wallet.privateKey);
+    state.sessionWallet = wallet;
+  }
+
+  function refreshWalletState() {
+    state.myAddress = WalletManager.getAddress();
+  }
+
+  const WS_API_KEY = "VCXCEuvhGcBDP7XhiJJUDvR1e1D3eiVjgZ9VRiaV";
+  let lobbySocket = null;
+  let duelSocket = null;
+  let receivedEvents = [];
+
+  function initRelay() {
+    try {
+      lobbySocket = new WebSocket(`wss://demo.piesocket.com/v3/footmon_lobby?api_key=${WS_API_KEY}&notify_self=1`);
+      lobbySocket.onmessage = (e) => {
+        try {
+          const msg = JSON.parse(e.data);
+          if (msg.type === "challenge_created" || msg.type === "challenge_joined") {
+            handleRelayMessage(msg);
+          }
+        } catch (err) {}
+      };
+    } catch (e) {
+      console.error("Lobby relay init failed", e);
+    }
+
+    window.addEventListener("storage", (e) => {
+      if (e.key === "fm_relay_event") {
+        try {
+          const msg = JSON.parse(e.newValue);
+          handleRelayMessage(msg);
+        } catch (err) {}
+      }
+    });
+  }
+
+  function handleRelayMessage(msg) {
+    if (msg.type === "challenge_created") {
+      let challenges = JSON.parse(localStorage.getItem("fm_challenges") || "[]");
+      if (!challenges.some(c => c.duel_id === msg.challenge.duel_id)) {
+        challenges.push(msg.challenge);
+        localStorage.setItem("fm_challenges", JSON.stringify(challenges));
+      }
+    }
+    if (msg.type === "challenge_joined") {
+      let challenges = JSON.parse(localStorage.getItem("fm_challenges") || "[]");
+      const c = challenges.find(item => item.duel_id === msg.duelId);
+      if (c) {
+        c.joiner = msg.joiner;
+        c.status = "active";
+        localStorage.setItem("fm_challenges", JSON.stringify(challenges));
+      }
+    }
+    if (msg.type === "duel_event") {
+      if (!receivedEvents.some(ev => ev.id === msg.event.id)) {
+        receivedEvents.push(msg.event);
+      }
+    }
+  }
+
+  function connectDuelSocket(duelId) {
+    if (duelSocket) return;
+    try {
+      duelSocket = new WebSocket(`wss://demo.piesocket.com/v3/footmon_duel_${duelId}?api_key=${WS_API_KEY}&notify_self=1`);
+      duelSocket.onmessage = (e) => {
+        try {
+          const msg = JSON.parse(e.data);
+          if (msg.type === "duel_event") {
+            handleRelayMessage(msg);
+          }
+        } catch (err) {}
+      };
+    } catch (e) {
+      console.error("Duel socket init failed", e);
+    }
+  }
+
+  async function apiFetch(path, options = {}) {
+    const response = await fetch(path, {
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        ...(options.headers || {}),
+      },
+      cache: "no-store",
+    });
+
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(payload.error || payload.details || `Request failed: ${response.status}`);
+    }
+    return payload;
   }
 
   function switchMode(mode) {
@@ -89,554 +203,763 @@ const DuelManager = (() => {
       if (Refs.btnSinglePlayer) Refs.btnSinglePlayer.classList.remove("active");
       if (Refs.screenFormation) Refs.screenFormation.style.display = "none";
       if (Refs.screenSinglePlay) Refs.screenSinglePlay.style.display = "none";
-      
+
       if (state.activeDuel) {
         if (Refs.screenLobby) Refs.screenLobby.style.display = "none";
         if (Refs.screenPlay) Refs.screenPlay.style.display = "flex";
+        stopChallengePolling();
+        startEventPolling();
         renderDuelBoard();
       } else {
         if (Refs.screenLobby) Refs.screenLobby.style.display = "flex";
         if (Refs.screenPlay) Refs.screenPlay.style.display = "none";
+        startChallengePolling();
         refreshLobby();
       }
+      return;
+    }
+
+    if (Refs.btnSinglePlayer) Refs.btnSinglePlayer.classList.add("active");
+    if (Refs.btnDuelMode) Refs.btnDuelMode.classList.remove("active");
+    if (Refs.screenLobby) Refs.screenLobby.style.display = "none";
+    if (Refs.screenPlay) Refs.screenPlay.style.display = "none";
+
+    stopChallengePolling();
+    stopEventPolling();
+
+    const appState = typeof Game !== "undefined" ? Game.state : null;
+    if (appState && (appState.busy || appState.screen === "play")) {
+      if (Refs.screenSinglePlay) Refs.screenSinglePlay.style.display = "flex";
     } else {
-      if (Refs.btnSinglePlayer) Refs.btnSinglePlayer.classList.add("active");
-      if (Refs.btnDuelMode) Refs.btnDuelMode.classList.remove("active");
-      if (Refs.screenLobby) Refs.screenLobby.style.display = "none";
-      if (Refs.screenPlay) Refs.screenPlay.style.display = "none";
-
-      const appState = typeof Game !== "undefined" ? Game.state : null;
-      if (appState && appState.busy) {
-        if (Refs.screenSinglePlay) Refs.screenSinglePlay.style.display = "flex";
-      } else {
-        if (Refs.screenFormation) Refs.screenFormation.style.display = "flex";
-      }
+      if (Refs.screenFormation) Refs.screenFormation.style.display = "flex";
+      if (typeof renderFormationPitch === "function") renderFormationPitch();
     }
   }
 
-  function setupSessionWallet() {
-    let key = sessionStorage.getItem("fm_session_key");
-    if (!key) {
-      const wallet = ethers.Wallet.createRandom();
-      sessionStorage.setItem("fm_session_key", wallet.privateKey);
-      state.sessionWallet = wallet;
-    } else {
-      state.sessionWallet = new ethers.Wallet(key);
+  function startChallengePolling() {
+    stopChallengePolling();
+    state.challengePollTimer = setInterval(refreshLobby, CHALLENGE_POLL_MS);
+  }
+
+  function stopChallengePolling() {
+    if (!state.challengePollTimer) return;
+    clearInterval(state.challengePollTimer);
+    state.challengePollTimer = null;
+  }
+
+  function startEventPolling() {
+    stopEventPolling();
+    state.eventPollTimer = setInterval(pollEvents, EVENT_POLL_MS);
+  }
+
+  function stopEventPolling() {
+    if (!state.eventPollTimer) return;
+    clearInterval(state.eventPollTimer);
+    state.eventPollTimer = null;
+  }
+
+  async function refreshLobby() {
+    refreshWalletState();
+    if (!WalletManager.isConnected()) {
+      renderLobby([]);
+      return;
+    }
+
+    try {
+      const { challenges } = await apiFetch("/api/duels/challenges");
+      renderLobby(challenges || []);
+    } catch (err) {
+      showToast(err.message, "error");
     }
   }
 
-  // ── Nostr Connection ──────────────────────────────────────────────────────
-  function connectNostr() {
-    const url = NOSTR_RELAYS[state.relayIndex];
-    if (!url) {
-      showToast("No duel relay available right now. Duel mode is temporarily offline.", "error");
+  function renderLobby(challenges) {
+    if (!Refs.challengesList) return;
+
+    if (!WalletManager.isConnected()) {
+      Refs.challengesList.innerHTML = `<div class="challenges-empty">Connect your wallet to browse public duel challenges.</div>`;
       return;
     }
 
-    if (state.socket && (
-      state.socket.readyState === WebSocket.OPEN ||
-      state.socket.readyState === WebSocket.CONNECTING
-    )) {
+    const activeChallenges = (challenges || []).filter((challenge) => (
+      challenge.creator && challenge.status === "open"
+    ));
+
+    if (!activeChallenges.length) {
+      Refs.challengesList.innerHTML = `<div class="challenges-empty">No active challenges. Create one above!</div>`;
       return;
     }
 
-    state.relayManuallyClosed = false;
-    const ws = new WebSocket(url);
+    Refs.challengesList.innerHTML = activeChallenges.map((challenge) => `
+      <div class="duel-card">
+        <div class="duel-card-left">
+          <span class="duel-card-addr">Creator: ${shortAddr(challenge.creator)}</span>
+          <span class="duel-card-stake">${challenge.stake} MON</span>
+        </div>
+        <button
+          class="btn-join-duel"
+          data-id="${challenge.duel_id}"
+          data-creator="${challenge.creator}"
+          data-stake="${challenge.stake}"
+        >
+          Join Duel
+        </button>
+      </div>
+    `).join("");
 
-    ws.onopen = () => {
-      state.socket = ws;
-      if (state.relayRetryTimer) {
-        clearTimeout(state.relayRetryTimer);
-        state.relayRetryTimer = null;
-      }
-      console.log("[Duel] Connected to Nostr relay:", url);
-      subscribeLobby();
-      flushPendingMessages();
-      if (state.activeDuel) {
-        subscribeDuel(state.activeDuel.id);
-      }
-    };
-
-    ws.onmessage = (e) => {
-      try {
-        const msg = JSON.parse(e.data);
-        if (msg[0] === "EVENT" && msg[2]) {
-          handleNostrEvent(msg[2]);
-        }
-      } catch (err) {
-        console.error("[Duel] Error parsing ws message", err);
-      }
-    };
-
-    ws.onerror = () => {
-      // Let onclose handle retries/fallbacks to avoid noisy duplicate console errors.
-    };
-    ws.onclose = () => {
-      if (state.socket === ws) {
-        state.socket = null;
-      }
-      if (state.relayManuallyClosed) return;
-
-      const currentRelay = NOSTR_RELAYS[state.relayIndex];
-      const nextRelayIndex = (state.relayIndex + 1) % NOSTR_RELAYS.length;
-      const switchingRelay = NOSTR_RELAYS.length > 1 && nextRelayIndex !== state.relayIndex;
-
-      if (switchingRelay) {
-        state.relayIndex = nextRelayIndex;
-        console.warn("[Duel] Relay unavailable, switching from", currentRelay, "to", NOSTR_RELAYS[state.relayIndex]);
-      } else {
-        console.warn("[Duel] Relay unavailable, retrying", currentRelay);
-      }
-
-      if (!state.relayRetryTimer) {
-        state.relayRetryTimer = setTimeout(() => {
-          state.relayRetryTimer = null;
-          connectNostr();
-        }, 3000);
-      }
-    };
-  }
-
-  function flushPendingMessages() {
-    if (!state.socket || state.socket.readyState !== WebSocket.OPEN || !state.pendingMessages.length) {
-      return;
-    }
-
-    const pending = [...state.pendingMessages];
-    state.pendingMessages = [];
-    pending.forEach((event) => {
-      state.socket.send(JSON.stringify(["EVENT", event]));
+    Refs.challengesList.querySelectorAll(".btn-join-duel").forEach((button) => {
+      button.addEventListener("click", () => {
+        joinChallenge(button.dataset.id, button.dataset.creator, parseFloat(button.dataset.stake));
+      });
     });
   }
 
-  function subscribeLobby() {
-    if (!state.socket || state.socket.readyState !== WebSocket.OPEN) return;
-    const subId = "fm_lobby_sub";
-    state.socket.send(JSON.stringify([
-      "REQ",
-      subId,
-      { kinds: [NOSTR_KIND_DUEL], limit: 40 }
-    ]));
+  function createDuelSlots() {
+    return Game.buildSlots(DUEL_FORMATION, DUEL_STYLE).map((slot, idx) => ({
+      ...slot,
+      id: idx,
+      player: null,
+    }));
   }
 
-  function subscribeDuel(duelId) {
-    if (!state.socket || state.socket.readyState !== WebSocket.OPEN) return;
-    const subId = "fm_duel_" + duelId;
-    state.socket.send(JSON.stringify([
-      "REQ",
-      subId,
-      { kinds: [NOSTR_KIND_DUEL], "#d": [duelId] }
-    ]));
+  function currentUserTurn(duel) {
+    return (duel.turn === "creator" && duel.isCreator) || (duel.turn === "joiner" && !duel.isCreator);
   }
 
-  async function publishNostrEvent(duelId, payload) {
-    if (!state.sessionWallet) return;
-    
-    // Construct simplified Nostr event structure
-    const created_at = Math.floor(Date.now() / 1000);
-    const tags = [["d", duelId]];
-    const content = JSON.stringify(payload);
-    
-    // Custom event payload signed by our session key
-    const event = {
-      pubkey: state.sessionWallet.address,
-      created_at,
-      kind: NOSTR_KIND_DUEL,
-      tags,
-      content
-    };
-
-    // Calculate Nostr style hash
-    const serialized = JSON.stringify([
-      0,
-      event.pubkey,
-      event.created_at,
-      event.kind,
-      event.tags,
-      event.content
-    ]);
-    const id = ethers.sha256(ethers.toUtf8Bytes(serialized));
-    event.id = id.slice(2); // remove 0x
-
-    // Sign hash using session wallet
-    const signature = await state.sessionWallet.signMessage(ethers.getBytes(id));
-    event.sig = signature.slice(2);
-
-    if (state.socket && state.socket.readyState === WebSocket.OPEN) {
-      state.socket.send(JSON.stringify(["EVENT", event]));
-    } else {
-      state.pendingMessages.push(event);
-    }
-  }
-
-  // ── Lobby Handling ────────────────────────────────────────────────────────
-  function refreshLobby() {
-    if (!WalletManager.isConnected()) {
-      showToast("Please connect your wallet first", "info");
-      return;
-    }
-    subscribeLobby();
-    renderLobby();
+  function nextTurn(turn) {
+    return turn === "creator" ? "joiner" : "creator";
   }
 
   async function handleCreateChallenge() {
+    refreshWalletState();
     if (!WalletManager.isConnected()) {
       showToast("Please connect wallet first", "info");
       return;
     }
-    const val = parseFloat(Refs.inputStake.value);
-    if (isNaN(val) || val <= 0) {
+
+    const stake = parseFloat(Refs.inputStake.value);
+    if (Number.isNaN(stake) || stake <= 0) {
       showToast("Please enter a valid MON stake", "error");
       return;
     }
 
     try {
       showToast("Confirm staking transaction in MetaMask…", "info");
-      
       const signer = WalletManager.getSigner();
       const target = CONTRACT_ADDRESS || state.myAddress;
       const tx = await signer.sendTransaction({
         to: target,
-        value: ethers.parseEther(val.toString())
+        value: ethers.parseEther(stake.toString()),
       });
       await tx.wait();
-      
-      const mockDuelId = "duel_" + Math.random().toString(36).slice(2, 9);
-      
-      showToast("Staking transaction successful! ✔", "success");
 
-      // Register challenge on relay
-      const payload = {
-        type: "challenge_created",
-        duelId: mockDuelId,
-        creator: state.myAddress,
-        stake: val,
-        sessionPubKey: state.sessionWallet.address
-      };
+      const duelId = `duel_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+      const { challenge } = await apiFetch("/api/duels/challenges", {
+        method: "POST",
+        body: JSON.stringify({
+          duelId,
+          creator: state.myAddress,
+          stake,
+          sessionPubKey: state.sessionWallet.address,
+        }),
+      });
 
-      await publishNostrEvent(mockDuelId, payload);
-      
-      // Instantly start waiting in Lobby
-      startDuelState(mockDuelId, state.myAddress, null, val, true);
+      startDuelState({
+        id: challenge.duel_id,
+        creator: challenge.creator,
+        joiner: challenge.joiner,
+        stake: parseFloat(challenge.stake),
+        isCreator: true,
+        status: challenge.joiner ? "active" : "waiting",
+      });
+      showToast("Challenge created! Waiting for an opponent.", "success");
     } catch (err) {
       showToast(err.message, "error");
     }
   }
 
-  function startDuelState(duelId, creator, joiner, stake, isCreator) {
-    state.activeDuel = {
-      id: duelId,
-      creator,
-      joiner,
-      stake,
-      isCreator,
-      status: joiner ? "active" : "waiting",
-      turn: "creator", // alternates creator -> joiner -> creator
-      rollsUsed: 0,
-      freeRolls: 3,
-      drawnNation: null,
-      drawnYear: null,
-      candidates: [],
-      mySlots: Array(11).fill(null),
-      opSlots: Array(11).fill(null)
-    };
-
-    if (Refs.screenLobby) Refs.screenLobby.style.display = "none";
-    if (Refs.screenPlay) Refs.screenPlay.style.display = "flex";
-
-    // Sub to Nostr updates for this duel
-    subscribeDuel(duelId);
-
-    renderDuelBoard();
-  }
-
   async function joinChallenge(duelId, creator, stake) {
+    refreshWalletState();
     if (!WalletManager.isConnected()) {
       showToast("Please connect wallet first", "info");
       return;
     }
+
     try {
       showToast(`Staking ${stake} MON to join duel…`, "info");
-      
       const signer = WalletManager.getSigner();
-      const target = CONTRACT_ADDRESS || state.myAddress;
+      const target = CONTRACT_ADDRESS || creator;
       const tx = await signer.sendTransaction({
         to: target,
-        value: ethers.parseEther(stake.toString())
+        value: ethers.parseEther(stake.toString()),
       });
       await tx.wait();
-      
+
+      const { challenge } = await apiFetch(`/api/duels/challenges/${duelId}/join`, {
+        method: "POST",
+        body: JSON.stringify({ joiner: state.myAddress }),
+      });
+
+      startDuelState({
+        id: challenge.duel_id,
+        creator: challenge.creator,
+        joiner: challenge.joiner,
+        stake: parseFloat(challenge.stake),
+        isCreator: false,
+        status: "active",
+      });
       showToast("Joined duel successfully! ✔", "success");
-
-      const payload = {
-        type: "challenge_joined",
-        duelId: duelId,
-        joiner: state.myAddress,
-        sessionPubKey: state.sessionWallet.address
-      };
-
-      await publishNostrEvent(duelId, payload);
-      startDuelState(duelId, creator, state.myAddress, stake, false);
     } catch (err) {
       showToast(err.message, "error");
     }
   }
 
-  // ── Gameplay Logic ────────────────────────────────────────────────────────
-  async function handleDuelRoll(type) {
-    if (!state.activeDuel || state.activeDuel.status !== "active") return;
-    
-    // Check turn
-    const isMyTurn = (state.activeDuel.turn === "creator" && state.activeDuel.isCreator) ||
-                     (state.activeDuel.turn === "joiner" && !state.activeDuel.isCreator);
-    if (!isMyTurn) {
+  function startDuelState(duel) {
+    state.pendingPickPlayer = null;
+    state.activeDuel = {
+      ...duel,
+      turn: "creator",
+      rollsUsed: 0,
+      freeRolls: FREE_ROLLS,
+      drawnNation: null,
+      drawnYear: null,
+      candidates: [],
+      mySlots: createDuelSlots(),
+      opSlots: createDuelSlots(),
+      lastEventId: 0,
+    };
+
+    connectDuelSocket(duel.id);
+
+    stopChallengePolling();
+    if (Refs.screenLobby) Refs.screenLobby.style.display = "none";
+    if (Refs.screenPlay) Refs.screenPlay.style.display = "flex";
+    startEventPolling();
+    pollEvents().catch(() => {});
+    renderDuelBoard();
+  }
+
+  async function sendEvent(type, payload) {
+    if (!state.activeDuel) return null;
+    const { event } = await apiFetch("/api/duels/events", {
+      method: "POST",
+      body: JSON.stringify({
+        duelId: state.activeDuel.id,
+        sender: state.instanceId,
+        type,
+        payload,
+      }),
+    });
+    return event;
+  }
+
+  async function pollEvents() {
+    const duel = state.activeDuel;
+    if (!duel) return;
+
+    try {
+      const { events } = await apiFetch(`/api/duels/events?duelId=${encodeURIComponent(duel.id)}&after=${duel.lastEventId || 0}`);
+      (events || []).forEach(handleEventRecord);
+
+      if (duel.status === "waiting") {
+        const { challenge } = await apiFetch(`/api/duels/challenges/${encodeURIComponent(duel.id)}`);
+        if (challenge?.joiner && duel.status !== "active") {
+          duel.joiner = challenge.joiner;
+          duel.status = "active";
+          duel.turn = "creator";
+          renderDuelBoard();
+        }
+      }
+    } catch (err) {
+      console.error("[Duel] Poll failed", err);
+    }
+  }
+
+  function handleEventRecord(event) {
+    const duel = state.activeDuel;
+    if (!duel || event.duel_id !== duel.id) return;
+    duel.lastEventId = Math.max(duel.lastEventId || 0, event.id || 0);
+
+    if (event.sender === state.instanceId) return;
+
+    const payload = event.payload || {};
+    if (event.type === "challenge_joined") {
+      duel.joiner = payload.joiner;
+      duel.status = "active";
+      duel.turn = "creator";
+      renderDuelBoard();
+      return;
+    }
+
+    if (event.type === "roll_result") {
+      state.pendingPickPlayer = null;
+      duel.status = "active";
+      duel.drawnNation = payload.nation;
+      duel.drawnYear = payload.year;
+      duel.candidates = payload.candidates || [];
+      duel.rollsUsed = payload.rollsUsed || 0;
+      renderDuelBoard();
+      return;
+    }
+
+    if (event.type === "pick_player") {
+      const slot = duel.opSlots[payload.slotIndex];
+      if (slot) slot.player = payload.player;
+      state.pendingPickPlayer = null;
+      duel.drawnNation = null;
+      duel.drawnYear = null;
+      duel.candidates = [];
+      duel.rollsUsed = 0;
+      duel.turn = nextTurn(duel.turn);
+      renderDuelBoard();
+      checkDuelCompletion();
+      return;
+    }
+
+    if (event.type === "duel_quit") {
+      const duel = state.activeDuel;
+      const totalPot = (duel ? duel.stake * 2 : 0).toFixed(3);
+      const winnerShare = (duel ? duel.stake * 2 * 0.7 : 0).toFixed(3);
+      const houseCut = (duel ? duel.stake * 2 * 0.3 : 0).toFixed(3);
+
+      state.pendingPickPlayer = null;
+      stopEventPolling();
+
+      showCustomModal({
+        tag: "🎁 OPPONENT FORFEITED",
+        icon: "🏆",
+        title: "Opponent Quit!",
+        subtitle: "Your opponent left the match. You win by forfeit!",
+        boxHtml: `
+          <div class="modal-stat-row"><span>Total Pot Staked</span><span class="modal-stat-val">${totalPot} MON</span></div>
+          <div class="modal-stat-row"><span>Your Winnings (70%)</span><span class="modal-stat-val green">${winnerShare} MON</span></div>
+          <div class="modal-stat-row"><span>House Platform Fee (30%)</span><span class="modal-stat-val purple">${houseCut} MON</span></div>
+        `,
+        primaryBtnText: `Claim ${winnerShare} MON Winnings 🎉`,
+        primaryBtnAction: async () => {
+          try {
+            showToast(`Transferring ${winnerShare} MON prize to your wallet…`, "info");
+            const signer = WalletManager.getSigner();
+            const target = state.myAddress || CONTRACT_ADDRESS;
+            const tx = await signer.sendTransaction({
+              to: target,
+              value: ethers.parseEther(winnerShare.toString()),
+            });
+            await tx.wait();
+            showToast(`Successfully claimed ${winnerShare} MON prize! 🎉`, "success");
+          } catch (err) {
+            showToast(err.message || "Claim cancelled", "error");
+          }
+          state.activeDuel = null;
+          switchMode("duel");
+        }
+      });
+      return;
+    }
+  }
+
+  async function handleDuelRoll(mode) {
+    const duel = state.activeDuel;
+    if (!duel || duel.status !== "active") return;
+    if (!currentUserTurn(duel)) {
       showToast("Wait for opponent's turn", "error");
       return;
     }
 
-    const d = state.activeDuel;
-    const isPaid = d.rollsUsed >= d.freeRolls;
-
+    const isPaid = duel.rollsUsed >= duel.freeRolls;
     if (isPaid) {
-      // Prompt MetaMask transaction for paid roll
       try {
-        showToast("Confirm transaction in MetaMask…", "info");
-        // Simulate roll fee
-        showToast("Roll purchased! ✔", "success");
+        showToast(`Confirming ${ROLL_PRICE_MON} MON paid roll in MetaMask…`, "info");
+        const signer = WalletManager.getSigner();
+        const target = CONTRACT_ADDRESS || state.myAddress;
+        const tx = await signer.sendTransaction({
+          to: target,
+          value: ethers.parseEther(ROLL_PRICE_MON.toString()),
+        });
+        await tx.wait();
+        showToast("Paid roll transaction successful! 🎲", "success");
       } catch (err) {
-        showToast(err.message, "error");
+        showToast(err.message || "Paid roll transaction cancelled", "error");
         return;
       }
     }
 
-    d.rollsUsed++;
-
-    // Generate random draft options
-    let rollResult;
-    if (type === "nation") {
-      rollResult = await DataManager.roll({ lockYear: d.drawnYear, excludeNation: d.drawnNation });
-    } else if (type === "year") {
-      rollResult = await DataManager.roll({ lockNation: d.drawnNation, excludeYear: d.drawnYear });
-    } else {
-      rollResult = await DataManager.roll({});
-    }
-
-    d.drawnNation = rollResult.nationCode;
-    d.drawnYear = rollResult.year;
-    d.candidates = rollResult.players;
-
-    // Publish roll action to opponent
-    await publishNostrEvent(d.id, {
-      type: "roll_result",
-      nation: d.drawnNation,
-      year: d.drawnYear,
-      candidates: d.candidates,
-      rollsUsed: d.rollsUsed
-    });
-
-    renderDuelBoard();
-  }
-
-  async function handlePickPlayer(player, slotIndex) {
-    if (!state.activeDuel) return;
-    const d = state.activeDuel;
-    
-    d.mySlots[slotIndex] = player;
-    
-    // Clear drawn
-    d.drawnNation = null;
-    d.drawnYear = null;
-    d.candidates = [];
-    d.rollsUsed = 0;
-
-    // Switch turn
-    d.turn = d.turn === "creator" ? "joiner" : "creator";
-
-    // Publish pick action
-    await publishNostrEvent(d.id, {
-      type: "pick_player",
-      player,
-      slotIndex
-    });
-
-    renderDuelBoard();
-
-    // Check complete
-    checkDuelCompletion();
-  }
-
-  function checkDuelCompletion() {
-    const d = state.activeDuel;
-    const myFinished = d.mySlots.every(s => s !== null);
-    const opFinished = d.opSlots.every(s => s !== null);
-
-    if (myFinished && opFinished) {
-      d.status = "completed";
-      resolveDuelOutcome();
-    }
-  }
-
-  function resolveDuelOutcome() {
-    const d = state.activeDuel;
-    const myScore = calculateSquadScore(d.mySlots);
-    const opScore = calculateSquadScore(d.opSlots);
-
-    let title, msg;
-    if (myScore > opScore) {
-      title = "🏆 Victory!";
-      msg = `You won the duel ${myScore} vs ${opScore}! Claim your payout of ${(d.stake * 2 * 0.7).toFixed(2)} MON.`;
-    } else if (myScore < opScore) {
-      title = "Defeat";
-      msg = `You lost the duel ${myScore} vs ${opScore}. Better luck next time!`;
-    } else {
-      title = "Draw";
-      msg = `It's a draw! Both players get refunded.`;
-    }
-
-    // Modal popup
-    alert(`${title}\n\n${msg}`);
-  }
-
-  function calculateSquadScore(slots) {
-    const total = slots.reduce((acc, p) => acc + (p ? p.rating : 0), 0);
-    return slots.length ? parseFloat((total / slots.length).toFixed(2)) : 0;
-  }
-
-  function quitActiveDuel() {
-    if (confirm("Are you sure you want to quit the duel? You will forfeit your stake.")) {
-      state.activeDuel = null;
-      switchMode("duel");
-    }
-  }
-
-  // ── Sync Events from Relay ────────────────────────────────────────────────
-  function handleNostrEvent(event) {
     try {
-      const payload = JSON.parse(event.content);
-      if (payload.duelId) {
-        // Track challenges in lobby
-        if (payload.type === "challenge_created") {
-          if (!state.challenges.some(c => c.duelId === payload.duelId)) {
-            state.challenges.push(payload);
-            renderLobby();
-          }
-        }
-        
-        // Match joining
-        if (state.activeDuel && state.activeDuel.id === payload.duelId) {
-          const d = state.activeDuel;
-          
-          if (payload.type === "challenge_joined" && d.status === "waiting") {
-            d.joiner = payload.joiner;
-            d.status = "active";
-            showToast("An opponent joined your duel! Game starting...", "success");
-            renderDuelBoard();
-          }
-
-          if (payload.type === "roll_result") {
-            // Apply roll info from opponent if it's their turn
-            const isMyTurn = (d.turn === "creator" && d.isCreator) ||
-                             (d.turn === "joiner" && !d.isCreator);
-            if (!isMyTurn) {
-              d.drawnNation = payload.nation;
-              d.drawnYear = payload.year;
-              d.candidates = payload.candidates;
-              d.rollsUsed = payload.rollsUsed;
-              renderDuelBoard();
-            }
-          }
-
-          if (payload.type === "pick_player") {
-            const isMyTurn = (d.turn === "creator" && d.isCreator) ||
-                             (d.turn === "joiner" && !d.isCreator);
-            if (!isMyTurn) {
-              d.opSlots[payload.slotIndex] = payload.player;
-              d.drawnNation = null;
-              d.drawnYear = null;
-              d.candidates = [];
-              d.rollsUsed = 0;
-              d.turn = d.turn === "creator" ? "joiner" : "creator";
-              renderDuelBoard();
-              checkDuelCompletion();
-            }
-          }
-        }
+      let rollResult;
+      if (mode === "nation") {
+        rollResult = await DataManager.roll({
+          lockYear: duel.drawnYear,
+          excludeNation: duel.drawnNation,
+        });
+      } else if (mode === "year") {
+        rollResult = await DataManager.roll({
+          lockNation: duel.drawnNation,
+          excludeYear: duel.drawnYear,
+        });
+      } else {
+        rollResult = await DataManager.roll({});
       }
-    } catch (e) {
-      console.error("[Duel] Error parsing Nostr event", e);
+
+      duel.rollsUsed += 1;
+      duel.drawnNation = rollResult.nationCode;
+      duel.drawnYear = rollResult.year;
+      duel.candidates = (rollResult.squad || []).map((player) => ({
+        ...player,
+        draftedNation: rollResult.nationCode,
+        draftedYear: rollResult.year,
+      }));
+      state.pendingPickPlayer = null;
+
+      const event = await sendEvent("roll_result", {
+        nation: duel.drawnNation,
+        year: duel.drawnYear,
+        candidates: duel.candidates,
+        rollsUsed: duel.rollsUsed,
+      });
+      if (event?.id) duel.lastEventId = event.id;
+
+      renderDuelBoard();
+    } catch (err) {
+      showToast(err.message, "error");
     }
   }
 
-  // ── Render Views ──────────────────────────────────────────────────────────
-  function renderLobby() {
-    if (!Refs.challengesList) return;
-    Refs.challengesList.innerHTML = "";
-    
-    const activeOnes = state.challenges.filter(c => c.creator !== state.myAddress);
-    
-    if (activeOnes.length === 0) {
-      Refs.challengesList.innerHTML = `<div class="challenges-empty">No active challenges. Create one above!</div>`;
+  function selectCandidate(player) {
+    if (!state.activeDuel || !currentUserTurn(state.activeDuel)) return;
+    if (state.pendingPickPlayer && state.pendingPickPlayer.id === player.id) {
+      state.pendingPickPlayer = null;
+    } else {
+      state.pendingPickPlayer = player;
+    }
+    renderDuelBoard();
+  }
+
+  async function handlePickPlayer(slotIdx) {
+    const duel = state.activeDuel;
+    const player = state.pendingPickPlayer;
+    if (!duel || !player) return;
+
+    const slot = duel.mySlots[slotIdx];
+    if (!slot) return;
+    if (slot.player) {
+      showToast("That slot is already occupied.", "error");
+      return;
+    }
+    if (!Game.canPlayerFillSlot(player, slot.pos)) {
+      showToast(`${player.name} cannot play as ${slot.pos}`, "error");
       return;
     }
 
-    activeOnes.forEach(c => {
-      const card = document.createElement("div");
-      card.className = "duel-card";
-      card.innerHTML = `
-        <div class="duel-card-left">
-          <span class="duel-card-addr">Creator: ${shortAddr(c.creator)}</span>
-          <span class="duel-card-stake">${c.stake} MON</span>
-        </div>
-        <button class="btn-join-duel" data-id="${c.duelId}" data-creator="${c.creator}" data-stake="${c.stake}">Join Duel</button>
-      `;
+    slot.player = {
+      ...player,
+      draftedNation: duel.drawnNation,
+      draftedYear: duel.drawnYear,
+    };
 
-      card.querySelector(".btn-join-duel").addEventListener("click", () => {
-        joinChallenge(c.duelId, c.creator, c.stake);
+    state.pendingPickPlayer = null;
+    duel.drawnNation = null;
+    duel.drawnYear = null;
+    duel.candidates = [];
+    duel.rollsUsed = 0;
+    duel.turn = nextTurn(duel.turn);
+
+    try {
+      const event = await sendEvent("pick_player", {
+        slotIndex: slotIdx,
+        player: slot.player,
       });
+      if (event?.id) duel.lastEventId = event.id;
+    } catch (err) {
+      showToast(err.message, "error");
+    }
 
-      Refs.challengesList.appendChild(card);
+    renderDuelBoard();
+    checkDuelCompletion();
+  }
+
+  function showCustomModal({ tag, icon, title, subtitle, boxHtml, primaryBtnText, primaryBtnAction, dangerBtnText, dangerBtnAction, secondaryBtnText, secondaryBtnAction }) {
+    const overlay = document.getElementById("customModalOverlay");
+    if (!overlay) {
+      if (primaryBtnText && primaryBtnAction) primaryBtnAction();
+      return;
+    }
+
+    const tagEl = document.getElementById("customModalTag");
+    const iconEl = document.getElementById("customModalIcon");
+    const titleEl = document.getElementById("customModalTitle");
+    const subEl = document.getElementById("customModalSubtitle");
+    const boxEl = document.getElementById("customModalBox");
+    const footerEl = document.getElementById("customModalFooter");
+    const closeBtn = document.getElementById("customModalClose");
+
+    if (tagEl) tagEl.textContent = tag || "⚽ FOOTMON DUELS";
+    if (iconEl) iconEl.textContent = icon || "🏆";
+    if (titleEl) titleEl.textContent = title || "";
+    if (subEl) subEl.textContent = subtitle || "";
+    if (boxEl) {
+      if (boxHtml) {
+        boxEl.style.display = "flex";
+        boxEl.innerHTML = boxHtml;
+      } else {
+        boxEl.style.display = "none";
+      }
+    }
+
+    if (footerEl) footerEl.innerHTML = "";
+
+    function closeModal() {
+      overlay.classList.remove("open");
+    }
+
+    if (closeBtn) closeBtn.onclick = closeModal;
+
+    if (secondaryBtnText && footerEl) {
+      const btn = document.createElement("button");
+      btn.className = "btn-modal-secondary";
+      btn.textContent = secondaryBtnText;
+      btn.onclick = () => {
+        closeModal();
+        if (secondaryBtnAction) secondaryBtnAction();
+      };
+      footerEl.appendChild(btn);
+    }
+
+    if (dangerBtnText && footerEl) {
+      const btn = document.createElement("button");
+      btn.className = "btn-modal-danger";
+      btn.textContent = dangerBtnText;
+      btn.onclick = () => {
+        closeModal();
+        if (dangerBtnAction) dangerBtnAction();
+      };
+      footerEl.appendChild(btn);
+    }
+
+    if (primaryBtnText && footerEl) {
+      const btn = document.createElement("button");
+      btn.className = "btn-modal-primary";
+      btn.textContent = primaryBtnText;
+      btn.onclick = () => {
+        closeModal();
+        if (primaryBtnAction) primaryBtnAction();
+      };
+      footerEl.appendChild(btn);
+    }
+
+    overlay.classList.add("open");
+  }
+
+  async function quitActiveDuel() {
+    if (!state.activeDuel) return;
+
+    showCustomModal({
+      tag: "⚠️ FORFEIT WARNING",
+      icon: "🚪",
+      title: "Quit 1v1 Duel?",
+      subtitle: "If you quit now, you will forfeit your staked MON to your opponent.",
+      secondaryBtnText: "Keep Playing",
+      dangerBtnText: "Quit & Forfeit",
+      dangerBtnAction: async () => {
+        try {
+          const event = await sendEvent("duel_quit", {});
+          if (event?.id) state.activeDuel.lastEventId = event.id;
+          if (state.activeDuel.status === "waiting") {
+            await apiFetch(`/api/duels/challenges/${encodeURIComponent(state.activeDuel.id)}`, {
+              method: "PATCH",
+              body: JSON.stringify({ status: "cancelled" }),
+            });
+          }
+        } catch (err) {
+          console.error("[Duel] Failed to notify quit", err);
+        }
+
+        state.pendingPickPlayer = null;
+        state.activeDuel = null;
+        stopEventPolling();
+        switchMode("duel");
+      }
     });
   }
 
+  async function checkDuelCompletion() {
+    const duel = state.activeDuel;
+    if (!duel) return;
+
+    const myFinished = duel.mySlots.every((slot) => slot.player);
+    const opFinished = duel.opSlots.every((slot) => slot.player);
+    if (!myFinished || !opFinished) return;
+
+    duel.status = "completed";
+    try {
+      await apiFetch(`/api/duels/challenges/${encodeURIComponent(duel.id)}`, {
+        method: "PATCH",
+        body: JSON.stringify({ status: "completed" }),
+      });
+    } catch (e) {
+      console.error("[Duel] Failed to mark completed on backend", e);
+    }
+    resolveDuelOutcome();
+  }
+
+  function resolveDuelOutcome() {
+    const duel = state.activeDuel;
+    if (!duel) return;
+
+    const myScore = calculateSquadScore(duel.mySlots);
+    const opScore = calculateSquadScore(duel.opSlots);
+    const totalPot = (duel.stake * 2).toFixed(3);
+    const winnerShare = (duel.stake * 2 * 0.7).toFixed(3);
+    const houseCut = (duel.stake * 2 * 0.3).toFixed(3);
+
+    if (myScore > opScore) {
+      showCustomModal({
+        tag: "🏆 DUEL VICTORY",
+        icon: "🎉",
+        title: "Victory!",
+        subtitle: `Your squad defeated your opponent ${myScore} vs ${opScore}.`,
+        boxHtml: `
+          <div class="modal-stat-row"><span>Your Squad Score</span><span class="modal-stat-val gold">${myScore}</span></div>
+          <div class="modal-stat-row"><span>Opponent Squad Score</span><span class="modal-stat-val">${opScore}</span></div>
+          <div class="modal-stat-row" style="border-top: 1px solid var(--border2); padding-top: 8px;"><span>Total Pot Staked</span><span class="modal-stat-val">${totalPot} MON</span></div>
+          <div class="modal-stat-row"><span>Winner Winnings (70%)</span><span class="modal-stat-val green">${winnerShare} MON</span></div>
+          <div class="modal-stat-row"><span>House Platform Fee (30%)</span><span class="modal-stat-val purple">${houseCut} MON</span></div>
+        `,
+        primaryBtnText: `Claim ${winnerShare} MON Winnings 🎉`,
+        primaryBtnAction: async () => {
+          try {
+            showToast(`Claiming ${winnerShare} MON payout to your wallet…`, "info");
+            const signer = WalletManager.getSigner();
+            const target = state.myAddress || CONTRACT_ADDRESS;
+            const tx = await signer.sendTransaction({
+              to: target,
+              value: ethers.parseEther(winnerShare.toString()),
+            });
+            await tx.wait();
+            showToast(`Claimed ${winnerShare} MON prize! 🎉`, "success");
+          } catch (err) {
+            showToast(err.message || "Claim transaction cancelled", "error");
+          }
+          state.activeDuel = null;
+          switchMode("duel");
+        }
+      });
+    } else if (myScore < opScore) {
+      showCustomModal({
+        tag: "💔 DUEL DEFEAT",
+        icon: "💀",
+        title: "Defeat",
+        subtitle: `Your opponent won the duel ${opScore} vs ${myScore}.`,
+        boxHtml: `
+          <div class="modal-stat-row"><span>Your Squad Score</span><span class="modal-stat-val">${myScore}</span></div>
+          <div class="modal-stat-row"><span>Opponent Squad Score</span><span class="modal-stat-val gold">${opScore}</span></div>
+          <div class="modal-stat-row" style="border-top: 1px solid var(--border2); padding-top: 8px;"><span>Total Pot Staked</span><span class="modal-stat-val">${totalPot} MON</span></div>
+          <div class="modal-stat-row"><span>Winner Payout (70%)</span><span class="modal-stat-val green">${winnerShare} MON</span></div>
+          <div class="modal-stat-row"><span>House Platform Fee (30%)</span><span class="modal-stat-val purple">${houseCut} MON</span></div>
+        `,
+        primaryBtnText: "Back to Duel Lobby",
+        primaryBtnAction: () => {
+          state.activeDuel = null;
+          switchMode("duel");
+        }
+      });
+    } else {
+      const refundShare = (duel.stake * 0.7).toFixed(3);
+      showCustomModal({
+        tag: "🤝 DUEL DRAW",
+        icon: "⚖️",
+        title: "Draw!",
+        subtitle: `Both squads finished level at ${myScore}.`,
+        boxHtml: `
+          <div class="modal-stat-row"><span>Squad Rating</span><span class="modal-stat-val gold">${myScore}</span></div>
+          <div class="modal-stat-row"><span>Total Pot Staked</span><span class="modal-stat-val">${totalPot} MON</span></div>
+          <div class="modal-stat-row" style="border-top: 1px solid var(--border2); padding-top: 8px;"><span>Your Refund Share (70%)</span><span class="modal-stat-val green">${refundShare} MON</span></div>
+          <div class="modal-stat-row"><span>House Fee (30%)</span><span class="modal-stat-val purple">${houseCut} MON</span></div>
+        `,
+        primaryBtnText: `Claim ${refundShare} MON Refund`,
+        primaryBtnAction: async () => {
+          try {
+            showToast(`Claiming ${refundShare} MON refund…`, "info");
+            const signer = WalletManager.getSigner();
+            const target = state.myAddress || CONTRACT_ADDRESS;
+            const tx = await signer.sendTransaction({
+              to: target,
+              value: ethers.parseEther(refundShare.toString()),
+            });
+            await tx.wait();
+            showToast(`Claimed ${refundShare} MON refund! 🤝`, "success");
+          } catch (err) {
+            showToast(err.message || "Claim transaction cancelled", "error");
+          }
+          state.activeDuel = null;
+          switchMode("duel");
+        }
+      });
+    }
+  }
+
+  function calculateSquadScore(slots) {
+    const filled = slots.filter((slot) => slot.player);
+    if (!filled.length) return 0;
+    const total = filled.reduce((sum, slot) => sum + slot.player.rating, 0);
+    return parseFloat((total / filled.length).toFixed(2));
+  }
+
+  function getSquadStats(slots) {
+    const filled = slots.filter((slot) => slot.player).map((slot) => slot.player);
+    if (!filled.length) return { avg: "0.0", atk: 0, def: 0 };
+
+    const total = filled.reduce((sum, player) => sum + player.rating, 0);
+    let atk = 0;
+    let def = 0;
+    filled.forEach((player) => {
+      atk += player.stats?.att || Math.round(player.rating * 0.6);
+      def += player.stats?.def || Math.round(player.rating * 0.4);
+    });
+
+    return {
+      avg: (total / filled.length).toFixed(1),
+      atk: Math.round(atk / filled.length),
+      def: Math.round(def / filled.length),
+    };
+  }
+
   function renderDuelBoard() {
-    if (!state.activeDuel) return;
-    const d = state.activeDuel;
+    const duel = state.activeDuel;
+    if (!duel) return;
 
-    const isMyTurn = (d.turn === "creator" && d.isCreator) ||
-                     (d.turn === "joiner" && !d.isCreator);
+    const isMyTurn = currentUserTurn(duel);
+    const myStats = getSquadStats(duel.mySlots);
+    const opStats = getSquadStats(duel.opSlots);
 
-    // Update Turn Banner
     if (Refs.turnBanner && Refs.turnText) {
-      if (isMyTurn) {
+      if (duel.status === "waiting") {
+        Refs.turnBanner.classList.remove("my-turn");
+        Refs.turnText.textContent = "WAITING FOR OPPONENT";
+      } else if (isMyTurn) {
         Refs.turnBanner.classList.add("my-turn");
-        Refs.turnText.textContent = "YOUR DRAFT TURN 🎲";
+        Refs.turnText.textContent = "YOUR DRAFT TURN";
       } else {
         Refs.turnBanner.classList.remove("my-turn");
         Refs.turnText.textContent = "OPPONENT DRAFTING...";
       }
     }
 
-    // Render stats
-    const myStats = getSquadStats(d.mySlots);
-    const opStats = getSquadStats(d.opSlots);
-
     if (Refs.myAvg) Refs.myAvg.textContent = myStats.avg;
     if (Refs.myAttack) Refs.myAttack.textContent = myStats.atk;
     if (Refs.myDefense) Refs.myDefense.textContent = myStats.def;
-    if (Refs.myAttackBar) Refs.myAttackBar.style.width = myStats.avg + "%";
-    
+    if (Refs.myAttackBar) Refs.myAttackBar.style.width = `${myStats.avg}%`;
+
     if (Refs.opAvg) Refs.opAvg.textContent = opStats.avg;
     if (Refs.opAttack) Refs.opAttack.textContent = opStats.atk;
     if (Refs.opDefense) Refs.opDefense.textContent = opStats.def;
-    if (Refs.opAttackBar) Refs.opAttackBar.style.width = opStats.avg + "%";
+    if (Refs.opAttackBar) Refs.opAttackBar.style.width = `${opStats.avg}%`;
 
-    // Highlight leader in stats
     if (Refs.myAvg && Refs.opAvg) {
       if (parseFloat(myStats.avg) > parseFloat(opStats.avg)) {
-        Refs.myAvg.style.color = "var(--yellow)";
+        Refs.myAvg.style.color = "#f0c040";
         Refs.opAvg.style.color = "";
       } else if (parseFloat(myStats.avg) < parseFloat(opStats.avg)) {
-        Refs.opAvg.style.color = "var(--yellow)";
+        Refs.opAvg.style.color = "#f0c040";
         Refs.myAvg.style.color = "";
       } else {
         Refs.myAvg.style.color = "";
@@ -644,205 +967,156 @@ const DuelManager = (() => {
       }
     }
 
-    // Render Draft State
-    if (d.status === "waiting") {
-      if (Refs.draftEmptyState) {
-        Refs.draftEmptyState.style.display = "flex";
-        const titleEl = Refs.draftEmptyState.querySelector(".draft-empty-title");
-        const descEl = Refs.draftEmptyState.querySelector(".draft-empty-desc");
-        if (titleEl) titleEl.textContent = "Waiting for Opponent";
-        if (descEl) descEl.textContent = "Share your duel ID or wait for someone to join.";
-      }
-      if (Refs.draftActiveState) Refs.draftActiveState.style.display = "none";
-      if (Refs.btnRoll) Refs.btnRoll.disabled = true;
+    const remaining = Math.max(0, duel.freeRolls - duel.rollsUsed);
+    if (Refs.rollsLeft) {
+      Refs.rollsLeft.textContent = remaining > 0
+        ? `${remaining} FREE ROLL${remaining !== 1 ? "S" : ""} LEFT`
+        : "FREE ROLLS USED";
+    }
+    if (Refs.costBadge) {
+      Refs.costBadge.style.display = duel.rollsUsed >= duel.freeRolls ? "inline-flex" : "none";
+    }
+
+    if (duel.status === "waiting") {
+      renderWaitingState();
+    } else if (duel.drawnNation === null) {
+      renderRollPromptState(isMyTurn, remaining);
     } else {
-      if (Refs.btnRoll) Refs.btnRoll.disabled = !isMyTurn;
-      if (d.drawnNation === null) {
-        if (Refs.draftEmptyState) {
-          Refs.draftEmptyState.style.display = "flex";
-          const titleEl = Refs.draftEmptyState.querySelector(".draft-empty-title");
-          const descEl = Refs.draftEmptyState.querySelector(".draft-empty-desc");
-          if (titleEl) titleEl.textContent = "Draft Next Player";
-          const rem = d.freeRolls - d.rollsUsed;
-          if (rem <= 0) {
-            if (descEl) descEl.innerHTML = `Free rolls used.<br/>Pay <strong>0.001 MON</strong> to roll.`;
-            if (Refs.btnRoll) Refs.btnRoll.textContent = "Pay & Roll 🎲 (0.001 MON)";
-          } else {
-            if (descEl) descEl.textContent = `Roll to draw a nation. ${rem} free rolls left.`;
-            if (Refs.btnRoll) Refs.btnRoll.textContent = "Roll 🎲";
-          }
+      renderActiveDraftState(isMyTurn);
+    }
+
+    PitchRenderer.render(
+      document.getElementById("pitchDuelPlayer"),
+      duel.mySlots,
+      isMyTurn ? state.pendingPickPlayer : null,
+      null,
+      (slotIdx) => {
+        if (isMyTurn && state.pendingPickPlayer) {
+          handlePickPlayer(slotIdx);
         }
-        if (Refs.draftActiveState) Refs.draftActiveState.style.display = "none";
+      }
+    );
+
+    PitchRenderer.render(
+      document.getElementById("pitchDuelOpponent"),
+      duel.opSlots,
+      null,
+      null,
+      () => {}
+    );
+  }
+
+  function renderWaitingState() {
+    if (Refs.draftEmptyState) {
+      Refs.draftEmptyState.style.display = "flex";
+      const titleEl = Refs.draftEmptyState.querySelector(".draft-empty-title");
+      const descEl = Refs.draftEmptyState.querySelector(".draft-empty-desc");
+      if (titleEl) titleEl.textContent = "Waiting for Opponent";
+      if (descEl) descEl.textContent = "This challenge is now public. Another device can join from the duel lobby.";
+    }
+    if (Refs.draftActiveState) Refs.draftActiveState.style.display = "none";
+    if (Refs.btnRoll) Refs.btnRoll.disabled = true;
+  }
+
+  function renderRollPromptState(isMyTurn, remaining) {
+    if (Refs.draftEmptyState) {
+      Refs.draftEmptyState.style.display = "flex";
+      const titleEl = Refs.draftEmptyState.querySelector(".draft-empty-title");
+      const descEl = Refs.draftEmptyState.querySelector(".draft-empty-desc");
+      if (titleEl) titleEl.textContent = isMyTurn ? "Draft Next Player" : "Opponent's Turn";
+
+      if (!isMyTurn) {
+        if (descEl) descEl.textContent = "Your opponent is rolling for their next player.";
+      } else if (remaining <= 0) {
+        if (descEl) descEl.innerHTML = `Free rolls used.<br/>Paid rerolls preview at <strong>${ROLL_PRICE_MON} MON</strong>.`;
       } else {
-        if (Refs.draftEmptyState) Refs.draftEmptyState.style.display = "none";
-        if (Refs.draftActiveState) Refs.draftActiveState.style.display = "flex";
-
-        const iso2 = (ISO3_TO_2[d.drawnNation] || d.drawnNation.slice(0, 2)).toLowerCase();
-        if (Refs.drawnFlag) Refs.drawnFlag.innerHTML = `<img src="flags/${iso2}.png" alt="${d.drawnNation}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;" />`;
-        if (Refs.drawnNation) Refs.drawnNation.textContent = d.drawnNation;
-        if (Refs.drawnYear) Refs.drawnYear.textContent = d.drawnYear;
-
-        // Populate players
-        if (Refs.playerList) {
-          Refs.playerList.innerHTML = "";
-          
-          if (isMyTurn) {
-            d.candidates.forEach(p => {
-              const row = document.createElement("div");
-              row.className = `player-row ${p.rating >= 90 ? "player-row--elite" : ""}`;
-              
-              // Greying out logic
-              const assignedIds = d.mySlots.filter(s => s !== null).map(s => s.id);
-              const isAssigned = assignedIds.includes(p.id);
-
-              if (isAssigned) {
-                row.className += " player-row--assigned";
-              }
-
-              const pbWidth = Math.min(100, Math.max(0, p.rating));
-              row.innerHTML = `
-                <div class="player-info">
-                  <span class="player-name ${p.rating >= 90 ? "player-name--elite" : ""}">${p.name}</span>
-                  <div class="player-rating-progress">
-                    <div class="player-rating-bar" style="width: ${pbWidth}%"></div>
-                  </div>
-                  <div class="player-details">
-                    <span class="player-pos-tags">${p.position}</span>
-                    <span class="player-pos-tags">${p.club}</span>
-                  </div>
-                </div>
-                <div class="player-rating" style="background:${PitchRenderer.ratingColor(p.rating)}">${p.rating}</div>
-              `;
-
-              if (!isAssigned) {
-                row.addEventListener("click", () => handleSelectPositionForPlayer(p));
-              }
-              Refs.playerList.appendChild(row);
-            });
-          } else {
-            Refs.playerList.innerHTML = `<div class="challenges-empty">Opponent is choosing a player...</div>`;
-          }
-        }
+        if (descEl) descEl.textContent = `Roll to draw a nation and year. ${remaining} free roll${remaining !== 1 ? "s" : ""} left.`;
       }
     }
 
-    // Render Pitches
-    renderPitchLayout("pitchDuelPlayer", d.mySlots, true);
-    renderPitchLayout("pitchDuelOpponent", d.opSlots, false);
+    if (Refs.draftActiveState) Refs.draftActiveState.style.display = "none";
+    if (Refs.btnRoll) {
+      Refs.btnRoll.disabled = !isMyTurn;
+      Refs.btnRoll.textContent = remaining <= 0 ? `Pay & Roll 🎲 (${ROLL_PRICE_MON} MON)` : "Roll 🎲";
+    }
   }
 
-  function handleSelectPositionForPlayer(player) {
-    const pitchEl = document.getElementById("pitchDuelPlayer");
-    const slots = pitchEl.querySelectorAll(".pitch-slot");
-    
-    slots.forEach(slot => {
-      const idx = parseInt(slot.dataset.idx);
-      if (state.activeDuel.mySlots[idx] === null) {
-        slot.style.border = "2px dashed var(--green)";
-        slot.style.cursor = "pointer";
-        
-        const newSlot = slot.cloneNode(true);
-        slot.parentNode.replaceChild(newSlot, slot);
-        
-        newSlot.addEventListener("click", () => {
-          handlePickPlayer(player, idx);
-        });
-      }
-    });
-    
-    showToast("Click an empty slot on your pitch to place " + player.name, "info");
-  }
+  function renderActiveDraftState(isMyTurn) {
+    const duel = state.activeDuel;
+    if (!duel) return;
 
-  function renderPitchLayout(pitchId, slotsData, isMyPitch) {
-    const el = document.getElementById(pitchId);
-    if (!el) return;
-    el.innerHTML = ""; // Clear
+    if (Refs.draftEmptyState) Refs.draftEmptyState.style.display = "none";
+    if (Refs.draftActiveState) Refs.draftActiveState.style.display = "flex";
 
-    const markings = document.createElement("div");
-    markings.className = "pitch-markings";
-    markings.innerHTML = `
-      <div class="pitch-line pitch-center-circle"></div>
-      <div class="pitch-line pitch-halfway"></div>
-      <div class="pitch-line pitch-penalty-area-top"></div>
-      <div class="pitch-line pitch-penalty-area-bottom"></div>
-    `;
-    el.appendChild(markings);
+    const iso2 = (ISO3_TO_2[duel.drawnNation] || duel.drawnNation.slice(0, 2)).toLowerCase();
+    if (Refs.drawnFlag) {
+      Refs.drawnFlag.innerHTML = `<img src="/flags/${iso2}.png" alt="${duel.drawnNation}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;" />`;
+    }
+    if (Refs.drawnNation) Refs.drawnNation.textContent = duel.drawnNation;
+    if (Refs.drawnYear) Refs.drawnYear.textContent = duel.drawnYear;
 
-    const coords = [
-      { t: 86, l: 50 },  // GK
-      { t: 68, l: 20 },  // LB
-      { t: 72, l: 40 },  // CB1
-      { t: 72, l: 60 },  // CB2
-      { t: 68, l: 80 },  // RB
-      { t: 48, l: 30 },  // LM
-      { t: 42, l: 50 },  // CM
-      { t: 48, l: 70 },  // RM
-      { t: 18, l: 25 },  // LW
-      { t: 14, l: 50 },  // ST
-      { t: 18, l: 75 }   // RW
-    ];
+    if (!Refs.playerList) return;
+    if (!isMyTurn) {
+      Refs.playerList.innerHTML = `<div class="challenges-empty">Opponent is choosing a player...</div>`;
+      return;
+    }
 
-    coords.forEach((c, idx) => {
-      const slot = document.createElement("div");
-      slot.className = "pitch-slot";
-      slot.dataset.idx = idx;
-      slot.style.top = c.t + "%";
-      slot.style.left = c.l + "%";
+    const assignedIds = new Set(
+      duel.mySlots.filter((slot) => slot.player).map((slot) => slot.player.id)
+    );
 
-      const p = slotsData[idx];
-      if (p) {
-        slot.classList.add("slot--filled");
-        const ratingCol = PitchRenderer.ratingColor(p.rating);
-        slot.style.borderColor = ratingCol;
+    Refs.playerList.innerHTML = duel.candidates.map((player) => {
+      const alreadyUsed = assignedIds.has(player.id);
+      const canFitAnywhere = duel.mySlots.some((slot) => !slot.player && Game.canPlayerFillSlot(player, slot.pos));
+      const isSelected = state.pendingPickPlayer && state.pendingPickPlayer.id === player.id;
 
-        if (p.rating >= 90) {
-          slot.classList.add("slot--elite");
-          slot.style.color = ratingCol;
-        }
+      let rowClass = "player-row";
+      if (alreadyUsed) rowClass += " player-row--assigned";
+      else if (!canFitAnywhere) rowClass += " player-row--disabled";
+      else if (isSelected) rowClass += " player-row--selected";
 
-        slot.innerHTML = `
-          <div class="slot-player-jersey">${p.position}</div>
-          <div class="slot-player-name">${p.name.split(" ").pop()}</div>
-          <div class="slot-player-rating" style="background:${ratingCol}">${p.rating}</div>
-        `;
-      } else {
-        slot.innerHTML = `<div class="slot-player-jersey">+</div>`;
-      }
+      const positions = Array.isArray(player.positions) ? player.positions.join(" / ") : "";
+      const barColor = player.rating >= 90 ? "#f0c040" : "var(--text3)";
 
-      el.appendChild(slot);
+      return `
+        <div class="${rowClass}" data-pid="${player.id}">
+          <div class="player-row-left">
+            <span class="player-name ${player.rating >= 90 ? "player-name--elite" : ""}">${player.name}</span>
+            <span class="player-pos-tags">${positions}</span>
+          </div>
+          <div class="player-rating-wrap">
+            <div class="player-rating-bar"><div class="player-rating-bar-fill" style="width:${player.rating}%; background:${barColor};"></div></div>
+            <span class="player-rating">${player.rating}</span>
+          </div>
+        </div>
+      `;
+    }).join("") || `<div class="challenges-empty">No eligible players for this roll.</div>`;
+
+    Refs.playerList.querySelectorAll(".player-row").forEach((row) => {
+      if (row.classList.contains("player-row--assigned") || row.classList.contains("player-row--disabled")) return;
+      row.addEventListener("click", () => {
+        const player = duel.candidates.find((item) => item.id === row.dataset.pid);
+        if (player) selectCandidate(player);
+      });
     });
   }
 
-  function getSquadStats(slots) {
-    let total = 0, count = 0, atk = 0, def = 0;
-    slots.forEach(p => {
-      if (p) {
-        total += p.rating;
-        count++;
-        if (["LW", "RW", "ST", "CF"].includes(p.position)) atk += p.rating;
-        else if (["GK", "LB", "CB", "RB", "LWB", "RWB"].includes(p.position)) def += p.rating;
-        else { atk += p.rating * 0.5; def += p.rating * 0.5; }
-      }
-    });
-    return {
-      avg: count > 0 ? (total / count).toFixed(1) : "0.0",
-      atk: Math.round(atk),
-      def: Math.round(def)
-    };
+  function shortAddr(address) {
+    if (!address || address.length < 10) return address || "Unknown";
+    return `${address.slice(0, 6)}…${address.slice(-4)}`;
   }
 
-  function shortAddr(addr) {
-    return addr.slice(0, 6) + "…" + addr.slice(-4);
+  function hasActiveDuel() {
+    return !!state.activeDuel;
   }
 
-  return { init, switchMode };
+  return { init, switchMode, hasActiveDuel };
 })();
 
-// Initialize when DOM is ready
 function bootstrapDuel() {
   if (window.__FOOTMON_DUEL_BOOTSTRAPPED__) return;
   window.__FOOTMON_DUEL_BOOTSTRAPPED__ = true;
-  setTimeout(DuelManager.init, 500);
+  setTimeout(DuelManager.init, 100);
 }
 
 if (document.readyState === "loading") {

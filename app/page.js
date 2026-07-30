@@ -24,7 +24,7 @@ const appMarkup = String.raw`
         <h1 class="mob-hero-title">FootMon</h1>
         <p class="mob-hero-sub">Build your dream World Cup squad.<br/>Compete on-chain. Win MON every hour.</p>
         <div class="mob-hero-stats">
-          <div class="mob-stat"><span class="mob-stat-val">3</span><span class="mob-stat-label">Free Rolls</span></div>
+          <div class="mob-stat"><span class="mob-stat-val">4</span><span class="mob-stat-label">Free Rolls</span></div>
           <div class="mob-stat-divider"></div>
           <div class="mob-stat"><span class="mob-stat-val">0.001</span><span class="mob-stat-label">MON / extra</span></div>
           <div class="mob-stat-divider"></div>
@@ -62,7 +62,7 @@ const appMarkup = String.raw`
           <p class="section-label">How it works</p>
           <p class="info-text">
             Pick a formation, roll for a nation &amp; year, build your 11.<br/>
-            3 free rolls · <span class="info-highlight">0.001 MON</span> per extra.
+            4 free rolls · <span class="info-highlight">0.001 MON</span> per extra.
           </p>
         </div>
 
@@ -200,7 +200,7 @@ const appMarkup = String.raw`
 
         <div id="duelDraftConsole" class="draft-console">
           <div class="rolls-left-row">
-            <span class="rolls-left-label" id="duelRollsLeft">3 FREE ROLLS LEFT</span>
+            <span class="rolls-left-label" id="duelRollsLeft">4 FREE ROLLS LEFT</span>
             <div class="roll-cost-badge" id="duelRollCostBadge">0.001 MON</div>
           </div>
           <div class="reroll-btns">
@@ -273,6 +273,22 @@ const appMarkup = String.raw`
         <button id="btnCloseLb" title="Close">✕</button>
       </div>
       <div id="lbBody"></div>
+    </div>
+  </div>
+
+  <div id="customModalOverlay" class="custom-modal-overlay">
+    <div class="custom-modal-panel">
+      <div class="custom-modal-header">
+        <span id="customModalTag" class="custom-modal-tag">⚽ FOOTMON DUELS</span>
+        <button id="customModalClose" class="btn-close-modal">✕</button>
+      </div>
+      <div class="custom-modal-body">
+        <div id="customModalIcon" class="custom-modal-icon">🏆</div>
+        <h2 id="customModalTitle" class="custom-modal-title">Victory!</h2>
+        <p id="customModalSubtitle" class="custom-modal-subtitle">You won the duel!</p>
+        <div id="customModalBox" class="custom-modal-box"></div>
+      </div>
+      <div id="customModalFooter" class="custom-modal-footer"></div>
     </div>
   </div>
 

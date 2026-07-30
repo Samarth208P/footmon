@@ -62,6 +62,7 @@ const Refs = {
   // Wallet
   btnConnect:     $("btnConnect"),
   walletBadge:    $("walletBadge"),
+  navbarLogo:     document.querySelector(".navbar-logo"),
 
   // Formation screen
   screenFormation:  $("screenFormation"),
@@ -74,6 +75,7 @@ const Refs = {
   // Play screen
   screenPlay:      $("screenPlay"),
   draftEmptyState:  $("draftEmptyState"),
+  draftEmptyScore:  $("draftEmptyScore"),
   draftActiveState: $("draftActiveState"),
   btnPlayRoll:      $("btnPlayRoll"),
   btnCancelDraft:   $("btnCancelDraft"),
@@ -162,7 +164,7 @@ function renderFormationPitch() {
 
 async function startGame() {
   Refs.btnStart.disabled = true;
-  Refs.btnStart.textContent = "Rolling…";
+  Refs.btnStart.innerHTML = 'Rolling <span class="football-roll">⚽</span>';
   try {
     // Clear slots and draft state for fresh draft progression game
     Game.state.slots = Game.buildSlots(Game.state.formation, Game.state.style);
@@ -177,7 +179,7 @@ async function startGame() {
     showToast(err.message, "error");
   } finally {
     Refs.btnStart.disabled = false;
-    Refs.btnStart.textContent = "Start Rolling 🎲";
+    Refs.btnStart.textContent = "Start Rolling →";
   }
 }
 
@@ -187,6 +189,10 @@ async function startGame() {
 function renderPlayScreen() {
   const s = Game.state;
   const isComplete = s.slots.every(slot => slot.player !== null);
+
+  if (Refs.draftEmptyScore) {
+    Refs.draftEmptyScore.style.display = "none";
+  }
 
   if (isComplete) {
     Refs.draftEmptyState.style.display  = "flex";
@@ -201,7 +207,15 @@ function renderPlayScreen() {
 
     if (iconEl) iconEl.textContent = "🏆";
     if (titleEl) titleEl.textContent = "Squad Complete!";
-    if (descEl) descEl.innerHTML = `Your squad is fully drafted.<br/>Submit your score of <strong>${avgScore}</strong> on-chain.`;
+    
+    if (Refs.draftEmptyScore) {
+      const rc = PitchRenderer.ratingColor(parseFloat(avgScore));
+      Refs.draftEmptyScore.style.display = "block";
+      Refs.draftEmptyScore.style.color = rc;
+      Refs.draftEmptyScore.textContent = avgScore;
+    }
+
+    if (descEl) descEl.innerHTML = `Your squad is fully drafted.<br/>Submit your score on-chain.`;
     
     if (btnEl) {
       if (!WalletManager.isConnected()) {
@@ -302,18 +316,24 @@ function renderPlayerList() {
       rowClass += " player-row--selected";
     }
 
-    const rc       = PitchRenderer.ratingColor(p.rating);
+    const isElite  = p.rating >= 90;
+    const rc       = isElite ? "#f0c040" : "var(--border2)";
+    const rcBadge  = isElite ? "#f0c040" : "var(--text2)";
+    const badgeBg  = isElite ? hexToRgba("#f0c040", 0.08) : "rgba(255,255,255,0.02)";
+    const badgeBdr = isElite ? hexToRgba("#f0c040", 0.15) : "var(--border2)";
+    const barColor = isElite ? "#f0c040" : "var(--text3)";
     const posStr   = p.positions.join(" / ");
-    const badgeBg  = hexToRgba(rc, 0.08);
-    const badgeBdr = hexToRgba(rc, 0.15);
     return `
       <div class="${rowClass}" style="border-left: 3px solid ${rc};"
            data-pid="${p.id}" data-pidx="${i}">
         <div class="player-row-left">
-          <span class="player-name">${p.name}</span>
+          <span class="player-name ${isElite ? "player-name--elite" : ""}">${p.name}</span>
           <span class="player-pos-tags">${posStr}</span>
         </div>
-        <span class="player-rating" style="color:${rc}; background-color:${badgeBg}; border-color:${badgeBdr};">${p.rating}</span>
+        <div class="player-rating-wrap">
+          <div class="player-rating-bar"><div class="player-rating-bar-fill" style="width:${p.rating}%; background:${barColor};"></div></div>
+          <span class="player-rating" style="color:${rcBadge}; background-color:${badgeBg}; border-color:${badgeBdr};">${p.rating}</span>
+        </div>
       </div>`;
   }).join("") || `<div class="player-empty">No players match this position</div>`;
 
@@ -429,12 +449,14 @@ function renderScorecard() {
   // Per-position rows
   Refs.scRows.innerHTML = Game.state.slots.map((sl, idx) => {
     const p  = sl.player;
-    const rc = p ? PitchRenderer.ratingColor(p.rating) : "";
+    const isElite = p && p.rating >= 90;
+    const rc = isElite ? "#f0c040" : "var(--text2)";
+    const barColor = isElite ? "#f0c040" : "var(--text3)";
     return `
       <div class="sc-row" data-idx="${idx}">
         <span class="sc-pos">${sl.pos}</span>
-        <span class="sc-name">${p ? PitchRenderer.shortName(p.name) : "—"}</span>
-        <span class="sc-rating" style="color:${rc}">${p ? p.rating : ""}</span>
+        <span class="sc-name ${isElite ? "player-name--elite" : ""}">${p ? PitchRenderer.shortName(p.name) : "—"}</span>
+        <div class="sc-rating-wrap">${p ? `<div class="sc-rating-bar"><div class="sc-rating-bar-fill" style="width:${p.rating}%; background:${barColor};"></div></div>` : ''}<span class="sc-rating" style="color:${rc}">${p ? p.rating : ""}</span></div>
       </div>`;
   }).join("");
 
@@ -552,6 +574,11 @@ function switchMobileTab(tab) {
 // Bootstrap
 // ══════════════════════════════════════════════════════════════════════════════
 document.addEventListener("DOMContentLoaded", () => {
+  // Logo redirect
+  if (Refs.navbarLogo) {
+    Refs.navbarLogo.addEventListener("click", () => switchToScreen("formation"));
+  }
+
   // Wallet
   Refs.btnConnect.addEventListener("click", handleConnectWallet);
 
@@ -612,7 +639,7 @@ async function handlePlayRoll() {
   }
 
   Refs.btnPlayRoll.disabled = true;
-  Refs.btnPlayRoll.textContent = "Rolling…";
+  Refs.btnPlayRoll.innerHTML = 'Rolling <span class="football-roll">⚽</span>';
   try {
     await Game.roll("full");
     renderPlayScreen();

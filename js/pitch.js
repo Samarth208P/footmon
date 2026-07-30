@@ -56,10 +56,10 @@ const PitchRenderer = (() => {
 </svg>`;
 
   function ratingColor(r) {
-    if (r >= 90) return "#fbbf24";
-    if (r >= 80) return "#4ade80";
-    if (r >= 70) return "#e5e7eb";
-    return "#9ca3af";
+    if (r >= 90) return "#f0c040";
+    if (r >= 80) return "#34d399";
+    if (r >= 70) return "#94a3b8";
+    return "#64748b";
   }
 
   function getJerseyNumber(player, slotPos) {
@@ -107,6 +107,8 @@ const PitchRenderer = (() => {
         const jerseyNum = getJerseyNumber(p, slot.pos);
         el.style.borderColor = ratingColor(p.rating);
         el.style.borderWidth = "2.5px";
+        // Add glow for elite players
+        if (p.rating >= 90) el.classList.add("slot--elite");
         el.innerHTML = `
           <div class="slot-player-jersey">
             <span class="slot-jersey-number">${jerseyNum}</span>

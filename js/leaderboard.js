@@ -107,7 +107,8 @@ const LeaderboardManager = (() => {
     const rows = top100.map((e, i) => {
       const isMe  = myAddr && e.player.toLowerCase() === myAddr.toLowerCase();
       const score = e.score.toFixed(2);
-      const flag  = getFlagEmoji(e.nation);
+      const iso2  = (ISO3_TO_2[e.nation] || e.nation.slice(0, 2)).toLowerCase();
+      const flagHtml = `<img src="flags/${iso2}.png" alt="${e.nation}" style="width:18px; height:12px; object-fit:cover; border-radius:1px; vertical-align:middle; margin-right:5px; box-shadow:0 1px 2px rgba(0,0,0,0.3);" />`;
       const date  = new Date(e.timestamp * 1000).toLocaleDateString();
       return `
         <tr class="lb-row ${isMe ? "lb-row--me" : ""}">
@@ -115,7 +116,7 @@ const LeaderboardManager = (() => {
           <td class="lb-player">
             <span class="lb-addr" title="${e.player}">${isMe ? "You" : shortAddr(e.player)}</span>
           </td>
-          <td class="lb-nation">${flag} ${e.nation} ${e.year}</td>
+          <td class="lb-nation">${flagHtml} ${e.nation} ${e.year}</td>
           <td class="lb-formation">${e.formation}</td>
           <td class="lb-score" style="color:${PitchRenderer.ratingColor(e.score)}">${score}</td>
           <td class="lb-date">${date}</td>

@@ -45,6 +45,14 @@ function ratingBadgeClass(r) {
   return "rating--gray";
 }
 
+function hexToRgba(hex, alpha) {
+  if (!hex || !hex.startsWith("#")) return hex;
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
 // ══════════════════════════════════════════════════════════════════════════════
 // DOM refs
 // ══════════════════════════════════════════════════════════════════════════════
@@ -180,12 +188,29 @@ function renderPlayScreen() {
   if (s.nationCode === null) {
     Refs.draftEmptyState.style.display  = "flex";
     Refs.draftActiveState.style.display = "none";
+
+    const titleEl = Refs.draftEmptyState.querySelector(".draft-empty-title");
+    const descEl  = Refs.draftEmptyState.querySelector(".draft-empty-desc");
+    const btnEl   = Refs.draftEmptyState.querySelector(".btn-play-roll");
+    const isPaid  = s.rollsUsed >= s.freeRolls;
+
+    if (isPaid) {
+      if (titleEl) titleEl.textContent = "Pay & Roll";
+      if (descEl) descEl.innerHTML = `Free rolls used.<br/>Pay <strong>${ROLL_PRICE_MON} MON</strong> to draft next player.`;
+      if (btnEl) btnEl.textContent = `Pay & Roll 🎲 (${ROLL_PRICE_MON} MON)`;
+    } else {
+      const remaining = s.freeRolls - s.rollsUsed;
+      if (titleEl) titleEl.textContent = "Draft Next Player";
+      if (descEl) descEl.textContent = `Roll to draw a nation. ${remaining} free roll${remaining !== 1 ? "s" : ""} left.`;
+      if (btnEl) btnEl.textContent = "Roll 🎲";
+    }
   } else {
     Refs.draftEmptyState.style.display  = "none";
     Refs.draftActiveState.style.display = "flex";
 
     // Drawn info
-    Refs.drawnFlag.textContent   = getFlagEmoji(s.nationCode);
+    const iso2 = (ISO3_TO_2[s.nationCode] || s.nationCode.slice(0, 2)).toLowerCase();
+    Refs.drawnFlag.innerHTML = `<img src="flags/${iso2}.png" alt="${s.nationName}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;" />`;
     Refs.drawnNation.textContent = `${s.nationName}`;
     Refs.drawnYear.textContent   = `${s.year}`;
 
@@ -247,14 +272,16 @@ function renderPlayerList() {
 
     const rc       = PitchRenderer.ratingColor(p.rating);
     const posStr   = p.positions.join(" / ");
+    const badgeBg  = hexToRgba(rc, 0.08);
+    const badgeBdr = hexToRgba(rc, 0.15);
     return `
-      <div class="${rowClass}"
+      <div class="${rowClass}" style="border-left: 3px solid ${rc};"
            data-pid="${p.id}" data-pidx="${i}">
         <div class="player-row-left">
           <span class="player-name">${p.name}</span>
           <span class="player-pos-tags">${posStr}</span>
         </div>
-        <span class="player-rating" style="color:${rc}">${p.rating}</span>
+        <span class="player-rating" style="color:${rc}; background-color:${badgeBg}; border-color:${badgeBdr};">${p.rating}</span>
       </div>`;
   }).join("") || `<div class="player-empty">No players match this position</div>`;
 

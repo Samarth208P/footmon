@@ -36,6 +36,20 @@
   <!-- ══════════ SCREEN 1: FORMATION PICKER ══════════════════════════════ -->
   <section id="screenFormation" class="screen">
 
+    <!-- Mobile-only hero (hidden on desktop) -->
+    <div class="mob-home-hero">
+      <div class="mob-hero-badge">⚽ MONAD TESTNET</div>
+      <h1 class="mob-hero-title">FootMon</h1>
+      <p class="mob-hero-sub">Build your dream World Cup squad.<br/>Compete on-chain. Win MON every hour.</p>
+      <div class="mob-hero-stats">
+        <div class="mob-stat"><span class="mob-stat-val">3</span><span class="mob-stat-label">Free Rolls</span></div>
+        <div class="mob-stat-divider"></div>
+        <div class="mob-stat"><span class="mob-stat-val">0.001</span><span class="mob-stat-label">MON / extra</span></div>
+        <div class="mob-stat-divider"></div>
+        <div class="mob-stat"><span class="mob-stat-val">50%</span><span class="mob-stat-label">Prize Pool</span></div>
+      </div>
+    </div>
+
     <!-- Left: controls -->
     <aside class="formation-panel">
 
@@ -72,7 +86,7 @@
         </p>
       </div>
 
-      <div style="display: flex; flex-direction: column; gap: 8px; width: 100%; margin-top: 10px;">
+      <div class="formation-actions">
         <button id="btnStart">Start Rolling 🎲</button>
         <button id="btnHomeLeaderboard" class="btn-home-leaderboard">Leaderboard 🏆</button>
       </div>
@@ -88,6 +102,22 @@
 
   <!-- ══════════ SCREEN 2: PLAY ════════════════════════════════════════════ -->
   <section id="screenPlay" class="screen" style="display:none">
+
+    <!-- Mobile tab bar (hidden on desktop) -->
+    <div class="mobile-tabs" id="mobileTabs">
+      <button class="mob-tab active" data-tab="draft" id="tabDraft">
+        <span class="mob-tab-icon">🎲</span>
+        <span class="mob-tab-label">Draft</span>
+      </button>
+      <button class="mob-tab" data-tab="pitch" id="tabPitch">
+        <span class="mob-tab-icon">⚽</span>
+        <span class="mob-tab-label">Pitch</span>
+      </button>
+      <button class="mob-tab" data-tab="stats" id="tabStats">
+        <span class="mob-tab-icon">📊</span>
+        <span class="mob-tab-label">Stats</span>
+      </button>
+    </div>
 
     <!-- Left: drawn info + player list -->
     <aside class="play-left">

@@ -333,10 +333,14 @@ function handlePlayerClick(player) {
   const s = Game.state;
 
   if (s.selectedPlayer && s.selectedPlayer.id === player.id) {
+    // Deselecting — go back to draft panel so they can pick another player
     s.selectedPlayer = null;
+    switchMobileTab("draft");
   } else {
     s.selectedPlayer = player;
     s.selectedPlacedSlotIdx = null; // deselect placed slot when selecting squad player
+    // Show pitch immediately so compatible slots are visible
+    switchMobileTab("pitch");
   }
 
   renderPitch();
@@ -369,6 +373,8 @@ function renderPitch() {
           const success = Game.assignPlayer(s.selectedPlayer, idx);
           if (success) {
             renderPlayScreen();
+            // On mobile: return to draft tab so user can roll for next player
+            switchMobileTab("draft");
           }
         } else {
           if (slot.player) {
@@ -515,6 +521,31 @@ function switchToScreen(screen) {
   Game.state.screen = screen;
   Refs.screenFormation.style.display = screen === "formation" ? "flex"   : "none";
   Refs.screenPlay.style.display      = screen === "play"      ? "flex"   : "none";
+  // On play screen, ensure draft panel is visible by default on mobile
+  if (screen === "play") switchMobileTab("draft");
+}
+
+// ── Mobile tab switching ──────────────────────────────────────────────────────
+function isMobile() {
+  return window.innerWidth <= 680;
+}
+
+function switchMobileTab(tab) {
+  if (!isMobile()) return;
+  // Toggle .mob-active on the three panels
+  const playLeft   = document.querySelector(".play-left");
+  const pitchWrap  = document.querySelector(".pitch-wrap");
+  const playRight  = document.querySelector(".play-right");
+  if (!playLeft || !pitchWrap || !playRight) return;
+
+  playLeft.classList.toggle("mob-active",  tab === "draft");
+  pitchWrap.classList.toggle("mob-active", tab === "pitch");
+  playRight.classList.toggle("mob-active", tab === "stats");
+
+  // Sync tab button active state
+  document.querySelectorAll(".mob-tab").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.tab === tab);
+  });
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -530,6 +561,11 @@ document.addEventListener("DOMContentLoaded", () => {
   if (Refs.btnHomeLeaderboard) {
     Refs.btnHomeLeaderboard.addEventListener("click", openLeaderboard);
   }
+
+  // Mobile tabs
+  document.querySelectorAll(".mob-tab").forEach(btn => {
+    btn.addEventListener("click", () => switchMobileTab(btn.dataset.tab));
+  });
 
   // Play screen — reroll buttons
   Refs.btnNation.addEventListener("click", () => handleReroll("nation"));

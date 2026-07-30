@@ -14,6 +14,9 @@ const DuelManager = (() => {
     sessionWallet: null, // Ephemeral session wallet
     activeDuel: null,    // Active duel state
     socket: null,
+    relayIndex: 0,
+    relayRetryTimer: null,
+    relayManuallyClosed: false,
     pendingMessages: [],
     challenges: []
   };
@@ -124,13 +127,31 @@ const DuelManager = (() => {
 
   // ── Nostr Connection ──────────────────────────────────────────────────────
   function connectNostr() {
-    const url = NOSTR_RELAYS[0];
+    const url = NOSTR_RELAYS[state.relayIndex];
+    if (!url) {
+      showToast("No duel relay available right now. Duel mode is temporarily offline.", "error");
+      return;
+    }
+
+    if (state.socket && (
+      state.socket.readyState === WebSocket.OPEN ||
+      state.socket.readyState === WebSocket.CONNECTING
+    )) {
+      return;
+    }
+
+    state.relayManuallyClosed = false;
     const ws = new WebSocket(url);
 
     ws.onopen = () => {
       state.socket = ws;
+      if (state.relayRetryTimer) {
+        clearTimeout(state.relayRetryTimer);
+        state.relayRetryTimer = null;
+      }
       console.log("[Duel] Connected to Nostr relay:", url);
       subscribeLobby();
+      flushPendingMessages();
       if (state.activeDuel) {
         subscribeDuel(state.activeDuel.id);
       }
@@ -147,11 +168,45 @@ const DuelManager = (() => {
       }
     };
 
-    ws.onerror = (err) => console.error("[Duel] Nostr connection error", err);
-    ws.onclose = () => {
-      console.log("[Duel] Nostr connection closed. Reconnecting...");
-      setTimeout(connectNostr, 3000);
+    ws.onerror = () => {
+      // Let onclose handle retries/fallbacks to avoid noisy duplicate console errors.
     };
+    ws.onclose = () => {
+      if (state.socket === ws) {
+        state.socket = null;
+      }
+      if (state.relayManuallyClosed) return;
+
+      const currentRelay = NOSTR_RELAYS[state.relayIndex];
+      const nextRelayIndex = (state.relayIndex + 1) % NOSTR_RELAYS.length;
+      const switchingRelay = NOSTR_RELAYS.length > 1 && nextRelayIndex !== state.relayIndex;
+
+      if (switchingRelay) {
+        state.relayIndex = nextRelayIndex;
+        console.warn("[Duel] Relay unavailable, switching from", currentRelay, "to", NOSTR_RELAYS[state.relayIndex]);
+      } else {
+        console.warn("[Duel] Relay unavailable, retrying", currentRelay);
+      }
+
+      if (!state.relayRetryTimer) {
+        state.relayRetryTimer = setTimeout(() => {
+          state.relayRetryTimer = null;
+          connectNostr();
+        }, 3000);
+      }
+    };
+  }
+
+  function flushPendingMessages() {
+    if (!state.socket || state.socket.readyState !== WebSocket.OPEN || !state.pendingMessages.length) {
+      return;
+    }
+
+    const pending = [...state.pendingMessages];
+    state.pendingMessages = [];
+    pending.forEach((event) => {
+      state.socket.send(JSON.stringify(["EVENT", event]));
+    });
   }
 
   function subscribeLobby() {
@@ -784,6 +839,14 @@ const DuelManager = (() => {
 })();
 
 // Initialize when DOM is ready
-window.addEventListener("DOMContentLoaded", () => {
+function bootstrapDuel() {
+  if (window.__FOOTMON_DUEL_BOOTSTRAPPED__) return;
+  window.__FOOTMON_DUEL_BOOTSTRAPPED__ = true;
   setTimeout(DuelManager.init, 500);
-});
+}
+
+if (document.readyState === "loading") {
+  window.addEventListener("DOMContentLoaded", bootstrapDuel);
+} else {
+  bootstrapDuel();
+}

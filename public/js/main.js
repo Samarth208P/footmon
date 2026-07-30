@@ -588,7 +588,10 @@ function switchMobileTab(tab) {
 // ══════════════════════════════════════════════════════════════════════════════
 // Bootstrap
 // ══════════════════════════════════════════════════════════════════════════════
-document.addEventListener("DOMContentLoaded", () => {
+function bootstrapApp() {
+  if (window.__FOOTMON_BOOTSTRAPPED__) return;
+  window.__FOOTMON_BOOTSTRAPPED__ = true;
+
   // Logo redirect
   if (Refs.navbarLogo) {
     Refs.navbarLogo.addEventListener("click", () => {
@@ -650,7 +653,13 @@ document.addEventListener("DOMContentLoaded", () => {
   if (WalletManager.isMetaMaskAvailable() && window.ethereum.selectedAddress) {
     handleConnectWallet().catch(() => {});
   }
-});
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", bootstrapApp);
+} else {
+  bootstrapApp();
+}
 
 async function handlePlayRoll() {
   if (Game.state.busy) return;

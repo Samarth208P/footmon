@@ -5,8 +5,8 @@ const DataManager = (() => {
 
   async function loadYear(year) {
     if (cache[year]) return cache[year];
-    const res = await fetch(`data/${year}.json`);
-    if (!res.ok) throw new Error(`Failed to load data/${year}.json`);
+    const res = await fetch(`/data/${year}.json`);
+    if (!res.ok) throw new Error(`Failed to load /data/${year}.json`);
     cache[year] = await res.json();
     return cache[year];
   }

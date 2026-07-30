@@ -92,6 +92,22 @@ const DuelManager = (() => {
       stopEventPolling();
       renderLobby([]);
     });
+
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) {
+        stopChallengePolling();
+        stopEventPolling();
+      } else {
+        if (Refs.screenLobby && Refs.screenLobby.style.display !== "none") {
+          startChallengePolling();
+          refreshLobby();
+        }
+        if (state.activeDuel) {
+          startEventPolling();
+          pollEvents();
+        }
+      }
+    });
   }
 
   function setupSessionWallet() {
@@ -559,6 +575,7 @@ const DuelManager = (() => {
   }
 
   async function handleDuelRoll(mode) {
+    if (state.busyAction) return;
     const duel = state.activeDuel;
     if (!duel || duel.status !== "active") return;
     if (!currentUserTurn(duel)) {
@@ -610,6 +627,7 @@ const DuelManager = (() => {
       }));
       state.pendingPickPlayer = null;
 
+      state.busyAction = true;
       const event = await sendEvent("roll_result", {
         nation: duel.drawnNation,
         year: duel.drawnYear,
@@ -621,6 +639,8 @@ const DuelManager = (() => {
       renderDuelBoard();
     } catch (err) {
       showToast(err.message, "error");
+    } finally {
+      state.busyAction = false;
     }
   }
 
@@ -635,6 +655,7 @@ const DuelManager = (() => {
   }
 
   async function handlePickPlayer(slotIdx) {
+    if (state.busyAction) return;
     const duel = state.activeDuel;
     const player = state.pendingPickPlayer;
     if (!duel || !player) return;
@@ -664,6 +685,7 @@ const DuelManager = (() => {
     duel.turn = nextTurn(duel.turn);
 
     try {
+      state.busyAction = true;
       const event = await sendEvent("pick_player", {
         slotIndex: slotIdx,
         player: slot.player,
@@ -671,6 +693,8 @@ const DuelManager = (() => {
       if (event?.id) duel.lastEventId = event.id;
     } catch (err) {
       showToast(err.message, "error");
+    } finally {
+      state.busyAction = false;
     }
 
     renderDuelBoard();

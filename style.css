@@ -271,6 +271,28 @@ h1, h2, h3 { font-family: "Space Grotesk", sans-serif; font-weight: 700; letter-
 #btnStart:active { transform: translateY(0.5px) scale(0.99); }
 #btnStart:disabled { opacity: 0.3; cursor: not-allowed; transform: none; box-shadow: none; }
 
+.btn-home-leaderboard {
+  width: 100%;
+  padding: 12px;
+  background: transparent;
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
+  color: var(--text2);
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.btn-home-leaderboard:hover {
+  border-color: var(--text2);
+  color: var(--text);
+  background: var(--panel3);
+}
+.btn-home-leaderboard:active {
+  transform: scale(0.99);
+}
+
 /* ═══════════════════════════════════════════════════════════════════════════
    PITCH  (shared by both screens)
    ═══════════════════════════════════════════════════════════════════════════ */
@@ -1149,6 +1171,33 @@ h1, h2, h3 { font-family: "Space Grotesk", sans-serif; font-weight: 700; letter-
   opacity: 0.95; 
   box-shadow: 0 0 16px rgba(124, 58, 237, 0.35);
   transform: translateY(-0.5px);
+}
+.btn-play-roll:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+.btn-cancel-draft {
+  width: 100%;
+  padding: 10px;
+  background: transparent;
+  border: 1.5px solid var(--text3);
+  border-radius: var(--radius-sm);
+  color: var(--text2);
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.btn-cancel-draft:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text);
+  border-color: var(--text2);
+}
+.btn-cancel-draft:active {
+  transform: scale(0.98);
 }
 
 /* Draft active state */

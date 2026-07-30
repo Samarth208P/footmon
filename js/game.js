@@ -152,6 +152,12 @@ const Game = (() => {
     // Remove player from any other slot they might already occupy
     state.slots.forEach(s => { if (s.player && s.player.id === playerObj.id) s.player = null; });
 
+    // Save the drafted nation and year from game state onto the player object
+    if (state.nationCode) {
+      playerObj.draftedNation = state.nationCode;
+      playerObj.draftedYear   = state.year;
+    }
+
     // If slot already has a player, remove them first
     slot.player = playerObj;
 

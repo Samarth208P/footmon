@@ -64,17 +64,19 @@ const Refs = {
   walletBadge:    $("walletBadge"),
 
   // Formation screen
-  screenFormation: $("screenFormation"),
-  formationBtns:   document.querySelectorAll(".btn-formation"),
-  styleBtns:       document.querySelectorAll(".btn-style"),
-  btnStart:        $("btnStart"),
-  pitchFormation:  $("pitchFormation"),
+  screenFormation:  $("screenFormation"),
+  formationBtns:    document.querySelectorAll(".btn-formation"),
+  styleBtns:        document.querySelectorAll(".btn-style"),
+  btnStart:         $("btnStart"),
+  btnHomeLeaderboard: $("btnHomeLeaderboard"),
+  pitchFormation:   $("pitchFormation"),
 
   // Play screen
   screenPlay:      $("screenPlay"),
   draftEmptyState:  $("draftEmptyState"),
   draftActiveState: $("draftActiveState"),
   btnPlayRoll:      $("btnPlayRoll"),
+  btnCancelDraft:   $("btnCancelDraft"),
   drawnFlag:       $("drawnFlag"),
   drawnNation:     $("drawnNation"),
   drawnYear:       $("drawnYear"),
@@ -184,14 +186,41 @@ async function startGame() {
 // ══════════════════════════════════════════════════════════════════════════════
 function renderPlayScreen() {
   const s = Game.state;
+  const isComplete = s.slots.every(slot => slot.player !== null);
 
-  if (s.nationCode === null) {
+  if (isComplete) {
     Refs.draftEmptyState.style.display  = "flex";
     Refs.draftActiveState.style.display = "none";
 
     const titleEl = Refs.draftEmptyState.querySelector(".draft-empty-title");
     const descEl  = Refs.draftEmptyState.querySelector(".draft-empty-desc");
-    const btnEl   = Refs.draftEmptyState.querySelector(".btn-play-roll");
+    const btnEl   = Refs.btnPlayRoll;
+    const iconEl  = Refs.draftEmptyState.querySelector(".draft-empty-icon");
+
+    const avgScore = Game.getTeamStats().avg;
+
+    if (iconEl) iconEl.textContent = "🏆";
+    if (titleEl) titleEl.textContent = "Squad Complete!";
+    if (descEl) descEl.innerHTML = `Your squad is fully drafted.<br/>Submit your score of <strong>${avgScore}</strong> on-chain.`;
+    
+    if (btnEl) {
+      if (!WalletManager.isConnected()) {
+        btnEl.textContent = "Connect Wallet to Submit";
+      } else {
+        btnEl.textContent = "Submit Score";
+      }
+      btnEl.disabled = false;
+    }
+  } else if (s.nationCode === null) {
+    Refs.draftEmptyState.style.display  = "flex";
+    Refs.draftActiveState.style.display = "none";
+
+    const titleEl = Refs.draftEmptyState.querySelector(".draft-empty-title");
+    const descEl  = Refs.draftEmptyState.querySelector(".draft-empty-desc");
+    const btnEl   = Refs.btnPlayRoll;
+    const iconEl  = Refs.draftEmptyState.querySelector(".draft-empty-icon");
+
+    if (iconEl) iconEl.textContent = "🎲";
     const isPaid  = s.rollsUsed >= s.freeRolls;
 
     if (isPaid) {
@@ -203,6 +232,9 @@ function renderPlayScreen() {
       if (titleEl) titleEl.textContent = "Draft Next Player";
       if (descEl) descEl.textContent = `Roll to draw a nation. ${remaining} free roll${remaining !== 1 ? "s" : ""} left.`;
       if (btnEl) btnEl.textContent = "Roll 🎲";
+    }
+    if (btnEl) {
+      btnEl.disabled = false;
     }
   } else {
     Refs.draftEmptyState.style.display  = "none";
@@ -432,17 +464,34 @@ async function handleSubmit() {
     return;
   }
 
+  // Find a representative assigned player to get their drafted nation code and year
+  const representativeSlot = s.slots.find(sl => sl.player && sl.player.draftedNation);
+  const nation = representativeSlot ? representativeSlot.player.draftedNation : "BRA";
+  const year   = representativeSlot ? representativeSlot.player.draftedYear : 2002;
+
   Refs.btnSubmit.disabled = true;
   Refs.btnSubmit.textContent = "Submitting…";
+
+  const btnEl = Refs.btnPlayRoll;
+  if (btnEl) {
+    btnEl.disabled = true;
+    btnEl.textContent = "Submitting…";
+  }
+
   try {
     showToast("Confirm transaction in MetaMask…", "info");
-    await ContractManager.submitScore(parseFloat(score), s.nationCode, s.year, s.formation);
+    await ContractManager.submitScore(parseFloat(score), nation, year, s.formation);
     showToast(`Score ${score} submitted on-chain ✔`, "success");
+    switchToScreen("formation");
   } catch (err) {
     showToast(err.message, "error");
   } finally {
     Refs.btnSubmit.disabled = false;
     Refs.btnSubmit.textContent = "Submit Score";
+    if (btnEl) {
+      btnEl.disabled = false;
+    }
+    renderPlayScreen();
   }
 }
 
@@ -478,11 +527,17 @@ document.addEventListener("DOMContentLoaded", () => {
   // Formation screen
   initFormationScreen();
   Refs.btnStart.addEventListener("click", startGame);
+  if (Refs.btnHomeLeaderboard) {
+    Refs.btnHomeLeaderboard.addEventListener("click", openLeaderboard);
+  }
 
   // Play screen — reroll buttons
   Refs.btnNation.addEventListener("click", () => handleReroll("nation"));
   Refs.btnYear.addEventListener("click",   () => handleReroll("year"));
   Refs.btnPlayRoll.addEventListener("click", handlePlayRoll);
+  if (Refs.btnCancelDraft) {
+    Refs.btnCancelDraft.addEventListener("click", () => switchToScreen("formation"));
+  }
 
   // Submit + Leaderboard
   Refs.btnSubmit.addEventListener("click", handleSubmit);
@@ -509,6 +564,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
 async function handlePlayRoll() {
   if (Game.state.busy) return;
+
+  const isComplete = Game.state.slots.every(slot => slot.player !== null);
+  if (isComplete) {
+    if (!WalletManager.isConnected()) {
+      await handleConnectWallet();
+    } else {
+      await handleSubmit();
+    }
+    return;
+  }
+
   Refs.btnPlayRoll.disabled = true;
   Refs.btnPlayRoll.textContent = "Rolling…";
   try {
@@ -518,6 +584,6 @@ async function handlePlayRoll() {
     showToast(err.message, "error");
   } finally {
     Refs.btnPlayRoll.disabled = false;
-    Refs.btnPlayRoll.textContent = "Roll 🎲";
+    renderPlayScreen();
   }
 }

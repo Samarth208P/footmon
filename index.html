@@ -72,7 +72,10 @@
         </p>
       </div>
 
-      <button id="btnStart">Start Rolling 🎲</button>
+      <div style="display: flex; flex-direction: column; gap: 8px; width: 100%; margin-top: 10px;">
+        <button id="btnStart">Start Rolling 🎲</button>
+        <button id="btnHomeLeaderboard" class="btn-home-leaderboard">Leaderboard 🏆</button>
+      </div>
 
     </aside>
 
@@ -94,7 +97,10 @@
         <div class="draft-empty-icon">🎲</div>
         <h3 class="draft-empty-title">Draft Next Player</h3>
         <p class="draft-empty-desc">Roll to draw a random World Cup nation &amp; year.</p>
-        <button id="btnPlayRoll" class="btn-play-roll">Roll 🎲</button>
+        <div style="width: 100%; display: flex; flex-direction: column; gap: 8px;">
+          <button id="btnPlayRoll" class="btn-play-roll">Roll 🎲</button>
+          <button id="btnCancelDraft" class="btn-cancel-draft">Cancel &amp; Restart</button>
+        </div>
       </div>
 
       <!-- ACTIVE STATE: Nation drawn, select player -->

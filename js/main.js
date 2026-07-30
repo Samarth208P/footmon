@@ -541,10 +541,25 @@ function closeLeaderboard() {
 // ══════════════════════════════════════════════════════════════════════════════
 function switchToScreen(screen) {
   Game.state.screen = screen;
-  Refs.screenFormation.style.display = screen === "formation" ? "flex"   : "none";
-  Refs.screenPlay.style.display      = screen === "play"      ? "flex"   : "none";
-  // On play screen, ensure draft panel is visible by default on mobile
-  if (screen === "play") switchMobileTab("draft");
+  
+  Refs.screenFormation.style.display = "none";
+  Refs.screenPlay.style.display = "none";
+  
+  const lobbyEl = document.getElementById("screenDuelLobby");
+  const playEl = document.getElementById("screenDuelPlay");
+  if (lobbyEl) lobbyEl.style.display = "none";
+  if (playEl) playEl.style.display = "none";
+
+  if (screen === "formation") {
+    Refs.screenFormation.style.display = "flex";
+  } else if (screen === "play") {
+    Refs.screenPlay.style.display = "flex";
+    switchMobileTab("draft");
+  } else if (screen === "duelLobby" && lobbyEl) {
+    lobbyEl.style.display = "flex";
+  } else if (screen === "duelPlay" && playEl) {
+    playEl.style.display = "flex";
+  }
 }
 
 // ── Mobile tab switching ──────────────────────────────────────────────────────
@@ -576,7 +591,19 @@ function switchMobileTab(tab) {
 document.addEventListener("DOMContentLoaded", () => {
   // Logo redirect
   if (Refs.navbarLogo) {
-    Refs.navbarLogo.addEventListener("click", () => switchToScreen("formation"));
+    Refs.navbarLogo.addEventListener("click", () => {
+      const singleNav = document.getElementById("navSinglePlayer");
+      const duelNav = document.getElementById("navDuelMode");
+      if (singleNav) singleNav.classList.add("active");
+      if (duelNav) duelNav.classList.remove("active");
+      
+      const lobbyEl = document.getElementById("screenDuelLobby");
+      const playEl = document.getElementById("screenDuelPlay");
+      if (lobbyEl) lobbyEl.style.display = "none";
+      if (playEl) playEl.style.display = "none";
+      
+      switchToScreen("formation");
+    });
   }
 
   // Wallet

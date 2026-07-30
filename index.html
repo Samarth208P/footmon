@@ -27,6 +27,10 @@
       <span>FootMon</span>
       <span class="logo-mon">MONAD</span>
     </div>
+    <div class="navbar-nav">
+      <button id="navSinglePlayer" class="nav-link active">Single Player</button>
+      <button id="navDuelMode" class="nav-link">1v1 Duels</button>
+    </div>
     <div class="navbar-right">
       <button id="btnConnect">🦊 Connect Wallet</button>
       <div id="walletBadge"></div>
@@ -205,6 +209,117 @@
     </aside>
 
   </section>
+
+  <!-- ══════════ SCREEN 3: DUEL LOBBY ═════════════════════════════════════ -->
+  <section id="screenDuelLobby" class="screen" style="display:none">
+    <aside class="lobby-side">
+      <h2 class="lobby-title">1v1 Draft Duels</h2>
+      <p class="lobby-desc">Stake MON, alternate turns drafting, highest squad score wins the pot!</p>
+      
+      <div class="lobby-box">
+        <p class="section-label">Create a Challenge</p>
+        <div class="create-duel-inputs">
+          <input type="number" id="inputDuelStake" placeholder="Stake amount (e.g. 0.5)" step="0.1" min="0.1" />
+          <span class="stake-mon-label">MON</span>
+        </div>
+        <button id="btnCreateDuel" class="btn-create-duel">Create Challenge</button>
+      </div>
+    </aside>
+    
+    <div class="lobby-main">
+      <div class="lobby-header">
+        <span class="lobby-section-title">Open Challenges</span>
+        <button id="btnRefreshLobby" class="btn-refresh-lobby">Refresh ↺</button>
+      </div>
+      <div id="duelChallengesList" class="challenges-list">
+        <div class="challenges-empty">No active challenges. Create one above!</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════ SCREEN 4: DUEL BOARD ═════════════════════════════════════ -->
+  <section id="screenDuelPlay" class="screen" style="display:none">
+    
+    <!-- Left panel: Draft card controls -->
+    <aside class="duel-left">
+      <!-- Active turn indicator banner -->
+      <div id="duelTurnBanner" class="duel-turn-banner">
+        <span id="duelTurnText">YOUR TURN</span>
+      </div>
+
+      <!-- Draft roll state -->
+      <div id="duelDraftConsole" class="draft-console">
+        <!-- Rerolls left counter -->
+        <div class="rolls-left-row">
+          <span class="rolls-left-label" id="duelRollsLeft">3 FREE ROLLS LEFT</span>
+          <div class="roll-cost-badge" id="duelRollCostBadge">0.001 MON</div>
+        </div>
+        <div class="reroll-btns">
+          <button id="btnDuelRerollNation" class="btn-reroll">↺ Nation</button>
+          <button id="btnDuelRerollYear" class="btn-reroll">↺ Year</button>
+        </div>
+
+        <div id="duelDraftEmptyState" class="draft-empty">
+          <div class="draft-empty-icon">🎲</div>
+          <h3 class="draft-empty-title">Draft Next Player</h3>
+          <p class="draft-empty-desc">Roll to draw a random World Cup nation &amp; year.</p>
+          <div style="width: 100%; display: flex; flex-direction: column; gap: 8px;">
+            <button id="btnDuelRoll" class="btn-play-roll">Roll 🎲</button>
+          </div>
+        </div>
+
+        <div id="duelDraftActiveState" class="draft-active" style="display:none;">
+          <div class="drawn-card">
+            <div id="duelDrawnFlag" class="drawn-flag"></div>
+            <div class="drawn-info-wrap">
+              <span id="duelDrawnNation" class="drawn-nation">Brazil</span>
+              <span id="duelDrawnYear" class="drawn-year">2002</span>
+            </div>
+          </div>
+          <div class="player-list-header">Select Player</div>
+          <div id="duelPlayerList"></div>
+        </div>
+      </div>
+
+      <!-- Action buttons -->
+      <div class="duel-actions-box">
+        <button id="btnDuelCancel" class="btn-cancel-draft">Quit Duel</button>
+      </div>
+    </aside>
+
+    <!-- Center/Right panel: Side-by-side Pitches and Stats comparison -->
+    <div class="duel-main">
+      <!-- Top Live stats comparisons banner -->
+      <div class="duel-stats-banner">
+        <div class="duel-stat-col text-left">
+          <span class="duel-stat-label">YOUR SQUAD</span>
+          <span class="duel-stat-value" id="duelMyAvg">0.0</span>
+          <div class="duel-stat-minibar"><div id="duelMyAttackBar" style="width:0%"></div></div>
+          <span class="duel-stat-sub">ATK: <b id="duelMyAttack">0</b> | DEF: <b id="duelMyDefense">0</b></span>
+        </div>
+        <div class="duel-stat-divider">VS</div>
+        <div class="duel-stat-col text-right">
+          <span class="duel-stat-label">OPPONENT SQUAD</span>
+          <span class="duel-stat-value" id="duelOpAvg">0.0</span>
+          <div class="duel-stat-minibar"><div id="duelOpAttackBar" style="width:0%"></div></div>
+          <span class="duel-stat-sub">ATK: <b id="duelOpAttack">0</b> | DEF: <b id="duelOpDefense">0</b></span>
+        </div>
+      </div>
+
+      <!-- Split Pitches container -->
+      <div class="duel-split-container">
+        <div class="duel-pitch-block">
+          <div class="duel-pitch-title">Your Pitch</div>
+          <div class="pitch" id="pitchDuelPlayer"></div>
+        </div>
+        <div class="duel-pitch-block">
+          <div class="duel-pitch-title">Opponent's Pitch</div>
+          <div class="pitch" id="pitchDuelOpponent"></div>
+        </div>
+      </div>
+    </div>
+
+  </section>
   </div>
 
   <!-- ══════════ LEADERBOARD OVERLAY ══════════════════════════════════════ -->
@@ -231,6 +346,7 @@
 <script src="js/pitch.js"></script>
 <script src="js/game.js"></script>
 <script src="js/leaderboard.js"></script>
+<script src="js/duel.js"></script>
 <script src="js/main.js"></script>
 </body>
 </html>

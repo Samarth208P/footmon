@@ -17,6 +17,21 @@ const NATION_NAMES = {
     'USA': 'United States'
 };
 
+const NATION_FLAGS = {
+    'ALG': '/flags/dz.png', 'ARG': '/flags/ar.png', 'AUS': '/flags/au.png', 'AUT': '/flags/at.png',
+    'BEL': '/flags/be.png', 'BRA': '/flags/br.png', 'BUL': '/flags/bg.png', 'CHI': '/flags/cl.png',
+    'CIV': '/flags/ci.png', 'CMR': '/flags/cm.png', 'COL': '/flags/co.png', 'CRC': '/flags/cr.png',
+    'CRO': '/flags/hr.png', 'CZE': '/flags/cz.png', 'DEN': '/flags/dk.png', 'ECU': '/flags/ec.png',
+    'EGY': '/flags/eg.png', 'ENG': '/flags/gb-eng.png', 'ESP': '/flags/es.png', 'FRA': '/flags/fr.png',
+    'GER': '/flags/de.png', 'GHA': '/flags/gh.png', 'GRE': '/flags/gr.png', 'IRL': '/flags/ie.png',
+    'ITA': '/flags/it.png', 'JPN': '/flags/jp.png', 'KOR': '/flags/kr.png', 'MAR': '/flags/ma.png',
+    'MEX': '/flags/mx.png', 'NED': '/flags/nl.png', 'NGA': '/flags/ng.png', 'PAR': '/flags/py.png',
+    'PER': '/flags/pe.png', 'POL': '/flags/pl.png', 'POR': '/flags/pt.png', 'ROU': '/flags/ro.png',
+    'RUS': '/flags/ru.png', 'SCO': '/flags/gb-sct.png', 'SEN': '/flags/sn.png', 'SRB': '/flags/rs.png',
+    'SUI': '/flags/ch.png', 'SWE': '/flags/se.png', 'TUR': '/flags/tr.png', 'UKR': '/flags/ua.png',
+    'URU': '/flags/uy.png', 'USA': '/flags/us.png'
+};
+
 function getNationDisplayName(code) {
     if (!code) return '';
     const fullName = NATION_NAMES[code.toUpperCase()];
@@ -402,9 +417,18 @@ export default function Home() {
                     {screen === 'play' && currentDraft && (
                         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 flex flex-col overflow-hidden">
                             <h3 className="text-[11px] font-bold text-gray-500 tracking-[0.15em] uppercase mb-1">Drawn</h3>
-                            <div className="mb-4">
-                                <div className="text-2xl font-black text-gray-900 tracking-tight leading-tight">{getNationDisplayName(currentDraft.nationName)}</div>
-                                <div className="text-xl font-black text-[#ff5c4a] tracking-tight leading-tight">World Cup<br/>{currentDraft.year}</div>
+                            <div className="mb-4 flex items-center gap-3">
+                                {NATION_FLAGS[currentDraft.nationName] && (
+                                    <img 
+                                        src={NATION_FLAGS[currentDraft.nationName]} 
+                                        alt={currentDraft.nationName} 
+                                        className="w-10 h-7 object-cover rounded shadow-sm border border-gray-200" 
+                                    />
+                                )}
+                                <div>
+                                    <div className="text-2xl font-black text-gray-900 tracking-tight leading-tight">{getNationDisplayName(currentDraft.nationName)}</div>
+                                    <div className="text-xl font-black text-[#ff5c4a] tracking-tight leading-tight">World Cup {currentDraft.year}</div>
+                                </div>
                             </div>
 
                             <div className="mb-3">

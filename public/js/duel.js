@@ -283,9 +283,17 @@ const DuelManager = (() => {
 
     try {
       const { challenges } = await apiFetch("/api/duels/challenges");
-      renderLobby(challenges || []);
+      let localList = JSON.parse(localStorage.getItem("fm_challenges") || "[]");
+      const combined = [...(challenges || [])];
+      localList.forEach(lc => {
+        if (!combined.some(c => c.duel_id === lc.duel_id)) {
+          combined.push(lc);
+        }
+      });
+      renderLobby(combined);
     } catch (err) {
-      showToast(err.message, "error");
+      let localList = JSON.parse(localStorage.getItem("fm_challenges") || "[]");
+      renderLobby(localList);
     }
   }
 

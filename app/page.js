@@ -4,6 +4,25 @@ import { useWallet } from '../contexts/WalletContext';
 import { useGame } from '../contexts/GameContext';
 import { supabase } from '../lib/supabase';
 
+const NATION_NAMES = {
+    'ALG': 'Algeria', 'ARG': 'Argentina', 'AUS': 'Australia', 'AUT': 'Austria', 'BEL': 'Belgium',
+    'BRA': 'Brazil', 'BUL': 'Bulgaria', 'CHI': 'Chile', 'CIV': 'Ivory Coast', 'CMR': 'Cameroon',
+    'COL': 'Colombia', 'CRC': 'Costa Rica', 'CRO': 'Croatia', 'CZE': 'Czech Republic', 'DEN': 'Denmark',
+    'ECU': 'Ecuador', 'EGY': 'Egypt', 'ENG': 'England', 'ESP': 'Spain', 'FRA': 'France',
+    'GER': 'Germany', 'GHA': 'Ghana', 'GRE': 'Greece', 'IRL': 'Ireland', 'ITA': 'Italy',
+    'JPN': 'Japan', 'KOR': 'South Korea', 'MAR': 'Morocco', 'MEX': 'Mexico', 'NED': 'Netherlands',
+    'NGA': 'Nigeria', 'PAR': 'Paraguay', 'PER': 'Peru', 'POL': 'Poland', 'POR': 'Portugal',
+    'ROU': 'Romania', 'RUS': 'Russia', 'SCO': 'Scotland', 'SEN': 'Senegal', 'SRB': 'Serbia',
+    'SUI': 'Switzerland', 'SWE': 'Sweden', 'TUR': 'Turkey', 'UKR': 'Ukraine', 'URU': 'Uruguay',
+    'USA': 'United States'
+};
+
+function getNationDisplayName(code) {
+    if (!code) return '';
+    const fullName = NATION_NAMES[code.toUpperCase()];
+    return fullName ? `${fullName} (${code.toUpperCase()})` : code;
+}
+
 /* ── Formation configs: position labels + pitch coordinates ─────────────── */
 const FORMATIONS = {
     '4-3-3': {
@@ -384,7 +403,7 @@ export default function Home() {
                         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 flex flex-col overflow-hidden">
                             <h3 className="text-[11px] font-bold text-gray-500 tracking-[0.15em] uppercase mb-1">Drawn</h3>
                             <div className="mb-4">
-                                <div className="text-3xl font-black text-gray-900 tracking-tight leading-tight">{currentDraft.nationName}</div>
+                                <div className="text-2xl font-black text-gray-900 tracking-tight leading-tight">{getNationDisplayName(currentDraft.nationName)}</div>
                                 <div className="text-xl font-black text-[#ff5c4a] tracking-tight leading-tight">World Cup<br/>{currentDraft.year}</div>
                             </div>
 

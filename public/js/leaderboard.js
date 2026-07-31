@@ -104,17 +104,22 @@ const LeaderboardManager = (() => {
     }
 
     const top100 = entries.slice(0, 100);
+
+    // Resolve any names we do not have yet, then re-render when they arrive.
+    ProfileManager.prefetch(top100.map((e) => e.player));
+
     const rows = top100.map((e, i) => {
       const isMe  = myAddr && e.player.toLowerCase() === myAddr.toLowerCase();
       const score = e.score.toFixed(2);
       const iso2  = (ISO3_TO_2[e.nation] || e.nation.slice(0, 2)).toLowerCase();
       const flagHtml = `<img src="flags/${iso2}.png" alt="${e.nation}" style="width:18px; height:12px; object-fit:cover; border-radius:1px; vertical-align:middle; margin-right:5px; box-shadow:0 1px 2px rgba(0,0,0,0.3);" />`;
       const date  = new Date(e.timestamp * 1000).toLocaleDateString();
+      const name  = isMe ? "You" : ProfileManager.usernameFor(e.player);
       return `
         <tr class="lb-row ${isMe ? "lb-row--me" : ""}">
           <td class="lb-rank">${rankMedal(i + 1)}</td>
           <td class="lb-player">
-            <span class="lb-addr" title="${e.player}">${isMe ? "You" : shortAddr(e.player)}</span>
+            <span class="lb-addr">${name}</span>
           </td>
           <td class="lb-nation">${flagHtml} ${e.nation} ${e.year}</td>
           <td class="lb-formation">${e.formation}</td>
@@ -157,6 +162,13 @@ const LeaderboardManager = (() => {
   function contractAvailable() {
     return !!CONTRACT_ADDRESS;
   }
+
+  // Usernames arrive asynchronously; redraw once they do so the table never
+  // sits showing shortened addresses.
+  document.addEventListener("profiles:updated", () => {
+    const overlay = document.getElementById("leaderboardOverlay");
+    if (overlay && !overlay.hidden && overlay.style.display !== "none") refresh();
+  });
 
   return { refresh };
 })();

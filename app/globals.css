@@ -2227,3 +2227,500 @@ h1, h2, h3 { font-family: "Space Grotesk", sans-serif; font-weight: 700; letter-
   cursor: pointer;
 }
 .btn-modal-danger:hover { opacity: 0.9; }
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Username claim modal (js/profile.js)
+   Blocking: a connected wallet must pick a username before playing, since
+   usernames replace addresses everywhere in the UI.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.profile-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(4, 5, 8, 0.82);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.profile-overlay[hidden] { display: none; }
+
+body.profile-modal-open { overflow: hidden; }
+
+.profile-modal {
+  width: 100%;
+  max-width: 420px;
+  background: var(--panel2);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-lg);
+  padding: 28px 26px 22px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+  animation: profileModalIn 160ms ease-out;
+}
+
+@keyframes profileModalIn {
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+  to   { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .profile-modal { animation: none; }
+}
+
+.profile-modal-title {
+  margin: 0 0 8px;
+  font-family: "Space Grotesk", system-ui, sans-serif;
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.profile-modal-sub {
+  margin: 0 0 20px;
+  font-size: 0.86rem;
+  line-height: 1.5;
+  color: var(--text2);
+}
+
+.profile-modal-label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text2);
+}
+
+.profile-modal-input {
+  width: 100%;
+  padding: 12px 14px;
+  font-family: inherit;
+  font-size: 1rem;
+  color: var(--text);
+  background: var(--panel);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-md);
+  outline: none;
+  transition: border-color 120ms ease;
+}
+
+.profile-modal-input:focus-visible {
+  border-color: var(--monad2);
+  box-shadow: 0 0 0 3px rgba(109, 92, 255, 0.22);
+}
+
+.profile-modal-input:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.profile-modal-hint {
+  margin: 8px 0 0;
+  font-size: 0.75rem;
+  color: var(--text3);
+}
+
+.profile-modal-error {
+  margin: 8px 0 0;
+  min-height: 1.1em;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--red);
+}
+
+.profile-modal-btn {
+  width: 100%;
+  margin-top: 16px;
+  padding: 13px 16px;
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #fff;
+  background: var(--monad);
+  border: 1px solid var(--monad2);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background 120ms ease, transform 80ms ease;
+}
+
+.profile-modal-btn:hover:not(:disabled) { background: var(--monad2); }
+.profile-modal-btn:active:not(:disabled) { transform: translateY(1px); }
+
+.profile-modal-btn:focus-visible {
+  outline: 2px solid var(--monad2);
+  outline-offset: 2px;
+}
+
+.profile-modal-btn:disabled { opacity: 0.6; cursor: progress; }
+
+.profile-modal-foot {
+  margin: 12px 0 0;
+  text-align: center;
+  font-size: 0.72rem;
+  color: var(--text3);
+}
+
+@media (max-width: 480px) {
+  .profile-modal { padding: 22px 18px 18px; }
+  .profile-modal-title { font-size: 1.18rem; }
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Duel connection / room status (js/duel.js + js/realtime.js)
+   Explicit state so a waiting player is never left staring at a dead screen.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.duel-status {
+  margin: 0 0 12px;
+  padding: 9px 12px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  line-height: 1.4;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border2);
+  background: var(--panel2);
+  color: var(--text2);
+}
+
+.duel-status[data-tone="ok"] {
+  border-color: rgba(52, 211, 153, 0.32);
+  background: rgba(52, 211, 153, 0.08);
+  color: var(--green);
+}
+
+.duel-status[data-tone="warn"] {
+  border-color: rgba(244, 63, 94, 0.3);
+  background: rgba(244, 63, 94, 0.07);
+  color: #fda4af;
+}
+
+.duel-status[data-tone="info"] {
+  border-color: rgba(109, 92, 255, 0.28);
+  background: rgba(109, 92, 255, 0.08);
+  color: var(--monad2);
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Duel match presentation (js/match-view.js)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.match-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 950;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: radial-gradient(circle at 50% 40%, rgba(16, 58, 32, 0.35), rgba(4, 5, 8, 0.94));
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.match-overlay[hidden] { display: none; }
+body.match-open { overflow: hidden; }
+
+.match-stage {
+  width: 100%;
+  max-width: 900px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.match-teams {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 18px;
+  align-items: start;
+}
+
+/* Line-ups converge toward the centre on kickoff. */
+.match-team {
+  background: var(--panel2);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-lg);
+  padding: 14px 16px;
+  transition: transform 700ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.match-overlay--kickoff .match-team--home { transform: translateX(-14px); }
+.match-overlay--kickoff .match-team--away { transform: translateX(14px); }
+.match-overlay--live .match-team { transform: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .match-team { transition: none; }
+}
+
+.match-team-name {
+  font-family: "Space Grotesk", system-ui, sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 10px;
+  overflow-wrap: anywhere;
+}
+
+.match-team--away { text-align: right; }
+
+.match-lineup { list-style: none; margin: 0; padding: 0; }
+
+.match-lineup-row {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  padding: 3px 0;
+  font-size: 0.82rem;
+  color: var(--text2);
+}
+
+.match-team--away .match-lineup-row { flex-direction: row-reverse; }
+
+.match-lineup-pos {
+  flex: 0 0 34px;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--text3);
+}
+
+.match-lineup-name { color: var(--text); overflow-wrap: anywhere; }
+
+.match-centre {
+  min-width: 150px;
+  text-align: center;
+  padding: 14px 10px;
+  background: var(--panel);
+  border: 1px solid var(--border-glow);
+  border-radius: var(--radius-lg);
+}
+
+.match-clock {
+  font-family: "Space Grotesk", system-ui, sans-serif;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--monad2);
+  font-variant-numeric: tabular-nums;
+}
+
+.match-score {
+  margin: 6px 0 4px;
+  font-family: "Space Grotesk", system-ui, sans-serif;
+  font-size: 2.4rem;
+  font-weight: 900;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+  transition: color 180ms ease, transform 180ms ease;
+}
+
+.match-score[data-flash="for"]     { color: var(--green); transform: scale(1.12); }
+.match-score[data-flash="against"] { color: var(--red);   transform: scale(1.06); }
+
+.match-phase {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text2);
+}
+
+.match-feed {
+  max-height: 150px;
+  overflow-y: auto;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 8px 12px;
+}
+
+.match-feed-row {
+  display: flex;
+  gap: 10px;
+  padding: 4px 0;
+  font-size: 0.84rem;
+  color: var(--text2);
+}
+
+.match-feed-row[data-tone="for"]     { color: var(--green); }
+.match-feed-row[data-tone="against"] { color: #fda4af; }
+.match-feed-row[data-replayed="1"]   { opacity: 0.65; }
+
+.match-feed-min {
+  flex: 0 0 34px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text3);
+}
+
+.match-result {
+  background: var(--panel2);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  text-align: center;
+}
+
+.match-result-headline {
+  font-family: "Space Grotesk", system-ui, sans-serif;
+  font-size: 1.7rem;
+  font-weight: 900;
+  margin-bottom: 8px;
+}
+
+.match-result-headline[data-result="win"]  { color: var(--green); }
+.match-result-headline[data-result="loss"] { color: var(--red); }
+.match-result-headline[data-result="draw"] { color: var(--text2); }
+
+.match-result-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 16px;
+}
+
+.match-result-score {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.match-result-scorers { font-size: 0.82rem; color: var(--text2); }
+
+.match-result-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.match-btn {
+  padding: 11px 20px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text);
+  background: var(--panel3);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background 120ms ease;
+}
+
+.match-btn:hover:not(:disabled) { background: var(--border2); }
+
+.match-btn--primary {
+  color: #fff;
+  background: var(--monad);
+  border-color: var(--monad2);
+}
+
+.match-btn--primary:hover:not(:disabled) { background: var(--monad2); }
+
+.match-btn:focus-visible { outline: 2px solid var(--monad2); outline-offset: 2px; }
+.match-btn:disabled { opacity: 0.6; cursor: progress; }
+
+.match-result-note {
+  margin-top: 10px;
+  min-height: 1.1em;
+  font-size: 0.78rem;
+  color: var(--text2);
+}
+
+.match-result-note[data-tone="warn"] { color: #fda4af; }
+
+/* Stack the line-ups above/below the scoreline on small screens. */
+@media (max-width: 720px) {
+  .match-teams { grid-template-columns: 1fr; }
+  .match-centre { order: -1; }
+  .match-team--away { text-align: left; }
+  .match-team--away .match-lineup-row { flex-direction: row; }
+  .match-overlay--kickoff .match-team--home,
+  .match-overlay--kickoff .match-team--away { transform: none; }
+  .match-score { font-size: 2rem; }
+  .match-feed { max-height: 110px; }
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Private rooms + invite links (js/duel.js)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.duel-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 10px 0 8px;
+  font-size: 0.82rem;
+  color: var(--text2);
+  cursor: pointer;
+  user-select: none;
+}
+
+.duel-check input { accent-color: var(--monad); width: 15px; height: 15px; cursor: pointer; }
+.duel-check input:focus-visible { outline: 2px solid var(--monad2); outline-offset: 2px; }
+
+.duel-password-input {
+  width: 100%;
+  margin-bottom: 10px;
+  padding: 10px 12px;
+  font-family: inherit;
+  font-size: 0.88rem;
+  color: var(--text);
+  background: var(--panel);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-md);
+  outline: none;
+}
+
+.duel-password-input:focus-visible {
+  border-color: var(--monad2);
+  box-shadow: 0 0 0 3px rgba(109, 92, 255, 0.2);
+}
+
+.duel-invite {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border2);
+}
+
+.duel-invite-row { display: flex; gap: 8px; }
+
+.duel-invite-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 9px 11px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.76rem;
+  color: var(--text);
+  background: var(--panel);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-md);
+}
+
+.btn-copy-invite {
+  flex: 0 0 auto;
+  padding: 9px 14px;
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #fff;
+  background: var(--monad);
+  border: 1px solid var(--monad2);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+
+.btn-copy-invite:hover { background: var(--monad2); }
+.btn-copy-invite:focus-visible { outline: 2px solid var(--monad2); outline-offset: 2px; }
+
+.duel-invite-hint {
+  margin: 8px 0 0;
+  font-size: 0.74rem;
+  line-height: 1.45;
+  color: var(--text3);
+}

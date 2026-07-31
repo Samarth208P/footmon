@@ -15,6 +15,20 @@ const FOOTMON_ABI = [
   "function canDistribute() view returns (bool)",
   "function pendingClaims(address) view returns (uint256)",
   "function hasEntry(address) view returns (bool)",
+  // ── Duel escrow: view ─────────────────────────────────────────
+  "function resolver() view returns (address)",
+  "function duelHousePct() view returns (uint256)",
+  "function duelExpiry() view returns (uint256)",
+  "function duelsPaused() view returns (bool)",
+  "function getDuel(bytes32) view returns (tuple(address creator, address joiner, uint256 stake, uint64 createdAt, uint8 status))",
+  "function duelStatus(bytes32) view returns (uint8)",
+  "function timeUntilDuelExpiry(bytes32) view returns (uint256)",
+  // ── Duel escrow: write ────────────────────────────────────────
+  "function createDuel(bytes32 duelId) payable",
+  "function joinDuel(bytes32 duelId) payable",
+  "function cancelDuel(bytes32 duelId)",
+  "function refundExpiredDuel(bytes32 duelId)",
+  "function claimDuelPrize()",
   // ── Write ─────────────────────────────────────────────────────
   "function payForRoll() payable",
   "function submitScore(uint256 score, string nation, uint16 year, string formation)",
@@ -30,7 +44,23 @@ const FOOTMON_ABI = [
   "event ScoreSubmitted(address indexed player, uint256 score, string nation, uint16 year, string formation)",
   "event PrizeAllocated(address indexed winner, uint256 amount, uint256 round)",
   "event PrizeClaimed(address indexed winner, uint256 amount)",
+  "event DuelCreated(bytes32 indexed duelId, address indexed creator, uint256 stake)",
+  "event DuelJoined(bytes32 indexed duelId, address indexed joiner, uint256 stake)",
+  "event DuelResolved(bytes32 indexed duelId, address indexed winner, uint256 payout, uint256 houseCut)",
+  "event DuelDrawn(bytes32 indexed duelId, uint256 refundEach)",
+  "event DuelCancelled(bytes32 indexed duelId, address indexed creator, uint256 refund)",
+  "event DuelRefunded(bytes32 indexed duelId, string reason)",
 ];
+
+/** Mirrors the DuelStatus enum in contract/FootMon.sol. */
+const DUEL_STATUS = {
+  NONE: 0,
+  OPEN: 1,
+  FULL: 2,
+  RESOLVED: 3,
+  CANCELLED: 4,
+  REFUNDED: 5,
+};
 
 const ContractManager = (() => {
   let contract     = null;
@@ -166,10 +196,106 @@ const ContractManager = (() => {
     return rc.roundNumber();
   }
 
+  // ══════════════════════════════════════════════════════════════════════════
+  //  Duel escrow
+  //
+  //  Stakes are held by the contract, not sent peer-to-peer. Each of these is a
+  //  single MetaMask confirmation.
+  // ══════════════════════════════════════════════════════════════════════════
+
+  /** Random bytes32 duel id, generated client-side and reused on-chain and off. */
+  function newDuelId() {
+    const bytes = new Uint8Array(32);
+    crypto.getRandomValues(bytes);
+    return "0x" + Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
+  }
+
+  function requireSigner() {
+    if (!isAvailable() || !contract) throw new Error("Connect your wallet first");
+    return contract;
+  }
+
+  /** Escrows the creator's stake and opens the duel. */
+  async function createDuel(duelId, stakeMon) {
+    const c = requireSigner();
+    const value = ethers.parseEther(String(stakeMon));
+    if (value <= 0n) throw new Error("Stake must be greater than zero");
+
+    const tx = await c.createDuel(duelId, { value });
+    const receipt = await tx.wait();
+    return { txHash: receipt?.hash ?? tx.hash, stakeWei: value.toString() };
+  }
+
+  /** Matches the creator's stake exactly, read from the chain. */
+  async function joinDuel(duelId) {
+    const c = requireSigner();
+    const duel = await getDuel(duelId);
+
+    if (Number(duel.status) !== DUEL_STATUS.OPEN) {
+      throw new Error("This duel is no longer open on-chain");
+    }
+
+    const tx = await c.joinDuel(duelId, { value: duel.stake });
+    const receipt = await tx.wait();
+    return { txHash: receipt?.hash ?? tx.hash, stakeWei: duel.stake.toString() };
+  }
+
+  /** Creator reclaims their stake before anyone joins. */
+  async function cancelDuel(duelId) {
+    const c = requireSigner();
+    const tx = await c.cancelDuel(duelId);
+    const receipt = await tx.wait();
+    return receipt?.hash ?? tx.hash;
+  }
+
+  /** Permissionless timeout reclaim, so stakes can never be stranded. */
+  async function refundExpiredDuel(duelId) {
+    const c = requireSigner();
+    const tx = await c.refundExpiredDuel(duelId);
+    const receipt = await tx.wait();
+    return receipt?.hash ?? tx.hash;
+  }
+
+  /** Winner pulls their escrowed winnings. */
+  async function claimDuelPrize() {
+    const c = requireSigner();
+    const tx = await c.claimDuelPrize();
+    const receipt = await tx.wait();
+    return receipt?.hash ?? tx.hash;
+  }
+
+  async function getDuel(duelId) {
+    const rc = readContract || contract;
+    if (!rc) throw new Error("Contract is not configured");
+    return rc.getDuel(duelId);
+  }
+
+  async function getDuelStatus(duelId) {
+    const rc = readContract || contract;
+    if (!rc) return DUEL_STATUS.NONE;
+    return Number(await rc.duelStatus(duelId));
+  }
+
+  async function getPendingClaim(address) {
+    const rc = readContract || contract;
+    if (!rc) return 0n;
+    return rc.pendingClaims(address);
+  }
+
+  async function getDuelHousePct() {
+    const rc = readContract || contract;
+    if (!rc) return 30n;
+    return rc.duelHousePct();
+  }
+
   return {
     init, isAvailable,
     payForRoll, submitScore, distributePrize, claimPrize,
     getPrizePool, getTimeUntilPayout, canDistribute, getPendingClaim,
     getLeaderboard, getRollPrice, getPayoutInterval, getRoundNumber,
+    // Duel escrow
+    newDuelId, createDuel, joinDuel, cancelDuel, refundExpiredDuel,
+    claimDuelPrize, getDuel, getDuelStatus, getDuelHousePct,
+    DUEL_STATUS,
   };
 })();

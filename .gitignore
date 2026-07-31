@@ -5,4 +5,14 @@
 /formations
 /scratch
 .env
+.env.local
 players.csv
+/.kiro
+
+# Foundry
+/contract/out
+/contract/cache
+/broadcast
+
+# Vitest
+/coverage

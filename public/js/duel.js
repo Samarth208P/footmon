@@ -6,8 +6,10 @@
 const DuelManager = (() => {
   const DUEL_FORMATION = "4-3-3";
   const DUEL_STYLE = "balanced";
-  const CHALLENGE_POLL_MS = 500;
-  const EVENT_POLL_MS = 250;
+  const CHALLENGE_POLL_MS = 2000;
+  // Realtime broadcast carries live traffic. This poll only exists to recover
+  // events missed while disconnected, so it can be slow and cheap.
+  const EVENT_POLL_MS = 5000;
 
   const state = {
     instanceId: `duel_${Math.random().toString(36).slice(2, 10)}`,
@@ -17,17 +19,51 @@ const DuelManager = (() => {
     pendingPickPlayer: null,
     challengePollTimer: null,
     eventPollTimer: null,
+    roomStatusText: "",
+    roomStatusTone: "info",
   };
 
   const Refs = {};
+
+  // Last lobby payload, kept so the list can be redrawn when usernames arrive.
+  let lastLobbyChallenges = null;
 
   function init() {
     cacheRefs();
     bindEvents();
     setupSessionWallet();
     refreshWalletState();
-    initRelay();
+    renderRoomStatus();
     renderLobby([]);
+    consumeInviteLink();
+  }
+
+  /**
+   * Handles arrival via /duel/<CODE>#pw=<password>.
+   *
+   * The fields are pre-filled rather than auto-joining: joining escrows real MON,
+   * so it must stay an explicit action the player takes.
+   */
+  function consumeInviteLink() {
+    const invite = DuelRoom.parseInvite();
+    if (!invite) return;
+
+    switchMode("duel");
+
+    if (Refs.inputJoinCode) Refs.inputJoinCode.value = invite.code;
+    if (Refs.inputJoinPassword && invite.password) {
+      Refs.inputJoinPassword.value = invite.password;
+    }
+
+    // Strip the password from the address bar so it is not left in history.
+    if (invite.password && window.history?.replaceState) {
+      window.history.replaceState(null, "", `/duel/${invite.code}`);
+    }
+
+    setLobbyStatus(
+      `Invited to room ${invite.code}${invite.password ? " (password filled in)" : ""} — press Join Duel to stake and enter.`,
+      "info"
+    );
   }
 
   function cacheRefs() {
@@ -41,6 +77,17 @@ const DuelManager = (() => {
     Refs.btnCreate = document.getElementById("btnCreateDuel");
     Refs.btnRefresh = document.getElementById("btnRefreshLobby");
     Refs.challengesList = document.getElementById("duelChallengesList");
+    Refs.lobbyStatus = document.getElementById("duelLobbyStatus");
+    Refs.duelRoomStatus = document.getElementById("duelRoomStatus");
+    Refs.inputPrivate = document.getElementById("inputDuelPrivate");
+    Refs.inputPassword = document.getElementById("inputDuelPassword");
+    Refs.inviteBox = document.getElementById("duelInviteBox");
+    Refs.inviteLink = document.getElementById("duelInviteLink");
+    Refs.inviteHint = document.getElementById("duelInviteHint");
+    Refs.btnCopyInvite = document.getElementById("btnCopyInvite");
+    Refs.inputJoinCode = document.getElementById("inputJoinCode");
+    Refs.inputJoinPassword = document.getElementById("inputJoinPassword");
+    Refs.btnJoinByCode = document.getElementById("btnJoinByCode");
 
     Refs.turnBanner = document.getElementById("duelTurnBanner");
     Refs.turnText = document.getElementById("duelTurnText");
@@ -76,6 +123,47 @@ const DuelManager = (() => {
     if (Refs.btnRoll) Refs.btnRoll.addEventListener("click", () => handleDuelRoll("full"));
     if (Refs.btnRerollNation) Refs.btnRerollNation.addEventListener("click", () => handleDuelRoll("nation"));
     if (Refs.btnRerollYear) Refs.btnRerollYear.addEventListener("click", () => handleDuelRoll("year"));
+
+    // Only show the password field when the room is actually private.
+    if (Refs.inputPrivate) {
+      Refs.inputPrivate.addEventListener("change", () => {
+        if (Refs.inputPassword) {
+          Refs.inputPassword.style.display = Refs.inputPrivate.checked ? "block" : "none";
+          if (!Refs.inputPrivate.checked) Refs.inputPassword.value = "";
+        }
+      });
+    }
+
+    if (Refs.btnCopyInvite) {
+      Refs.btnCopyInvite.addEventListener("click", async () => {
+        const link = Refs.inviteLink?.value;
+        if (!link) return;
+        try {
+          await navigator.clipboard.writeText(link);
+          Refs.btnCopyInvite.textContent = "Copied ✔";
+          setTimeout(() => { Refs.btnCopyInvite.textContent = "Copy"; }, 1800);
+        } catch {
+          // Clipboard can be blocked; selecting the text still lets them copy.
+          Refs.inviteLink.select();
+          showToast("Press Ctrl+C to copy the link", "info");
+        }
+      });
+    }
+
+    if (Refs.btnJoinByCode) {
+      Refs.btnJoinByCode.addEventListener("click", () => {
+        const code = Refs.inputJoinCode?.value?.trim().toUpperCase();
+        if (!code) {
+          showToast("Enter a room code", "error");
+          return;
+        }
+        const password = Refs.inputJoinPassword?.value?.trim() || null;
+        Refs.btnJoinByCode.disabled = true;
+        joinChallenge(code, password).finally(() => {
+          Refs.btnJoinByCode.disabled = false;
+        });
+      });
+    }
 
     document.addEventListener("wallet:accountChanged", (e) => {
       state.myAddress = e.detail || null;
@@ -125,75 +213,111 @@ const DuelManager = (() => {
     state.myAddress = WalletManager.getAddress();
   }
 
-  const WS_API_KEY = "VCXCEuvhGcBDP7XhiJJUDvR1e1D3eiVjgZ9VRiaV";
-  let lobbySocket = null;
-  let duelSocket = null;
-  let receivedEvents = [];
+  // ── Live transport ────────────────────────────────────────────────────────
+  // Supabase Realtime broadcast carries live turn/draft/match traffic; a slow
+  // Postgres poll is kept purely as a reconnection safety net, since broadcast
+  // messages are lost while a client is not subscribed.
+  //
+  // Replaced: a shared public piesocket demo relay with a hardcoded API key
+  // (world-readable and forgeable) plus a localStorage "storage" listener that
+  // only ever synced tabs inside one browser.
 
-  function initRelay() {
-    try {
-      lobbySocket = new WebSocket(`wss://demo.piesocket.com/v3/footmon_lobby?api_key=${WS_API_KEY}&notify_self=1`);
-      lobbySocket.onmessage = (e) => {
-        try {
-          const msg = JSON.parse(e.data);
-          if (msg.type === "challenge_created" || msg.type === "challenge_joined") {
-            handleRelayMessage(msg);
-          }
-        } catch (err) {}
-      };
-    } catch (e) {
-      console.error("Lobby relay init failed", e);
+  function currentTransportStatus() {
+    if (!RealtimeManager.isAvailable()) return "polling";
+    return RealtimeManager.isLive() ? "live" : "connecting";
+  }
+
+  function setRoomStatus(text, tone) {
+    state.roomStatusText = text || "";
+    state.roomStatusTone = tone || "info";
+    renderRoomStatus();
+  }
+
+  function renderRoomStatus() {
+    const el = Refs.duelRoomStatus;
+    if (!el) return;
+    el.textContent = state.roomStatusText || "";
+    el.dataset.tone = state.roomStatusTone || "info";
+    el.style.display = state.roomStatusText ? "block" : "none";
+  }
+
+  /** Applies one raw event from either transport through the normaliser. */
+  function ingestEvents(rawEvents, source) {
+    const duel = state.activeDuel;
+    if (!duel) return;
+
+    const normalized = (Array.isArray(rawEvents) ? rawEvents : [rawEvents])
+      .map((raw) => DuelEvents.normalizeEvent(raw, source))
+      .filter(Boolean);
+
+    if (normalized.length === 0) return;
+
+    const { events, added } = DuelEvents.mergeEvents(duel.events || [], normalized);
+    duel.events = events;
+    duel.lastEventId = DuelEvents.maxEventId(events);
+
+    for (const event of added) {
+      applyDuelEvent(event);
     }
+  }
 
-    window.addEventListener("storage", (e) => {
-      if (e.key === "fm_relay_event") {
-        try {
-          const msg = JSON.parse(e.newValue);
-          handleRelayMessage(msg);
-        } catch (err) {}
-      }
+  async function connectRoomTransport(duelId) {
+    const live = await RealtimeManager.join(duelId, {
+      selfId: state.instanceId,
+
+      onEvent: (payload) => {
+        if (!payload) return;
+        ingestEvents(payload, "realtime");
+      },
+
+      onStatus: ({ status, detail }) => {
+        if (status === "connected") {
+          setRoomStatus("Connected", "ok");
+        } else if (status === "connecting") {
+          setRoomStatus("Connecting to opponent…", "info");
+        } else if (status === "resync-required") {
+          // Anything broadcast while we were away is unrecoverable, so take the
+          // durable path immediately rather than waiting for the slow tick.
+          catchUpFromDatabase().catch(() => {});
+        } else if (status === "unavailable" || status === "polling") {
+          setRoomStatus("Live sync unavailable — using slower updates", "warn");
+        } else if (status === "error" || status === "timeout") {
+          setRoomStatus("Connection problem — retrying", "warn");
+          if (detail) console.warn("[Duel] realtime:", detail);
+        } else if (status === "disconnected") {
+          setRoomStatus("Reconnecting…", "warn");
+        }
+      },
+
+      onPresence: ({ opponentPresent }) => {
+        const duel = state.activeDuel;
+        if (!duel) return;
+        duel.opponentPresent = opponentPresent;
+        if (!duel.joiner) {
+          setRoomStatus("Waiting for an opponent to join…", "info");
+        } else if (opponentPresent) {
+          setRoomStatus("Opponent connected", "ok");
+        } else {
+          setRoomStatus("Opponent disconnected — waiting for them to return…", "warn");
+        }
+      },
     });
+
+    if (!live) {
+      setRoomStatus("Live sync unavailable — using slower updates", "warn");
+    }
+    return live;
   }
 
-  function handleRelayMessage(msg) {
-    if (msg.type === "challenge_created") {
-      let challenges = JSON.parse(localStorage.getItem("fm_challenges") || "[]");
-      if (!challenges.some(c => c.duel_id === msg.challenge.duel_id)) {
-        challenges.push(msg.challenge);
-        localStorage.setItem("fm_challenges", JSON.stringify(challenges));
-      }
-    }
-    if (msg.type === "challenge_joined") {
-      let challenges = JSON.parse(localStorage.getItem("fm_challenges") || "[]");
-      const c = challenges.find(item => item.duel_id === msg.duelId);
-      if (c) {
-        c.joiner = msg.joiner;
-        c.status = "active";
-        localStorage.setItem("fm_challenges", JSON.stringify(challenges));
-      }
-    }
-    if (msg.type === "duel_event") {
-      if (!receivedEvents.some(ev => ev.id === msg.event.id)) {
-        receivedEvents.push(msg.event);
-      }
-    }
-  }
+  /** Authoritative re-sync from Postgres. Used on reconnect and on a slow tick. */
+  async function catchUpFromDatabase() {
+    const duel = state.activeDuel;
+    if (!duel) return;
 
-  function connectDuelSocket(duelId) {
-    if (duelSocket) return;
-    try {
-      duelSocket = new WebSocket(`wss://demo.piesocket.com/v3/footmon_duel_${duelId}?api_key=${WS_API_KEY}&notify_self=1`);
-      duelSocket.onmessage = (e) => {
-        try {
-          const msg = JSON.parse(e.data);
-          if (msg.type === "duel_event") {
-            handleRelayMessage(msg);
-          }
-        } catch (err) {}
-      };
-    } catch (e) {
-      console.error("Duel socket init failed", e);
-    }
+    const { events } = await apiFetch(
+      `/api/duels/events?duelId=${encodeURIComponent(duel.id)}&after=${duel.lastEventId || 0}`
+    );
+    ingestEvents(events || [], "poll");
   }
 
   async function apiFetch(path, options = {}) {
@@ -274,23 +398,50 @@ const DuelManager = (() => {
     state.eventPollTimer = null;
   }
 
+  function setLobbyStatus(text, tone) {
+    const el = Refs.lobbyStatus;
+    if (!el) return;
+    el.textContent = text || "";
+    el.dataset.tone = tone || "info";
+    el.style.display = text ? "block" : "none";
+  }
+
   async function refreshLobby() {
     refreshWalletState();
     if (!WalletManager.isConnected()) {
+      setLobbyStatus("Connect your wallet to browse and create duels.", "info");
       renderLobby([]);
       return;
     }
 
     try {
-      const { challenges } = await apiFetch("/api/duels/challenges");
-      renderLobby(challenges || []);
+      // duel_lobby already excludes private rooms and rooms with an opponent.
+      const { rooms } = await apiFetch("/api/duels/rooms");
+      const open = rooms || [];
+
+      if (!RealtimeManager.isAvailable()) {
+        setLobbyStatus("Live sync unavailable — the lobby will update slowly.", "warn");
+      } else if (open.length === 0) {
+        setLobbyStatus("No open duels yet. Create one to get started.", "info");
+      } else {
+        setLobbyStatus(
+          `${open.length} open duel${open.length === 1 ? "" : "s"} — pick one to join.`,
+          "ok"
+        );
+      }
+
+      renderLobby(open);
     } catch (err) {
+      setLobbyStatus("Could not reach the lobby. Retrying…", "warn");
       showToast(err.message, "error");
     }
   }
 
   function renderLobby(challenges) {
     if (!Refs.challengesList) return;
+
+    // Remember the last payload so we can redraw when usernames resolve.
+    if (challenges) lastLobbyChallenges = challenges;
 
     if (!WalletManager.isConnected()) {
       Refs.challengesList.innerHTML = `<div class="challenges-empty">Connect your wallet to browse public duel challenges.</div>`;
@@ -306,28 +457,44 @@ const DuelManager = (() => {
       return;
     }
 
-    Refs.challengesList.innerHTML = activeChallenges.map((challenge) => `
+    // Resolve creator names, then re-render when they arrive.
+    ProfileManager.prefetch(activeChallenges.map((c) => c.creator));
+
+    Refs.challengesList.innerHTML = activeChallenges.map((room) => {
+      // Stakes are wei on-chain; render as MON.
+      const stakeMon = room.stake_mon ?? formatStake(room.stake);
+      return `
       <div class="duel-card">
         <div class="duel-card-left">
-          <span class="duel-card-addr">Creator: ${shortAddr(challenge.creator)}</span>
-          <span class="duel-card-stake">${challenge.stake} MON</span>
+          <span class="duel-card-addr">Creator: ${ProfileManager.usernameFor(room.creator)}</span>
+          <span class="duel-card-stake">${stakeMon} MON</span>
         </div>
-        <button
-          class="btn-join-duel"
-          data-id="${challenge.duel_id}"
-          data-creator="${challenge.creator}"
-          data-stake="${challenge.stake}"
-        >
+        <button class="btn-join-duel" data-code="${room.room_code}">
           Join Duel
         </button>
-      </div>
-    `).join("");
+      </div>`;
+    }).join("");
 
     Refs.challengesList.querySelectorAll(".btn-join-duel").forEach((button) => {
       button.addEventListener("click", () => {
-        joinChallenge(button.dataset.id, button.dataset.creator, parseFloat(button.dataset.stake));
+        button.disabled = true;
+        joinChallenge(button.dataset.code, null).finally(() => {
+          button.disabled = false;
+        });
       });
     });
+  }
+
+  /** wei (string) → MON, tolerating a value that is already in MON. */
+  function formatStake(stake) {
+    const raw = String(stake ?? "0");
+    try {
+      // Anything with a decimal point is already MON.
+      if (raw.includes(".")) return Number(raw).toFixed(3).replace(/\.?0+$/, "");
+      return Number(ethers.formatEther(raw)).toFixed(3).replace(/\.?0+$/, "");
+    } catch {
+      return raw;
+    }
   }
 
   function createDuelSlots() {
@@ -346,87 +513,142 @@ const DuelManager = (() => {
     return turn === "creator" ? "joiner" : "creator";
   }
 
+  /**
+   * Creates a duel with the stake ESCROWED in the contract.
+   *
+   * Replaced: a raw `sendTransaction` to `CONTRACT_ADDRESS || state.myAddress`.
+   * That either paid the stake into the hourly prize pool via the contract's
+   * receive() fallback, or sent it to the player's own address — in neither case
+   * was anything escrowed, so a duel could never actually pay out a winner.
+   */
   async function handleCreateChallenge() {
     refreshWalletState();
     if (!WalletManager.isConnected()) {
       showToast("Please connect wallet first", "info");
       return;
     }
+    if (!ProfileManager.getMyUsername()) {
+      showToast("Pick a username before creating a duel", "info");
+      return;
+    }
 
-    const stake = parseFloat(Refs.inputStake.value);
+    const stake = parseFloat(Refs.inputStake?.value);
     if (Number.isNaN(stake) || stake <= 0) {
       showToast("Please enter a valid MON stake", "error");
       return;
     }
 
-    try {
-      showToast("Confirm staking transaction in MetaMask…", "info");
-      const signer = WalletManager.getSigner();
-      const target = CONTRACT_ADDRESS || state.myAddress;
-      const tx = await signer.sendTransaction({
-        to: target,
-        value: ethers.parseEther(stake.toString()),
-      });
-      await tx.wait();
+    const isPrivate = Boolean(Refs.inputPrivate?.checked);
+    const password = Refs.inputPassword?.value?.trim() || null;
+    if (isPrivate && (!password || password.length < 4)) {
+      showToast("A private room needs a password of at least 4 characters", "error");
+      return;
+    }
 
-      const duelId = `duel_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
-      const { challenge } = await apiFetch("/api/duels/challenges", {
-        method: "POST",
-        body: JSON.stringify({
-          duelId,
-          creator: state.myAddress,
-          stake,
-          sessionPubKey: state.sessionWallet.address,
-        }),
+    setLobbyStatus("Confirm the stake in your wallet…", "info");
+    if (Refs.btnCreate) Refs.btnCreate.disabled = true;
+
+    try {
+      const { room, shareLink } = await DuelRoom.createRoom({
+        stakeMon: stake,
+        isPrivate,
+        password,
       });
+
+      // One signature buys a session for every later pick in this room.
+      await DuelRoom.openSession(room.room_code);
 
       startDuelState({
-        id: challenge.duel_id,
-        creator: challenge.creator,
-        joiner: challenge.joiner,
-        stake: parseFloat(challenge.stake),
+        id: room.id,
+        roomCode: room.room_code,
+        duelId: room.duel_id,
+        creator: room.creator,
+        joiner: room.joiner,
+        stake,
         isCreator: true,
-        status: challenge.joiner ? "active" : "waiting",
+        status: room.joiner ? "active" : "waiting",
       });
-      showToast("Challenge created! Waiting for an opponent.", "success");
+
+      showInviteLink(shareLink, isPrivate);
+      showToast("Stake escrowed. Waiting for an opponent.", "success");
     } catch (err) {
-      showToast(err.message, "error");
+      setLobbyStatus("", "info");
+      showToast(friendlyError(err), "error");
+    } finally {
+      if (Refs.btnCreate) Refs.btnCreate.disabled = false;
     }
   }
 
-  async function joinChallenge(duelId, creator, stake) {
+  /** Joins a duel by room code, matching the stake on-chain. */
+  async function joinChallenge(roomCode, password = null) {
     refreshWalletState();
     if (!WalletManager.isConnected()) {
       showToast("Please connect wallet first", "info");
       return;
     }
+    if (!ProfileManager.getMyUsername()) {
+      showToast("Pick a username before joining a duel", "info");
+      return;
+    }
+
+    setLobbyStatus("Matching the stake in your wallet…", "info");
 
     try {
-      showToast(`Staking ${stake} MON to join duel…`, "info");
-      const signer = WalletManager.getSigner();
-      const target = CONTRACT_ADDRESS || creator;
-      const tx = await signer.sendTransaction({
-        to: target,
-        value: ethers.parseEther(stake.toString()),
-      });
-      await tx.wait();
-
-      const { challenge } = await apiFetch(`/api/duels/challenges/${duelId}/join`, {
-        method: "POST",
-        body: JSON.stringify({ joiner: state.myAddress }),
-      });
+      const { room } = await DuelRoom.joinRoom(roomCode, password);
+      await DuelRoom.openSession(room.room_code);
 
       startDuelState({
-        id: challenge.duel_id,
-        creator: challenge.creator,
-        joiner: challenge.joiner,
-        stake: parseFloat(challenge.stake),
+        id: room.id,
+        roomCode: room.room_code,
+        duelId: room.duel_id,
+        creator: room.creator,
+        joiner: room.joiner,
+        stake: Number(ethers.formatEther(String(room.stake))),
         isCreator: false,
         status: "active",
       });
-      showToast("Joined duel successfully! ✔", "success");
+
+      showToast("Both stakes escrowed — ready up!", "success");
     } catch (err) {
-      showToast(err.message, "error");
+      setLobbyStatus("", "info");
+      showToast(friendlyError(err), "error");
+    }
+  }
+
+  /** Turns wallet/contract errors into something a player can act on. */
+  function friendlyError(err) {
+    const message = err?.shortMessage || err?.message || "Something went wrong";
+
+    if (err?.code === "ACTION_REJECTED" || /user rejected|denied/i.test(message)) {
+      return "Transaction rejected — nothing was staked.";
+    }
+    if (/insufficient funds/i.test(message)) {
+      return "Not enough MON to cover the stake plus gas.";
+    }
+    if (/stake mismatch/i.test(message)) {
+      return "The stake changed — refresh the lobby and try again.";
+    }
+    if (/cannot self-join/i.test(message)) {
+      return "You cannot join your own duel.";
+    }
+    if (/duel not open|already has an opponent/i.test(message)) {
+      return "Someone else joined first. Try another duel.";
+    }
+    if (/Incorrect room password/i.test(message)) {
+      return "Incorrect room password.";
+    }
+    return message;
+  }
+
+  /** Shows the copyable invite link while waiting for an opponent. */
+  function showInviteLink(link, isPrivate) {
+    if (!Refs.inviteBox || !Refs.inviteLink) return;
+    Refs.inviteBox.style.display = "block";
+    Refs.inviteLink.value = link;
+    if (Refs.inviteHint) {
+      Refs.inviteHint.textContent = isPrivate
+        ? "Private room — this link includes the password. Share it only with your opponent."
+        : "Public room — anyone can join from the lobby, or with this link.";
     }
   }
 
@@ -443,30 +665,82 @@ const DuelManager = (() => {
       mySlots: createDuelSlots(),
       opSlots: createDuelSlots(),
       lastEventId: 0,
+      events: [],
+      opponentPresent: false,
     };
-
-    connectDuelSocket(duel.id);
 
     stopChallengePolling();
     if (Refs.screenLobby) Refs.screenLobby.style.display = "none";
     if (Refs.screenPlay) Refs.screenPlay.style.display = "flex";
+
+    setRoomStatus(
+      duel.joiner ? "Connecting to opponent…" : "Waiting for an opponent to join…",
+      "info"
+    );
+
+    // Subscribe first, then catch up, so nothing published between the initial
+    // read and the subscription is lost.
+    connectRoomTransport(duel.id)
+      .then(() => catchUpFromDatabase())
+      .catch((err) => console.error("[Duel] transport setup failed", err));
+
     startEventPolling();
-    pollEvents().catch(() => {});
     renderDuelBoard();
   }
 
   async function sendEvent(type, payload) {
     if (!state.activeDuel) return null;
+
+    // A client-side id lets the broadcast copy and the durable row be recognised
+    // as the same event, so the receiver never applies a pick twice.
+    const clientEventId = DuelEvents.newClientEventId();
+    const body = { ...(payload || {}), clientEventId };
+
     const { event } = await apiFetch("/api/duels/events", {
       method: "POST",
       body: JSON.stringify({
         duelId: state.activeDuel.id,
         sender: state.instanceId,
         type,
-        payload,
+        payload: body,
       }),
     });
+
+    // Persist first, broadcast second: if the broadcast is dropped the opponent
+    // still recovers the event from Postgres.
+    RealtimeManager.broadcast({
+      id: event?.id ?? null,
+      clientEventId,
+      type,
+      sender: state.instanceId,
+      payload: body,
+      ts: Date.now(),
+    }).catch(() => {});
+
+    if (event?.id) {
+      const duel = state.activeDuel;
+      // Record our own event so the catch-up poll does not replay it back to us.
+      const normalized = DuelEvents.normalizeEvent(
+        { ...event, clientEventId },
+        "poll"
+      );
+      if (normalized) {
+        const merged = DuelEvents.mergeEvents(duel.events || [], [normalized]);
+        duel.events = merged.events;
+        duel.lastEventId = DuelEvents.maxEventId(merged.events);
+      }
+    }
+
     return event;
+  }
+
+  /** Ends the duel session and releases the live channel. */
+  function clearActiveDuel() {
+    state.activeDuel = null;
+    state.pendingPickPlayer = null;
+    stopEventPolling();
+    setRoomStatus("", "info");
+    RealtimeManager.leave().catch(() => {});
   }
 
   async function pollEvents() {
@@ -474,8 +748,7 @@ const DuelManager = (() => {
     if (!duel) return;
 
     try {
-      const { events } = await apiFetch(`/api/duels/events?duelId=${encodeURIComponent(duel.id)}&after=${duel.lastEventId || 0}`);
-      (events || []).forEach(handleEventRecord);
+      await catchUpFromDatabase();
 
       if (duel.status === "waiting") {
         const { challenge } = await apiFetch(`/api/duels/challenges/${encodeURIComponent(duel.id)}`);
@@ -483,6 +756,7 @@ const DuelManager = (() => {
           duel.joiner = challenge.joiner;
           duel.status = "active";
           duel.turn = "creator";
+          setRoomStatus("Opponent joined", "ok");
           renderDuelBoard();
         }
       }
@@ -491,10 +765,14 @@ const DuelManager = (() => {
     }
   }
 
-  function handleEventRecord(event) {
+  /**
+   * Applies a NORMALISED event (see js/duel-events.js). Callers must route
+   * everything through ingestEvents() so dedupe and ordering are enforced —
+   * the same event legitimately arrives over both transports.
+   */
+  function applyDuelEvent(event) {
     const duel = state.activeDuel;
-    if (!duel || event.duel_id !== duel.id) return;
-    duel.lastEventId = Math.max(duel.lastEventId || 0, event.id || 0);
+    if (!duel) return;
 
     if (event.sender === state.instanceId) return;
 
@@ -566,7 +844,7 @@ const DuelManager = (() => {
           } catch (err) {
             showToast(err.message || "Claim cancelled", "error");
           }
-          state.activeDuel = null;
+          clearActiveDuel();
           switchMode("duel");
         }
       });
@@ -798,8 +1076,7 @@ const DuelManager = (() => {
         }
 
         state.pendingPickPlayer = null;
-        state.activeDuel = null;
-        stopEventPolling();
+        clearActiveDuel();
         switchMode("duel");
       }
     });
@@ -863,7 +1140,7 @@ const DuelManager = (() => {
           } catch (err) {
             showToast(err.message || "Claim transaction cancelled", "error");
           }
-          state.activeDuel = null;
+          clearActiveDuel();
           switchMode("duel");
         }
       });
@@ -882,7 +1159,7 @@ const DuelManager = (() => {
         `,
         primaryBtnText: "Back to Duel Lobby",
         primaryBtnAction: () => {
-          state.activeDuel = null;
+          clearActiveDuel();
           switchMode("duel");
         }
       });
@@ -914,7 +1191,7 @@ const DuelManager = (() => {
           } catch (err) {
             showToast(err.message || "Claim transaction cancelled", "error");
           }
-          state.activeDuel = null;
+          clearActiveDuel();
           switchMode("duel");
         }
       });
@@ -1134,6 +1411,12 @@ const DuelManager = (() => {
   function hasActiveDuel() {
     return !!state.activeDuel;
   }
+
+  // Usernames resolve after the lobby first paints; redraw so creators are
+  // never left showing a raw address.
+  document.addEventListener("profiles:updated", () => {
+    if (lastLobbyChallenges) renderLobby(lastLobbyChallenges);
+  });
 
   return { init, switchMode, hasActiveDuel };
 })();

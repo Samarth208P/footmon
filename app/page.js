@@ -177,7 +177,45 @@ const appMarkup = String.raw`
             <input type="number" id="inputDuelStake" placeholder="Stake amount (e.g. 0.5)" step="0.1" min="0.1" />
             <span class="stake-mon-label">MON</span>
           </div>
+
+          <label class="duel-check">
+            <input type="checkbox" id="inputDuelPrivate" />
+            <span>Private room (invite only)</span>
+          </label>
+          <input
+            type="password"
+            id="inputDuelPassword"
+            class="duel-password-input"
+            placeholder="Room password (min 4 characters)"
+            autocomplete="new-password"
+            style="display:none"
+          />
+
           <button id="btnCreateDuel" class="btn-create-duel">Create Challenge</button>
+
+          <div id="duelInviteBox" class="duel-invite" style="display:none">
+            <p class="section-label">Share this link</p>
+            <div class="duel-invite-row">
+              <input type="text" id="duelInviteLink" class="duel-invite-input" readonly />
+              <button type="button" id="btnCopyInvite" class="btn-copy-invite">Copy</button>
+            </div>
+            <p class="duel-invite-hint" id="duelInviteHint"></p>
+          </div>
+        </div>
+
+        <div class="lobby-box">
+          <p class="section-label">Join with a code</p>
+          <div class="create-duel-inputs">
+            <input type="text" id="inputJoinCode" placeholder="Room code (e.g. ABC23456)" maxlength="10" autocomplete="off" />
+          </div>
+          <input
+            type="password"
+            id="inputJoinPassword"
+            class="duel-password-input"
+            placeholder="Password (private rooms only)"
+            autocomplete="off"
+          />
+          <button id="btnJoinByCode" class="btn-create-duel">Join Duel</button>
         </div>
       </aside>
 
@@ -186,6 +224,7 @@ const appMarkup = String.raw`
           <span class="lobby-section-title">Open Challenges</span>
           <button id="btnRefreshLobby" class="btn-refresh-lobby">Refresh ↺</button>
         </div>
+        <div id="duelLobbyStatus" class="duel-status" data-tone="info" style="display:none" role="status" aria-live="polite"></div>
         <div id="duelChallengesList" class="challenges-list">
           <div class="challenges-empty">No active challenges. Create one above!</div>
         </div>
@@ -194,6 +233,7 @@ const appMarkup = String.raw`
 
     <section id="screenDuelPlay" class="screen" style="display:none">
       <aside class="duel-left">
+        <div id="duelRoomStatus" class="duel-status" data-tone="info" style="display:none" role="status" aria-live="polite"></div>
         <div id="duelTurnBanner" class="duel-turn-banner">
           <span id="duelTurnText">YOUR TURN</span>
         </div>
@@ -306,10 +346,31 @@ export default function HomePage() {
         src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.1/ethers.umd.min.js"
         strategy="beforeInteractive"
       />
+      {/* Publishable key only — RLS-constrained, SELECT-only, safe in the browser. */}
+      <Script
+        id="footmon-supabase-config"
+        strategy="beforeInteractive"
+        dangerouslySetInnerHTML={{
+          __html: `window.__FOOTMON_SUPABASE = ${JSON.stringify({
+            url: process.env.NEXT_PUBLIC_SUPABASE_URL || "",
+            anonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "",
+          })};`,
+        }}
+      />
+      <Script
+        src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.111.0/dist/umd/supabase.js"
+        strategy="beforeInteractive"
+      />
       <Script src="/js/config.js" strategy="afterInteractive" />
       <Script src="/js/data.js" strategy="afterInteractive" />
       <Script src="/js/wallet.js" strategy="afterInteractive" />
+      <Script src="/js/profile.js" strategy="afterInteractive" />
+      <Script src="/js/duel-events.js" strategy="afterInteractive" />
+      <Script src="/js/duel-screen.js" strategy="afterInteractive" />
+      <Script src="/js/realtime.js" strategy="afterInteractive" />
+      <Script src="/js/match-view.js" strategy="afterInteractive" />
       <Script src="/js/contract.js" strategy="afterInteractive" />
+      <Script src="/js/duel-room.js" strategy="afterInteractive" />
       <Script src="/js/pitch.js" strategy="afterInteractive" />
       <Script src="/js/game.js" strategy="afterInteractive" />
       <Script src="/js/leaderboard.js" strategy="afterInteractive" />

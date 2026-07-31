@@ -4,7 +4,7 @@
 //    Leave as null to run in "wallet-only" mode (leaderboard disabled).
 // ─────────────────────────────────────────────────────────────────
 
-const CONTRACT_ADDRESS = "0xE60f79571E7EDba477ff98BAdeE618b5605DF7aE"; // e.g. "0xYourDeployedAddressHere"
+const CONTRACT_ADDRESS = "0xB63A832eD63Ec65273b5a8506968C5E7a1F86cD0"; // Monad Testnet
 
 const MONAD_CHAIN = {
   chainId:         "0x279F",   // 10143 decimal

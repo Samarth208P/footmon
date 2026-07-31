@@ -113,6 +113,12 @@ async function handleConnectWallet() {
     ContractManager.init();
     updateWalletUI(addr);
     showToast("Wallet connected ✔", "success");
+
+    // Every player needs a username before they appear anywhere in the UI.
+    // This blocks on a modal when the address has no profile yet.
+    const username = await ProfileManager.ensureUsername(addr);
+    updateWalletUI(addr);
+    if (username) showToast(`Playing as ${username}`, "success");
   } catch (err) {
     showToast(err.message, "error");
   }
@@ -126,7 +132,11 @@ function updateWalletUI(addr) {
   }
   Refs.btnConnect.style.display  = "none";
   Refs.walletBadge.style.display = "flex";
-  Refs.walletBadge.textContent   = addr.slice(0, 6) + "…" + addr.slice(-4);
+
+  // Prefer the username; fall back to a short address only until it loads.
+  const username = ProfileManager.getMyUsername();
+  Refs.walletBadge.textContent = username || ProfileManager.shortAddr(addr);
+  Refs.walletBadge.title       = username ? username : addr;
 }
 
 // ══════════════════════════════════════════════════════════════════════════════

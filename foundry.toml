@@ -1,0 +1,16 @@
+[profile.default]
+src = "contract"
+out = "contract/out"
+libs = ["contract/lib"]
+test = "contract/test"
+script = "contract/script"
+cache_path = "contract/cache"
+solc_version = "0.8.20"
+optimizer = true
+optimizer_runs = 200
+gas_reports = ["FootMon"]
+
+[rpc_endpoints]
+monad_testnet = "${MONAD_RPC_URL}"
+
+# See https://book.getfoundry.sh/reference/config/

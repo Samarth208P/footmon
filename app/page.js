@@ -192,15 +192,6 @@ const appMarkup = String.raw`
           />
 
           <button id="btnCreateDuel" class="btn-create-duel">Create Challenge</button>
-
-          <div id="duelInviteBox" class="duel-invite" style="display:none">
-            <p class="section-label">Share this link</p>
-            <div class="duel-invite-row">
-              <input type="text" id="duelInviteLink" class="duel-invite-input" readonly />
-              <button type="button" id="btnCopyInvite" class="btn-copy-invite">Copy</button>
-            </div>
-            <p class="duel-invite-hint" id="duelInviteHint"></p>
-          </div>
         </div>
 
         <div class="lobby-box">
@@ -234,6 +225,43 @@ const appMarkup = String.raw`
     <section id="screenDuelPlay" class="screen" style="display:none">
       <aside class="duel-left">
         <div id="duelRoomStatus" class="duel-status" data-tone="info" style="display:none" role="status" aria-live="polite"></div>
+
+        <div id="duelWaitingPanel" class="waiting-panel" style="display:none">
+          <div class="waiting-spinner" aria-hidden="true"></div>
+          <p class="waiting-title">Waiting for an opponent…</p>
+          <p class="waiting-sub">Your stake is escrowed. Share these to invite someone.</p>
+
+          <div class="waiting-field">
+            <span class="waiting-label">Room code</span>
+            <div class="waiting-row">
+              <code id="waitingRoomCode" class="waiting-code">--------</code>
+              <button type="button" class="waiting-copy" data-copy="code">Copy</button>
+            </div>
+          </div>
+
+          <div class="waiting-field" id="waitingPasswordField" style="display:none">
+            <span class="waiting-label">Password</span>
+            <div class="waiting-row">
+              <code id="waitingPassword" class="waiting-code"></code>
+              <button type="button" class="waiting-copy" data-copy="password">Copy</button>
+            </div>
+            <p class="waiting-note">Private room — the opponent needs this to join.</p>
+          </div>
+
+          <div class="waiting-field">
+            <span class="waiting-label">Invite link</span>
+            <div class="waiting-row">
+              <input type="text" id="waitingLink" class="waiting-link" readonly />
+              <button type="button" class="waiting-copy" data-copy="link">Copy</button>
+            </div>
+            <p class="waiting-note" id="waitingLinkNote"></p>
+          </div>
+
+          <button type="button" id="btnCancelRoom" class="waiting-cancel">
+            Cancel &amp; refund my stake
+          </button>
+        </div>
+
         <div id="duelTurnBanner" class="duel-turn-banner">
           <span id="duelTurnText">YOUR TURN</span>
         </div>

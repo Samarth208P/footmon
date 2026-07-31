@@ -127,6 +127,42 @@ const DuelRoom = (() => {
   // ── Create / join ─────────────────────────────────────────────────────────
 
   /**
+   * Remembers the room password for the creator's own tab.
+   *
+   * The server only stores a scrypt hash, so it can never hand the password back.
+   * Without this, a refresh while waiting would leave the creator unable to tell
+   * their opponent the password they just set. sessionStorage keeps it to this
+   * tab and clears when the tab closes.
+   */
+  function rememberPassword(roomCode, password) {
+    if (!roomCode) return;
+    try {
+      if (password) sessionStorage.setItem(`fm_pw_${roomCode}`, password);
+      else sessionStorage.removeItem(`fm_pw_${roomCode}`);
+    } catch {
+      /* private browsing can block storage; the link still carries the password */
+    }
+  }
+
+  function recallPassword(roomCode) {
+    if (!roomCode) return null;
+    try {
+      return sessionStorage.getItem(`fm_pw_${roomCode}`);
+    } catch {
+      return null;
+    }
+  }
+
+  function forgetPassword(roomCode) {
+    if (!roomCode) return;
+    try {
+      sessionStorage.removeItem(`fm_pw_${roomCode}`);
+    } catch {
+      /* ignore */
+    }
+  }
+
+  /**
    * Escrows the stake on-chain, then registers the room.
    *
    * On-chain FIRST, deliberately: if the API call fails afterwards the stake is
@@ -155,6 +191,7 @@ const DuelRoom = (() => {
     state.myAddress = address.toLowerCase();
     state.side = "creator";
     state.invitePassword = isPrivate ? password : null;
+    rememberPassword(room.room_code, isPrivate ? password : null);
 
     return { room, escrowTx: escrow.txHash, shareLink: shareLinkFor(room.room_code, password) };
   }
@@ -269,6 +306,11 @@ const DuelRoom = (() => {
   const hasSession = () => Boolean(state.token);
   const getInvitePassword = () => state.invitePassword;
 
+  /** Password for a room this tab created, if still known. */
+  function passwordFor(roomCode) {
+    return state.invitePassword || recallPassword(roomCode);
+  }
+
   function currentScreen() {
     return DuelScreen.screenForRoom(state.room, state.matchLogs);
   }
@@ -323,6 +365,8 @@ const DuelRoom = (() => {
     getToken,
     hasSession,
     getInvitePassword,
+    passwordFor,
+    forgetPassword,
     setMyAddress,
     currentScreen,
     outcome,

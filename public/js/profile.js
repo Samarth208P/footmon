@@ -66,20 +66,38 @@ const ProfileManager = (() => {
     return usernameFor(address);
   }
 
+  /**
+   * @returns {Promise<{ok: boolean, profile: object|null, error?: string}>}
+   *
+   * "No profile yet" and "the server is broken" are different outcomes: showing
+   * the claim modal when the API is failing traps the player in a dialog whose
+   * submit button can never succeed.
+   */
   async function fetchProfile(address) {
     const key = String(address).toLowerCase();
     try {
       const res = await fetch(`/api/profile/${key}`, { cache: "no-store" });
-      if (!res.ok) return null;
+
+      if (!res.ok) {
+        let detail = `Profile service returned ${res.status}`;
+        try {
+          const body = await res.json();
+          detail = body.details || body.error || detail;
+        } catch {
+          /* keep the status-based message */
+        }
+        return { ok: false, profile: null, error: detail };
+      }
+
       const { profile } = await res.json();
       if (profile?.username) {
         cache.set(key, profile.username);
-        return profile;
+        return { ok: true, profile };
       }
       known.add(key);
-      return null;
-    } catch {
-      return null;
+      return { ok: true, profile: null };
+    } catch (err) {
+      return { ok: false, profile: null, error: err?.message || "Network error" };
     }
   }
 
@@ -155,6 +173,9 @@ const ProfileManager = (() => {
         <button id="profileClaimBtn" class="profile-modal-btn" type="button">
           Sign &amp; claim
         </button>
+        <button id="profileClaimLater" class="profile-modal-link" type="button">
+          Not now
+        </button>
         <p class="profile-modal-foot">Signing is free — no gas, no transaction.</p>
       </div>
     `;
@@ -162,12 +183,29 @@ const ProfileManager = (() => {
 
     const input = modalEl.querySelector("#profileUsernameInput");
     const btn = modalEl.querySelector("#profileClaimBtn");
+    const later = modalEl.querySelector("#profileClaimLater");
 
     btn.addEventListener("click", () => submitClaim());
     input.addEventListener("keydown", (e) => {
       if (e.key === "Enter") submitClaim();
     });
     input.addEventListener("input", () => setError(""));
+
+    // Escape hatch. Duels still require a username, but the player is never
+    // locked out of the rest of the app by this dialog.
+    later.addEventListener("click", () => {
+      closeModal();
+      pendingClaim?.resolve(null);
+      pendingClaim = null;
+    });
+
+    modalEl.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        closeModal();
+        pendingClaim?.resolve(null);
+        pendingClaim = null;
+      }
+    });
 
     return modalEl;
   }
@@ -252,7 +290,9 @@ const ProfileManager = (() => {
       const json = await res.json();
 
       if (!res.ok) {
-        setError(json.error || "Could not claim that username");
+        // Show the server's own reason — "already taken", cooldown, or a
+        // misconfiguration message — rather than a generic failure.
+        setError(json.details || json.error || `Could not claim that username (${res.status})`);
         setBusy(false);
         return;
       }
@@ -280,15 +320,28 @@ const ProfileManager = (() => {
   // ── Entry point ───────────────────────────────────────────────────────────
 
   /**
-   * Called after a wallet connects. Resolves once the address has a username,
-   * blocking on the modal when it does not.
+   * Called after a wallet connects. Resolves once the address has a username.
+   *
+   * Resolves with null rather than hanging when the profile service is
+   * unavailable or the player dismisses the dialog — a wallet connection must
+   * never leave the app stuck behind a modal it cannot complete. Duel actions
+   * check for a username separately and refuse without one.
    */
   async function ensureUsername(address) {
     myAddress = address;
-    const profile = await fetchProfile(address);
 
-    if (profile?.username) {
-      myUsername = profile.username;
+    const lookup = await fetchProfile(address);
+
+    if (!lookup.ok) {
+      console.error("[Profile] lookup failed:", lookup.error);
+      if (typeof showToast === "function") {
+        showToast(`Usernames unavailable: ${lookup.error}`, "error");
+      }
+      return null;
+    }
+
+    if (lookup.profile?.username) {
+      myUsername = lookup.profile.username;
       document.dispatchEvent(new CustomEvent("profiles:updated"));
       return myUsername;
     }

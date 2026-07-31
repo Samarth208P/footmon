@@ -81,10 +81,13 @@ const DuelManager = (() => {
     Refs.duelRoomStatus = document.getElementById("duelRoomStatus");
     Refs.inputPrivate = document.getElementById("inputDuelPrivate");
     Refs.inputPassword = document.getElementById("inputDuelPassword");
-    Refs.inviteBox = document.getElementById("duelInviteBox");
-    Refs.inviteLink = document.getElementById("duelInviteLink");
-    Refs.inviteHint = document.getElementById("duelInviteHint");
-    Refs.btnCopyInvite = document.getElementById("btnCopyInvite");
+    Refs.waitingPanel = document.getElementById("duelWaitingPanel");
+    Refs.waitingRoomCode = document.getElementById("waitingRoomCode");
+    Refs.waitingPasswordField = document.getElementById("waitingPasswordField");
+    Refs.waitingPassword = document.getElementById("waitingPassword");
+    Refs.waitingLink = document.getElementById("waitingLink");
+    Refs.waitingLinkNote = document.getElementById("waitingLinkNote");
+    Refs.btnCancelRoom = document.getElementById("btnCancelRoom");
     Refs.inputJoinCode = document.getElementById("inputJoinCode");
     Refs.inputJoinPassword = document.getElementById("inputJoinPassword");
     Refs.btnJoinByCode = document.getElementById("btnJoinByCode");
@@ -134,18 +137,28 @@ const DuelManager = (() => {
       });
     }
 
-    if (Refs.btnCopyInvite) {
-      Refs.btnCopyInvite.addEventListener("click", async () => {
-        const link = Refs.inviteLink?.value;
-        if (!link) return;
+    if (Refs.waitingPanel) {
+      Refs.waitingPanel.querySelectorAll(".waiting-copy").forEach((button) => {
+        button.addEventListener("click", () => copyInviteValue(button.dataset.copy, button));
+      });
+    }
+
+    if (Refs.btnCancelRoom) {
+      Refs.btnCancelRoom.addEventListener("click", async () => {
+        if (!state.activeDuel) return;
+        Refs.btnCancelRoom.disabled = true;
+        Refs.btnCancelRoom.textContent = "Confirm in wallet…";
         try {
-          await navigator.clipboard.writeText(link);
-          Refs.btnCopyInvite.textContent = "Copied ✔";
-          setTimeout(() => { Refs.btnCopyInvite.textContent = "Copy"; }, 1800);
-        } catch {
-          // Clipboard can be blocked; selecting the text still lets them copy.
-          Refs.inviteLink.select();
-          showToast("Press Ctrl+C to copy the link", "info");
+          await DuelRoom.cancel();
+          DuelRoom.forgetPassword(state.activeDuel.roomCode);
+          showToast("Room cancelled — your stake was refunded.", "success");
+          clearActiveDuel();
+          switchMode("duel");
+        } catch (err) {
+          showToast(friendlyError(err), "error");
+        } finally {
+          Refs.btnCancelRoom.disabled = false;
+          Refs.btnCancelRoom.textContent = "Cancel & refund my stake";
         }
       });
     }
@@ -579,8 +592,8 @@ const DuelManager = (() => {
         status: room.joiner ? "active" : "waiting",
       });
 
-      showInviteLink(shareLink, isPrivate);
-      showToast("Stake escrowed. Waiting for an opponent.", "success");
+      showRoomInvite();
+      showToast("Stake escrowed. Share the room code to invite an opponent.", "success");
     } catch (err) {
       setLobbyStatus("", "info");
       showToast(friendlyError(err), "error");
@@ -650,15 +663,84 @@ const DuelManager = (() => {
     return message;
   }
 
-  /** Shows the copyable invite link while waiting for an opponent. */
-  function showInviteLink(link, isPrivate) {
-    if (!Refs.inviteBox || !Refs.inviteLink) return;
-    Refs.inviteBox.style.display = "block";
-    Refs.inviteLink.value = link;
-    if (Refs.inviteHint) {
-      Refs.inviteHint.textContent = isPrivate
-        ? "Private room — this link includes the password. Share it only with your opponent."
-        : "Public room — anyone can join from the lobby, or with this link.";
+  /**
+   * Shows the room code, password and invite link while waiting for an opponent.
+   *
+   * Lives on the duel screen, not the lobby: startDuelState() switches screens
+   * immediately after creation, so the old lobby-side invite box was being
+   * populated inside an already-hidden panel and was never visible.
+   */
+  function showRoomInvite() {
+    const duel = state.activeDuel;
+    const panel = Refs.waitingPanel;
+    if (!panel || !duel) return;
+
+    // Only while genuinely waiting for someone to join.
+    if (duel.joiner) {
+      hideRoomInvite();
+      return;
+    }
+
+    const roomCode = duel.roomCode;
+    const password = DuelRoom.passwordFor(roomCode);
+    const link = DuelRoom.shareLinkFor(roomCode, password);
+
+    panel.style.display = "block";
+
+    if (Refs.waitingRoomCode) Refs.waitingRoomCode.textContent = roomCode || "--------";
+
+    if (Refs.waitingPasswordField) {
+      if (password) {
+        Refs.waitingPasswordField.style.display = "block";
+        if (Refs.waitingPassword) Refs.waitingPassword.textContent = password;
+      } else {
+        Refs.waitingPasswordField.style.display = "none";
+      }
+    }
+
+    if (Refs.waitingLink) Refs.waitingLink.value = link;
+    if (Refs.waitingLinkNote) {
+      Refs.waitingLinkNote.textContent = password
+        ? "This link already contains the password — send it only to your opponent."
+        : "Anyone with this link, or browsing the lobby, can join.";
+    }
+
+    if (Refs.btnCancelRoom) {
+      Refs.btnCancelRoom.style.display = duel.isCreator ? "block" : "none";
+    }
+  }
+
+  function hideRoomInvite() {
+    if (Refs.waitingPanel) Refs.waitingPanel.style.display = "none";
+  }
+
+  /** Copies one of the invite values, with a fallback when the clipboard is blocked. */
+  async function copyInviteValue(kind, button) {
+    const duel = state.activeDuel;
+    if (!duel) return;
+
+    const password = DuelRoom.passwordFor(duel.roomCode);
+    const value =
+      kind === "code"
+        ? duel.roomCode
+        : kind === "password"
+          ? password
+          : DuelRoom.shareLinkFor(duel.roomCode, password);
+
+    if (!value) return;
+
+    const original = button.textContent;
+    try {
+      await navigator.clipboard.writeText(value);
+      button.textContent = "Copied ✔";
+      setTimeout(() => { button.textContent = original; }, 1600);
+    } catch {
+      if (kind === "link" && Refs.waitingLink) {
+        Refs.waitingLink.select();
+        showToast("Press Ctrl+C to copy the link", "info");
+      } else {
+        showToast(`${kind === "code" ? "Room code" : "Password"}: ${value}`, "info");
+      }
     }
   }
 
@@ -687,6 +769,9 @@ const DuelManager = (() => {
       duel.joiner ? "Connecting to opponent…" : "Waiting for an opponent to join…",
       "info"
     );
+
+    // Room code / password / link, shown for as long as nobody has joined.
+    showRoomInvite();
 
     // Subscribe first, then catch up, so nothing published between the initial
     // read and the subscription is lost.
@@ -750,6 +835,7 @@ const DuelManager = (() => {
     state.pendingPickPlayer = null;
     stopEventPolling();
     setRoomStatus("", "info");
+    hideRoomInvite();
     RealtimeManager.leave().catch(() => {});
   }
 
@@ -767,6 +853,7 @@ const DuelManager = (() => {
           duel.status = "active";
           duel.turn = "creator";
           setRoomStatus("Opponent joined", "ok");
+          hideRoomInvite();
           renderDuelBoard();
         }
       }
@@ -791,6 +878,8 @@ const DuelManager = (() => {
       duel.joiner = payload.joiner;
       duel.status = "active";
       duel.turn = "creator";
+      setRoomStatus("Opponent joined", "ok");
+      hideRoomInvite();
       renderDuelBoard();
       return;
     }

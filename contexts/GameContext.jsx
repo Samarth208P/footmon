@@ -48,7 +48,7 @@ function getPlayerJerseyNumber(player, slotIndex = 0, slotLabel = '') {
 /** Check if a player can fill a given slot label */
 function canPlaySlot(player, slotLabel) {
     if (!player || !slotLabel) return false;
-    const playerPositions = player.position.split(',').map(p => p.trim().toUpperCase());
+    const playerPositions = player.position.split(/[,/]+/).map(p => p.trim().toUpperCase());
     const accepted = SLOT_ACCEPTS[slotLabel.toUpperCase()] || [];
     return playerPositions.some(pp => accepted.includes(pp));
 }

@@ -2,63 +2,125 @@ const fs = require('fs');
 const path = require('path');
 const { createClient } = require('@supabase/supabase-js');
 
-const SUPABASE_URL = 'https://kjugoifxigegfokqcwjp.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtqdWdvaWZ4aWdlZ2Zva3Fjd2pwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU0NjU1MTIsImV4cCI6MjEwMTA0MTUxMn0.QG0QYlnjvF8lnPc6kxt9PZG1CJ-HTF6zg9WD-PGU0yM';
+// Load environment variables from .env.local if present
+const envPath = path.join(__dirname, '..', '.env.local');
+let url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+let key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
-
-const dataDir = path.join(__dirname, '..', 'public', 'data');
-
-async function seed() {
-    console.log('Seeding players...');
-    const files = fs.readdirSync(dataDir).filter(f => f.endsWith('.json'));
-    
-    let totalInserted = 0;
-    for (const file of files) {
-        const yearMatch = file.match(/^(\d+)\.json$/);
-        if (!yearMatch) continue;
-        const year = yearMatch[1];
-        
-        console.log(`Processing year ${year}...`);
-        const filePath = path.join(dataDir, file);
-        const data = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
-        
-        let allPlayers = [];
-        
-        for (const [nationCode, nationData] of Object.entries(data.nations)) {
-            const nationName = nationData.name;
-            const teamYear = `${nationName} ${year}`;
-            
-            for (const player of nationData.squad) {
-                // Some players might have multiple positions, we'll join them or take the first
-                const position = Array.isArray(player.positions) ? player.positions.join(', ') : (player.positions || 'UNKNOWN');
-                
-                allPlayers.push({
-                    name: player.name,
-                    jersey_number: player.jersey_number || 0,
-                    rating: player.rating || 50,
-                    position: position,
-                    is_legendary: player.is_legendary || false,
-                    team_year: teamYear
-                });
-            }
+if (fs.existsSync(envPath)) {
+    const envContent = fs.readFileSync(envPath, 'utf8');
+    envContent.split('\n').forEach(line => {
+        const parts = line.split('=');
+        if (parts.length >= 2) {
+            const envKey = parts[0].trim();
+            const envVal = parts.slice(1).join('=').trim();
+            if (envKey === 'NEXT_PUBLIC_SUPABASE_URL' && !url) url = envVal;
+            if (envKey === 'NEXT_PUBLIC_SUPABASE_ANON_KEY' && !key) key = envVal;
         }
-        
-        console.log(`Found ${allPlayers.length} players for ${year}. Inserting...`);
-        // Batch insert in chunks of 500
-        const chunkSize = 500;
-        for (let i = 0; i < allPlayers.length; i += chunkSize) {
-            const chunk = allPlayers.slice(i, i + chunkSize);
-            const { error } = await supabase.from('players').insert(chunk);
-            if (error) {
-                console.error(`Error inserting chunk for ${year}:`, error);
-            } else {
-                totalInserted += chunk.length;
-                console.log(`Inserted ${chunk.length} players. (Total: ${totalInserted})`);
-            }
-        }
-    }
-    console.log('Seeding complete! Total players inserted:', totalInserted);
+    });
 }
 
-seed().catch(console.error);
+if (!url || !key) {
+    console.error('Supabase URL or Key not found in environment or .env.local');
+    process.exit(1);
+}
+
+const supabase = createClient(url, key);
+const csvPath = path.join(__dirname, '..', 'public', 'players.csv');
+
+function parseCSVLine(line) {
+    const result = [];
+    let current = '';
+    let inQuotes = false;
+    for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+        if (char === '"') {
+            inQuotes = !inQuotes;
+        } else if (char === ',' && !inQuotes) {
+            result.push(current.trim());
+            current = '';
+        } else {
+            current += char;
+        }
+    }
+    result.push(current.trim());
+    return result;
+}
+
+async function seed() {
+    console.log('--- Step 1: Deleting older player data from Supabase ---');
+    const { error: deleteError, count: deletedCount } = await supabase
+        .from('players')
+        .delete({ count: 'exact' })
+        .neq('id', '00000000-0000-0000-0000-000000000000');
+
+    if (deleteError) {
+        console.error('Error deleting older player data:', deleteError);
+        process.exit(1);
+    }
+    console.log(`Deleted ${deletedCount ?? 'all'} existing rows from 'players' table.`);
+
+    console.log('--- Step 2: Reading and parsing players.csv ---');
+    if (!fs.existsSync(csvPath)) {
+        console.error('players.csv file not found at:', csvPath);
+        process.exit(1);
+    }
+
+    const fileContent = fs.readFileSync(csvPath, 'utf8');
+    const lines = fileContent.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+    
+    if (lines.length <= 1) {
+        console.error('No player data found in players.csv');
+        process.exit(1);
+    }
+
+    const header = parseCSVLine(lines[0]);
+    console.log('CSV Header:', header);
+
+    const playersToInsert = [];
+    for (let i = 1; i < lines.length; i++) {
+        const cols = parseCSVLine(lines[i]);
+        if (cols.length < header.length) continue;
+        
+        const [nation, worldCupYear, playerName, playerId, jerseyNumber, rating, position, attack, defense, isLegendary] = cols;
+        
+        const formattedPosition = position ? position.replace(/\//g, ', ') : 'UNKNOWN';
+        const teamYear = `${nation} ${worldCupYear}`;
+        
+        playersToInsert.push({
+            name: playerName,
+            jersey_number: parseInt(jerseyNumber, 10) || 0,
+            rating: parseInt(rating, 10) || 50,
+            position: formattedPosition,
+            is_legendary: isLegendary ? isLegendary.toLowerCase() === 'true' : false,
+            team_year: teamYear
+        });
+    }
+
+    console.log(`Parsed ${playersToInsert.length} valid players from CSV.`);
+
+    console.log('--- Step 3: Inserting players into Supabase in batches ---');
+    const chunkSize = 500;
+    let totalInserted = 0;
+
+    for (let i = 0; i < playersToInsert.length; i += chunkSize) {
+        const chunk = playersToInsert.slice(i, i + chunkSize);
+        const { error: insertError, data } = await supabase.from('players').insert(chunk).select('id');
+        
+        if (insertError) {
+            console.error(`Error inserting batch at offset ${i}:`, insertError);
+            process.exit(1);
+        } else {
+            const countInserted = data ? data.length : chunk.length;
+            totalInserted += countInserted;
+            console.log(`Inserted batch ${Math.floor(i / chunkSize) + 1} (${countInserted} rows). Total so far: ${totalInserted}`);
+        }
+    }
+
+    console.log(`\n=== Seeding successful! Total players inserted into Supabase: ${totalInserted} ===`);
+}
+
+seed().catch(err => {
+    console.error('Fatal error during seeding:', err);
+    process.exit(1);
+});

@@ -92,8 +92,12 @@ const DataManager = (() => {
       squad      = data.nations[nationCode].squad;
     }
 
-    // Sort squad by rating desc
-    squad = [...squad].sort((a, b) => b.rating - a.rating);
+    // Randomize squad player order on every roll
+    squad = [...squad];
+    for (let i = squad.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [squad[i], squad[j]] = [squad[j], squad[i]];
+    }
 
     return { year, nationCode, nationName, squad };
   }

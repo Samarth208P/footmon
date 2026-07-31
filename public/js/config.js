@@ -18,21 +18,19 @@ const FREE_ROLLS     = 4;
 const ROLL_PRICE_MON = "0.001"; // MON
 
 // ─── Position Compatibility ──────────────────────────────────────────────────
-// POSITION_COMPAT[slotPos] = array of player.positions values that can fill it
+// POSITION_COMPAT[slotPos] = array of player position strings from CSV that can fill slotPos
 const POSITION_COMPAT = {
   GK:  ["GK"],
   CB:  ["CB"],
-  LB:  ["LB", "CB"],
-  RB:  ["RB", "CB"],
-  CDM: ["CDM", "CM"],
-  CM:  ["CM", "CDM", "CAM", "LM", "RM"],
-  CAM: ["CAM", "CM"],
-  LM:  ["LM", "CM", "LW"],
-  RM:  ["RM", "CM", "RW"],
-  ST:  ["ST", "CF", "LW", "RW"],
-  LW:  ["LW", "ST", "LM", "CF"],
-  RW:  ["RW", "ST", "RM", "CF"],
-  CF:  ["CF", "ST"],
+  LB:  ["LB", "LWB"],
+  RB:  ["RB", "RWB"],
+  CM:  ["CM", "DM", "AM", "CDM", "CAM"],
+  LM:  ["LM"],
+  RM:  ["RM"],
+  ST:  ["ST", "CF", "SS"],
+  LW:  ["LW"],
+  RW:  ["RW"],
+  CF:  ["CF", "ST", "SS"],
 };
 
 // ─── Formations ──────────────────────────────────────────────────────────────
@@ -81,10 +79,10 @@ const FORMATIONS = {
       { pos: "CB",  top: 71, left: 35 },
       { pos: "CB",  top: 71, left: 65 },
       { pos: "RB",  top: 70, left: 86 },
-      { pos: "CDM", top: 58, left: 37 },
-      { pos: "CDM", top: 58, left: 63 },
+      { pos: "CM",  top: 58, left: 37 },
+      { pos: "CM",  top: 58, left: 63 },
       { pos: "LM",  top: 40, left: 14 },
-      { pos: "CAM", top: 39, left: 50 },
+      { pos: "CM",  top: 39, left: 50 },
       { pos: "RM",  top: 40, left: 86 },
       { pos: "ST",  top: 18, left: 50 },
     ],
@@ -114,7 +112,7 @@ const FORMATIONS = {
       { pos: "CB",  top: 71, left: 76 },
       { pos: "LM",  top: 50, left: 10 },
       { pos: "CM",  top: 51, left: 31 },
-      { pos: "CDM", top: 53, left: 50 },
+      { pos: "CM",  top: 53, left: 50 },
       { pos: "CM",  top: 51, left: 69 },
       { pos: "RM",  top: 50, left: 90 },
       { pos: "ST",  top: 18, left: 35 },
@@ -147,7 +145,7 @@ const FORMATIONS = {
       { pos: "RB",  top: 70, left: 86 },
       { pos: "LM",  top: 50, left: 10 },
       { pos: "CM",  top: 51, left: 28 },
-      { pos: "CDM", top: 53, left: 50 },
+      { pos: "CM",  top: 53, left: 50 },
       { pos: "CM",  top: 51, left: 72 },
       { pos: "RM",  top: 50, left: 90 },
       { pos: "ST",  top: 18, left: 50 },

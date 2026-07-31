@@ -140,8 +140,10 @@ const Game = (() => {
   // ── Player assignment ─────────────────────────────────────────────────────
 
   function canPlayerFillSlot(player, slotPos) {
+    if (!player || !slotPos) return false;
     const accepted = POSITION_COMPAT[slotPos] || [slotPos];
-    return player.positions.some(p => accepted.includes(p));
+    const playerPositions = Array.isArray(player.positions) ? player.positions : (player.position ? player.position.split("/") : []);
+    return playerPositions.some(p => accepted.includes(p.trim().toUpperCase()));
   }
 
   function assignPlayer(playerObj, slotIdx) {
@@ -186,8 +188,8 @@ const Game = (() => {
     if (assigned === 0) return { avg: 0, attack: 0, defense: 0, assigned, total };
 
     const avg     = filled.reduce((s, sl) => s + sl.player.rating, 0) / assigned;
-    const attack  = filled.reduce((s, sl) => s + (sl.player.stats?.att || 0), 0) / assigned;
-    const defense = filled.reduce((s, sl) => s + (sl.player.stats?.def || 0), 0) / assigned;
+    const attack  = filled.reduce((s, sl) => s + (sl.player.attack ?? sl.player.stats?.att ?? 0), 0) / assigned;
+    const defense = filled.reduce((s, sl) => s + (sl.player.defense ?? sl.player.stats?.def ?? 0), 0) / assigned;
 
     return { avg: avg.toFixed(1), attack: Math.round(attack), defense: Math.round(defense), assigned, total };
   }

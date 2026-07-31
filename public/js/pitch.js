@@ -55,20 +55,25 @@ const PitchRenderer = (() => {
   <path d="M 768 1170 A 10 10 0 0 1 778 1160" fill="none" stroke="rgba(255,255,255,0.38)" stroke-width="2.5"/>
 </svg>`;
 
-  function ratingColor(r) {
-    if (r >= 90) return "#f0c040";
+  function ratingColor(r, isLegendary) {
+    if (isLegendary) return "#f0c040";
     if (r >= 80) return "#34d399";
     if (r >= 70) return "#94a3b8";
     return "#64748b";
   }
 
   function getJerseyNumber(player, slotPos) {
+    if (player.jerseyNumber !== undefined && player.jerseyNumber !== null && player.jerseyNumber > 0) {
+      return player.jerseyNumber;
+    }
+    if (player.jersey !== undefined && player.jersey !== null && player.jersey > 0) {
+      return player.jersey;
+    }
     if (slotPos === "GK") return 1;
     let hash = 0;
     for (let i = 0; i < player.id.length; i++) {
       hash = player.id.charCodeAt(i) + ((hash << 5) - hash);
     }
-    // Ensure it's not 1 (reserved for GK)
     let num = (Math.abs(hash) % 98) + 2;
     return num;
   }
@@ -105,10 +110,10 @@ const PitchRenderer = (() => {
       if (slot.player) {
         const p = slot.player;
         const jerseyNum = getJerseyNumber(p, slot.pos);
-        el.style.borderColor = ratingColor(p.rating);
+        el.style.borderColor = ratingColor(p.rating, !!p.isLegendary);
         el.style.borderWidth = "2.5px";
         // Add glow for elite players
-        if (p.rating >= 90) el.classList.add("slot--elite");
+        if (p.isLegendary) el.classList.add("slot--elite");
         el.innerHTML = `
           <div class="slot-player-jersey">
             <span class="slot-jersey-number">${jerseyNum}</span>

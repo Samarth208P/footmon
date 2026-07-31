@@ -936,8 +936,8 @@ const DuelManager = (() => {
     let atk = 0;
     let def = 0;
     filled.forEach((player) => {
-      atk += player.stats?.att || Math.round(player.rating * 0.6);
-      def += player.stats?.def || Math.round(player.rating * 0.4);
+      atk += player.attack ?? player.stats?.att ?? Math.round(player.rating * 0.6);
+      def += player.defense ?? player.stats?.def ?? Math.round(player.rating * 0.4);
     });
 
     return {
@@ -1099,13 +1099,14 @@ const DuelManager = (() => {
       else if (!canFitAnywhere) rowClass += " player-row--disabled";
       else if (isSelected) rowClass += " player-row--selected";
 
-      const positions = Array.isArray(player.positions) ? player.positions.join(" / ") : "";
-      const barColor = player.rating >= 90 ? "#f0c040" : "var(--text3)";
+      const isElite = !!player.isLegendary;
+      const positions = Array.isArray(player.positions) ? player.positions.join(" / ") : (player.position || "");
+      const barColor = isElite ? "#f0c040" : "var(--text3)";
 
       return `
         <div class="${rowClass}" data-pid="${player.id}">
           <div class="player-row-left">
-            <span class="player-name ${player.rating >= 90 ? "player-name--elite" : ""}">${player.name}</span>
+            <span class="player-name ${isElite ? "player-name--elite" : ""}">${player.name}</span>
             <span class="player-pos-tags">${positions}</span>
           </div>
           <div class="player-rating-wrap">

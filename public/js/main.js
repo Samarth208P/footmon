@@ -38,8 +38,8 @@ function showToast(msg, type = "info") {
 }
 
 // ── Rating colour util (used by multiple modules) ────────────────────────────
-function ratingBadgeClass(r) {
-  if (r >= 90) return "rating--gold";
+function ratingBadgeClass(r, isLegendary) {
+  if (isLegendary) return "rating--gold";
   if (r >= 80) return "rating--green";
   if (r >= 70) return "rating--white";
   return "rating--gray";
@@ -316,7 +316,7 @@ function renderPlayerList() {
       rowClass += " player-row--selected";
     }
 
-    const isElite  = p.rating >= 90;
+    const isElite  = !!p.isLegendary;
     const rc       = isElite ? "#f0c040" : "var(--border2)";
     const rcBadge  = isElite ? "#f0c040" : "var(--text2)";
     const badgeBg  = isElite ? hexToRgba("#f0c040", 0.08) : "rgba(255,255,255,0.02)";
@@ -449,7 +449,7 @@ function renderScorecard() {
   // Per-position rows
   Refs.scRows.innerHTML = Game.state.slots.map((sl, idx) => {
     const p  = sl.player;
-    const isElite = p && p.rating >= 90;
+    const isElite = p && !!p.isLegendary;
     const rc = isElite ? "#f0c040" : "var(--text2)";
     const barColor = isElite ? "#f0c040" : "var(--text3)";
     return `

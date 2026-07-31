@@ -16,8 +16,9 @@ const Game = (() => {
     selectedPlayer: null,    // selected player in squad list
 
     // Roll economy
-    rollsUsed:   0,          // total rolls this session
+    rollsUsed:   0,          // rolls used in the CURRENT turn
     freeRolls:   FREE_ROLLS, // from config.js
+    rolledThisTurn: false,   // true once this turn's free roll is spent
 
     // Team slots  (populated from FORMATIONS on formation change)
     slots: [],               // [{ pos, top, left, player: null|playerObj }]
@@ -90,20 +91,22 @@ const Game = (() => {
     if (state.busy) return;
     state.busy = true;
 
-    const isPaid = state.rollsUsed >= state.freeRolls;
+    // One free roll per turn. Once you have rolled for the current slot, any
+    // nation/year reroll is paid — this is what REROLL_PRICE_MON buys.
+    const isPaid = state.rolledThisTurn === true;
 
     try {
       if (isPaid) {
         // Pay on-chain first
         if (!WalletManager.isConnected()) {
-          throw new Error("Connect your wallet for paid rolls.");
+          throw new Error("Connect your wallet to reroll.");
         }
         if (!ContractManager.isAvailable()) {
           throw new Error("Contract not deployed yet. Contact the game owner.");
         }
-        showToast("Confirm transaction in MetaMask…", "info");
-        await ContractManager.payForRoll();
-        showToast("Roll purchased! ✔", "success");
+        showToast(`Confirm ${REROLL_PRICE_MON} MON reroll in MetaMask…`, "info");
+        await ContractManager.payForRoll(REROLL_PRICE_MON);
+        showToast("Reroll purchased ✔", "success");
       }
 
       let rollResult;
@@ -126,6 +129,8 @@ const Game = (() => {
       state.nationName = rollResult.nationName;
       state.squad      = rollResult.squad;
       state.rollsUsed++;
+      // The free roll for this turn is now spent.
+      state.rolledThisTurn = true;
 
       // Reset selection UI state
       state.selectedSlotIdx = null;
@@ -170,6 +175,8 @@ const Game = (() => {
     state.squad          = [];
     state.rollsUsed      = 0;
     state.selectedPlayer = null;
+    // New turn: the next roll is free again.
+    state.rolledThisTurn = false;
 
     return true;
   }

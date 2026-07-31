@@ -179,6 +179,7 @@ async function startGame() {
     // Clear slots and draft state for fresh draft progression game
     Game.state.slots = Game.buildSlots(Game.state.formation, Game.state.style);
     Game.state.rollsUsed = 0;
+    Game.state.rolledThisTurn = false;
     Game.state.selectedPlayer = null;
     Game.state.selectedPlacedSlotIdx = null;
 
@@ -225,13 +226,13 @@ function renderPlayScreen() {
       Refs.draftEmptyScore.textContent = avgScore;
     }
 
-    if (descEl) descEl.innerHTML = `Your squad is fully drafted.<br/>Submit your score on-chain.`;
+    if (descEl) descEl.innerHTML = `Your XI is complete.<br/>Face 7 opponents — one loss ends the run.`;
     
     if (btnEl) {
       if (!WalletManager.isConnected()) {
-        btnEl.textContent = "Connect Wallet to Submit";
+        btnEl.textContent = "Connect Wallet to Play";
       } else {
-        btnEl.textContent = "Submit Score";
+        btnEl.textContent = "Enter Tournament ⚽";
       }
       btnEl.disabled = false;
     }
@@ -245,16 +246,20 @@ function renderPlayScreen() {
     const iconEl  = Refs.draftEmptyState.querySelector(".draft-empty-icon");
 
     if (iconEl) iconEl.textContent = "🎲";
-    const isPaid  = s.rollsUsed >= s.freeRolls;
+    // One free roll per turn; rerolls within the turn are paid.
+    const isPaid = s.rolledThisTurn === true;
+
+    const filled = s.slots ? s.slots.filter((sl) => sl.player).length : 0;
+    const turn = Math.min(filled + 1, SQUAD_TURNS);
 
     if (isPaid) {
-      if (titleEl) titleEl.textContent = "Pay & Roll";
-      if (descEl) descEl.innerHTML = `Free rolls used.<br/>Pay <strong>${ROLL_PRICE_MON} MON</strong> to draft next player.`;
-      if (btnEl) btnEl.textContent = `Pay & Roll 🎲 (${ROLL_PRICE_MON} MON)`;
+      if (titleEl) titleEl.textContent = "Reroll";
+      if (descEl) descEl.innerHTML = `Free roll for this pick used.<br/>Reroll costs <strong>${REROLL_PRICE_MON} MON</strong>.`;
+      if (btnEl) btnEl.textContent = `Reroll 🎲 (${REROLL_PRICE_MON} MON)`;
     } else {
-      const remaining = s.freeRolls - s.rollsUsed;
       if (titleEl) titleEl.textContent = "Draft Next Player";
-      if (descEl) descEl.textContent = `Roll to draw a nation. ${remaining} free roll${remaining !== 1 ? "s" : ""} left.`;
+      if (descEl) descEl.textContent =
+        `Pick ${turn} of ${SQUAD_TURNS} — this roll is free.`;
       if (btnEl) btnEl.textContent = "Roll 🎲";
     }
     if (btnEl) {
@@ -492,6 +497,33 @@ async function handleReroll(mode) {
 }
 
 // ── Submit score ──────────────────────────────────────────────────────────────
+function formatDiff(diff) {
+  const n = Number(diff) || 0;
+  return n > 0 ? `+${n}` : String(n);
+}
+
+/**
+ * The hourly on-chain board is separate from the tournament board and costs gas,
+ * so it is offered rather than forced. A rejection here must not lose the
+ * tournament result, which is already recorded.
+ */
+async function maybeSubmitHourlyScore(score, nation, year, formation) {
+  if (!ContractManager.isAvailable()) return;
+  try {
+    await ContractManager.submitScore(parseFloat(score), nation, year, formation);
+    showToast(`Squad rating ${score} also submitted to the hourly board ✔`, "success");
+  } catch (err) {
+    const rejected =
+      err?.code === "ACTION_REJECTED" || /reject|denied/i.test(err?.message || "");
+    showToast(
+      rejected
+        ? "Skipped the hourly board — your tournament run is already saved."
+        : `Hourly board submission failed: ${err.message}. Tournament run is saved.`,
+      "info"
+    );
+  }
+}
+
 async function handleSubmit() {
   const s     = Game.state;
   const score = Game.getSubmitScore();
@@ -508,24 +540,47 @@ async function handleSubmit() {
   const year   = representativeSlot ? representativeSlot.player.draftedYear : 2002;
 
   Refs.btnSubmit.disabled = true;
-  Refs.btnSubmit.textContent = "Submitting…";
+  Refs.btnSubmit.textContent = "Starting tournament…";
 
   const btnEl = Refs.btnPlayRoll;
   if (btnEl) {
     btnEl.disabled = true;
-    btnEl.textContent = "Submitting…";
+    btnEl.textContent = "Tournament running…";
   }
 
   try {
-    showToast("Confirm transaction in MetaMask…", "info");
-    await ContractManager.submitScore(parseFloat(score), nation, year, s.formation);
-    showToast(`Score ${score} submitted on-chain ✔`, "success");
+    // The squad now plays a 7-match eliminator. The player watches every match
+    // before anything is published, and the leaderboard entry is written by the
+    // server from its own simulation — not from anything this client claims.
+    showToast("Sign to enter the 7-match tournament (free, no gas)", "info");
+
+    const { run, entry } = await TournamentClient.startRun({
+      gameState: s,
+      nation,
+      year,
+      formation: s.formation,
+      onProgress: ({ round, total }) => {
+        Refs.btnSubmit.textContent = `Match ${round} of ${total}…`;
+      },
+    });
+
+    const summary = run.champion
+      ? `Champion! 7 wins, goal difference ${formatDiff(run.goalDiff)}`
+      : `Knocked out in round ${run.eliminatedInRound} — ${run.wins} win${
+          run.wins === 1 ? "" : "s"
+        }, goal difference ${formatDiff(run.goalDiff)}`;
+    showToast(summary, run.champion ? "success" : "info");
+
+    // Also record the squad rating on the hourly board, if they want to.
+    await maybeSubmitHourlyScore(score, nation, year, s.formation);
+
+    openLeaderboard("tournament");
     switchToScreen("formation");
   } catch (err) {
     showToast(err.message, "error");
   } finally {
     Refs.btnSubmit.disabled = false;
-    Refs.btnSubmit.textContent = "Submit Score";
+    Refs.btnSubmit.textContent = "Enter Tournament";
     if (btnEl) {
       btnEl.disabled = false;
     }
@@ -536,10 +591,10 @@ async function handleSubmit() {
 // ══════════════════════════════════════════════════════════════════════════════
 // Leaderboard Overlay
 // ══════════════════════════════════════════════════════════════════════════════
-function openLeaderboard() {
+function openLeaderboard(board) {
   Refs.leaderboardOverlay.classList.add("open");
   Refs.lbBody.innerHTML = "";
-  LeaderboardManager.refresh(Refs.lbBody);
+  LeaderboardManager.refresh(Refs.lbBody, board);
 }
 
 function closeLeaderboard() {

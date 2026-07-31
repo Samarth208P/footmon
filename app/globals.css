@@ -2724,3 +2724,179 @@ body.match-open { overflow: hidden; }
   line-height: 1.45;
   color: var(--text3);
 }
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Leaderboard redesign — Tournament / Duels / Hourly (js/leaderboard.js)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.lb-tabs {
+  display: flex;
+  gap: 6px;
+  padding: 4px;
+  margin-bottom: 14px;
+  background: var(--panel);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-md);
+}
+
+.lb-tab {
+  flex: 1 1 0;
+  padding: 9px 12px;
+  font-family: inherit;
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--text2);
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background 120ms ease, color 120ms ease;
+}
+
+.lb-tab:hover { color: var(--text); background: var(--panel2); }
+
+.lb-tab--active {
+  color: #fff;
+  background: var(--monad);
+}
+
+.lb-tab:focus-visible { outline: 2px solid var(--monad2); outline-offset: 2px; }
+
+.lb-blurb {
+  margin: 0 0 12px;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: var(--text2);
+}
+
+.lb-scroll {
+  max-height: 52vh;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.lb-table { width: 100%; border-collapse: collapse; }
+
+.lb-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: 10px 12px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  text-align: left;
+  color: var(--text3);
+  background: var(--panel2);
+  border-bottom: 1px solid var(--border2);
+  white-space: nowrap;
+}
+
+.lb-table td {
+  padding: 10px 12px;
+  font-size: 0.85rem;
+  color: var(--text);
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+.lb-row:last-child td { border-bottom: 0; }
+.lb-row:hover td { background: rgba(255, 255, 255, 0.02); }
+
+.lb-row--me td {
+  background: rgba(109, 92, 255, 0.1);
+  box-shadow: inset 2px 0 0 var(--monad2);
+}
+
+.lb-row--champ .lb-rank { color: #fbbf24; }
+
+.lb-rank {
+  width: 62px;
+  font-family: "Space Grotesk", system-ui, sans-serif;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text2);
+}
+
+.lb-name { font-weight: 600; overflow-wrap: anywhere; }
+
+.lb-badge {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 7px;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #0b0b0b;
+  background: #fbbf24;
+  border-radius: 99px;
+  vertical-align: middle;
+}
+
+.lb-wins-pill {
+  display: inline-block;
+  padding: 3px 9px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+  background: var(--panel3);
+  border: 1px solid var(--border2);
+  border-radius: 99px;
+}
+
+.lb-gd {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.lb-gd[data-sign="pos"] { color: var(--green); }
+.lb-gd[data-sign="neg"] { color: var(--red); }
+
+.lb-goals,
+.lb-score,
+.lb-won { font-variant-numeric: tabular-nums; }
+
+.lb-score { font-weight: 700; }
+
+.lb-record { display: flex; gap: 7px; font-variant-numeric: tabular-nums; }
+.lb-record .lb-w { color: var(--green); font-weight: 700; }
+.lb-record .lb-l { color: var(--red); }
+.lb-record .lb-d { color: var(--text2); }
+
+.lb-won { color: var(--monad2); font-weight: 600; }
+
+.lb-flag {
+  width: 18px;
+  height: 12px;
+  object-fit: cover;
+  border-radius: 1px;
+  vertical-align: middle;
+  margin-right: 6px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.lb-empty,
+.lb-loading,
+.lb-error,
+.lb-notice {
+  padding: 28px 20px;
+  text-align: center;
+  font-size: 0.86rem;
+  color: var(--text2);
+}
+
+.lb-error { color: #fda4af; }
+
+@media (max-width: 640px) {
+  .lb-tab { font-size: 0.76rem; padding: 8px 6px; }
+  .lb-table td, .lb-table thead th { padding: 8px 8px; font-size: 0.78rem; }
+  .lb-rank { width: 48px; }
+  /* Least important columns drop out first on narrow screens. */
+  .lb-table th:nth-child(5), .lb-table td:nth-child(5) { display: none; }
+  .lb-scroll { max-height: 60vh; }
+}

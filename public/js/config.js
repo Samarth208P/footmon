@@ -14,8 +14,15 @@ const MONAD_CHAIN = {
   blockExplorerUrls: ["https://explorer.testnet.monad.xyz"],
 };
 
-const FREE_ROLLS     = 4;
-const ROLL_PRICE_MON = "0.001"; // MON
+// ── Roll economics ───────────────────────────────────────────────────────────
+// One FREE roll per turn (11 turns = 11 free rolls, one per squad slot).
+// Rerolling the nation or the year within the same turn is paid.
+const SQUAD_TURNS      = 11;
+const REROLL_PRICE_MON = "0.01"; // MON per nation/year reroll
+
+// Legacy alias kept so older call sites keep working.
+const FREE_ROLLS     = SQUAD_TURNS;
+const ROLL_PRICE_MON = REROLL_PRICE_MON;
 
 // ─── Position Compatibility ──────────────────────────────────────────────────
 // POSITION_COMPAT[slotPos] = array of player position strings from CSV that can fill slotPos

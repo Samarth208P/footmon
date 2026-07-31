@@ -85,10 +85,26 @@ const ContractManager = (() => {
   }
 
   /** Pay for one extra roll — 0.001 MON (or whatever rollPrice is set to on-chain). */
-  async function payForRoll() {
+  /**
+   * Pay for one roll.
+   *
+   * `amountMon` lets the client charge more than the contract's minimum
+   * (`rollPrice`), which is how the 0.01 MON reroll works without an owner
+   * transaction: payForRoll only requires msg.value >= rollPrice, and
+   * prizePoolPct of whatever is sent goes to the hourly prize pool.
+   */
+  async function payForRoll(amountMon) {
     if (!isAvailable()) throw new Error("Connect wallet first");
-    const price = await readContract.rollPrice();
-    const tx    = await contract.payForRoll({ value: price });
+    const minimum = await readContract.rollPrice();
+
+    let value = minimum;
+    if (amountMon !== undefined && amountMon !== null) {
+      const requested = ethers.parseEther(String(amountMon));
+      // Never send less than the contract demands, or the call reverts.
+      value = requested > minimum ? requested : minimum;
+    }
+
+    const tx = await contract.payForRoll({ value });
     return tx.wait();
   }
 

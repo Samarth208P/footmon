@@ -161,7 +161,7 @@ const appMarkup = String.raw`
         <div id="scRows"></div>
 
         <div class="scorecard-actions">
-          <button id="btnSubmit" disabled title="Fill all 11 slots to submit">Submit Score</button>
+          <button id="btnSubmit" disabled title="Fill all 11 slots to enter">Enter Tournament</button>
           <button id="btnLeaderboard">🏆 Leaderboard</button>
         </div>
       </aside>
@@ -374,6 +374,7 @@ export default function HomePage() {
       <Script src="/js/pitch.js" strategy="afterInteractive" />
       <Script src="/js/game.js" strategy="afterInteractive" />
       <Script src="/js/leaderboard.js" strategy="afterInteractive" />
+      <Script src="/js/tournament.js" strategy="afterInteractive" />
       <Script src="/js/duel.js" strategy="afterInteractive" />
       <Script src="/js/main.js" strategy="afterInteractive" />
     </>

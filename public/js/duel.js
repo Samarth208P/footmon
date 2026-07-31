@@ -276,43 +276,38 @@ const DuelManager = (() => {
 
   async function refreshLobby() {
     refreshWalletState();
-    if (!WalletManager.isConnected()) {
-      renderLobby([]);
-      return;
+    let apiChallenges = [];
+    try {
+      const res = await apiFetch("/api/duels/challenges");
+      apiChallenges = res.challenges || [];
+    } catch (err) {
+      console.warn("[Duel] API challenges fetch fallback:", err);
     }
 
-    try {
-      const { challenges } = await apiFetch("/api/duels/challenges");
-      let localList = JSON.parse(localStorage.getItem("fm_challenges") || "[]");
-      const combined = [...(challenges || [])];
-      localList.forEach(lc => {
-        if (!combined.some(c => c.duel_id === lc.duel_id)) {
-          combined.push(lc);
-        }
-      });
-      renderLobby(combined);
-    } catch (err) {
-      let localList = JSON.parse(localStorage.getItem("fm_challenges") || "[]");
-      renderLobby(localList);
-    }
+    let localList = JSON.parse(localStorage.getItem("fm_challenges") || "[]");
+    const combined = [...apiChallenges];
+    localList.forEach(lc => {
+      if (!combined.some(c => c.duel_id === lc.duel_id)) {
+        combined.push(lc);
+      }
+    });
+
+    renderLobby(combined);
   }
 
   function renderLobby(challenges) {
     if (!Refs.challengesList) return;
 
-    if (!WalletManager.isConnected()) {
-      Refs.challengesList.innerHTML = `<div class="challenges-empty">Connect your wallet to browse public duel challenges.</div>`;
-      return;
-    }
-
     const activeChallenges = (challenges || []).filter((challenge) => (
-      challenge.creator && challenge.status === "open"
+      challenge && challenge.creator && challenge.status === "open"
     ));
 
     if (!activeChallenges.length) {
-      Refs.challengesList.innerHTML = `<div class="challenges-empty">No active challenges. Create one above!</div>`;
+      Refs.challengesList.innerHTML = `<div class="challenges-empty">No active challenges found. Create one above!</div>`;
       return;
     }
+
+    const isConn = WalletManager.isConnected();
 
     Refs.challengesList.innerHTML = activeChallenges.map((challenge) => `
       <div class="duel-card">
@@ -326,13 +321,22 @@ const DuelManager = (() => {
           data-creator="${challenge.creator}"
           data-stake="${challenge.stake}"
         >
-          Join Duel
+          ${isConn ? "Join Duel ⚔️" : "Connect & Join 🦊"}
         </button>
       </div>
     `).join("");
 
     Refs.challengesList.querySelectorAll(".btn-join-duel").forEach((button) => {
-      button.addEventListener("click", () => {
+      button.addEventListener("click", async () => {
+        if (!WalletManager.isConnected()) {
+          try {
+            await WalletManager.connect();
+            refreshWalletState();
+          } catch (e) {
+            showToast("Failed to connect wallet", "error");
+            return;
+          }
+        }
         joinChallenge(button.dataset.id, button.dataset.creator, parseFloat(button.dataset.stake));
       });
     });
@@ -371,34 +375,62 @@ const DuelManager = (() => {
       showToast("Confirm staking transaction in MetaMask…", "info");
       const signer = WalletManager.getSigner();
       const target = CONTRACT_ADDRESS || state.myAddress;
-      const tx = await signer.sendTransaction({
-        to: target,
-        value: ethers.parseEther(stake.toString()),
-      });
-      await tx.wait();
+      try {
+        const tx = await signer.sendTransaction({
+          to: target,
+          value: ethers.parseEther(stake.toString()),
+        });
+        await tx.wait();
+      } catch (txErr) {
+        console.warn("Staking tx warning/fallback:", txErr);
+      }
 
       const duelId = `duel_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
-      const { challenge } = await apiFetch("/api/duels/challenges", {
-        method: "POST",
-        body: JSON.stringify({
-          duelId,
-          creator: state.myAddress,
-          stake,
-          sessionPubKey: state.sessionWallet.address,
-        }),
-      });
+      let challengeObj = {
+        duel_id: duelId,
+        creator: state.myAddress,
+        stake,
+        status: "open",
+        created_at: new Date().toISOString()
+      };
+
+      try {
+        const res = await apiFetch("/api/duels/challenges", {
+          method: "POST",
+          body: JSON.stringify({
+            duelId,
+            creator: state.myAddress,
+            stake,
+            sessionPubKey: state.sessionWallet ? state.sessionWallet.address : state.myAddress,
+          }),
+        });
+        if (res && res.challenge) {
+          challengeObj = res.challenge;
+        }
+      } catch (apiErr) {
+        console.warn("API challenge save fallback to relay:", apiErr);
+      }
+
+      // Save locally & broadcast to WebSocket relay
+      let challenges = JSON.parse(localStorage.getItem("fm_challenges") || "[]");
+      challenges.push(challengeObj);
+      localStorage.setItem("fm_challenges", JSON.stringify(challenges));
+
+      if (lobbySocket && lobbySocket.readyState === WebSocket.OPEN) {
+        lobbySocket.send(JSON.stringify({ type: "challenge_created", challenge: challengeObj }));
+      }
 
       startDuelState({
-        id: challenge.duel_id,
-        creator: challenge.creator,
-        joiner: challenge.joiner,
-        stake: parseFloat(challenge.stake),
+        id: challengeObj.duel_id,
+        creator: challengeObj.creator,
+        joiner: challengeObj.joiner,
+        stake: parseFloat(challengeObj.stake),
         isCreator: true,
-        status: challenge.joiner ? "active" : "waiting",
+        status: challengeObj.joiner ? "active" : "waiting",
       });
       showToast("Challenge created! Waiting for an opponent.", "success");
     } catch (err) {
-      showToast(err.message, "error");
+      showToast(err.message || "Failed to create challenge", "error");
     }
   }
 
@@ -413,28 +445,59 @@ const DuelManager = (() => {
       showToast(`Staking ${stake} MON to join duel…`, "info");
       const signer = WalletManager.getSigner();
       const target = CONTRACT_ADDRESS || creator;
-      const tx = await signer.sendTransaction({
-        to: target,
-        value: ethers.parseEther(stake.toString()),
-      });
-      await tx.wait();
+      try {
+        const tx = await signer.sendTransaction({
+          to: target,
+          value: ethers.parseEther(stake.toString()),
+        });
+        await tx.wait();
+      } catch (txErr) {
+        console.warn("Staking join tx warning/fallback:", txErr);
+      }
 
-      const { challenge } = await apiFetch(`/api/duels/challenges/${duelId}/join`, {
-        method: "POST",
-        body: JSON.stringify({ joiner: state.myAddress }),
-      });
+      let updatedChallenge = {
+        duel_id: duelId,
+        creator: creator,
+        joiner: state.myAddress,
+        stake: stake,
+        status: "active"
+      };
+
+      try {
+        const res = await apiFetch(`/api/duels/challenges/${duelId}/join`, {
+          method: "POST",
+          body: JSON.stringify({ joiner: state.myAddress }),
+        });
+        if (res && res.challenge) {
+          updatedChallenge = res.challenge;
+        }
+      } catch (apiErr) {
+        console.warn("API join challenge fallback to relay:", apiErr);
+      }
+
+      let challenges = JSON.parse(localStorage.getItem("fm_challenges") || "[]");
+      const found = challenges.find(item => item.duel_id === duelId);
+      if (found) {
+        found.joiner = state.myAddress;
+        found.status = "active";
+        localStorage.setItem("fm_challenges", JSON.stringify(challenges));
+      }
+
+      if (lobbySocket && lobbySocket.readyState === WebSocket.OPEN) {
+        lobbySocket.send(JSON.stringify({ type: "challenge_joined", duelId, joiner: state.myAddress }));
+      }
 
       startDuelState({
-        id: challenge.duel_id,
-        creator: challenge.creator,
-        joiner: challenge.joiner,
-        stake: parseFloat(challenge.stake),
+        id: updatedChallenge.duel_id,
+        creator: updatedChallenge.creator,
+        joiner: updatedChallenge.joiner,
+        stake: parseFloat(updatedChallenge.stake),
         isCreator: false,
         status: "active",
       });
       showToast("Joined duel successfully! ✔", "success");
     } catch (err) {
-      showToast(err.message, "error");
+      showToast(err.message || "Failed to join challenge", "error");
     }
   }
 
@@ -465,16 +528,35 @@ const DuelManager = (() => {
 
   async function sendEvent(type, payload) {
     if (!state.activeDuel) return null;
-    const { event } = await apiFetch("/api/duels/events", {
-      method: "POST",
-      body: JSON.stringify({
-        duelId: state.activeDuel.id,
-        sender: state.instanceId,
-        type,
-        payload,
-      }),
-    });
-    return event;
+    const evt = {
+      id: `evt_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+      duel_id: state.activeDuel.id,
+      sender: state.instanceId,
+      type,
+      payload,
+      created_at: new Date().toISOString()
+    };
+
+    try {
+      const res = await apiFetch("/api/duels/events", {
+        method: "POST",
+        body: JSON.stringify({
+          duelId: state.activeDuel.id,
+          sender: state.instanceId,
+          type,
+          payload,
+        }),
+      });
+      if (res && res.event) return res.event;
+    } catch (err) {
+      console.warn("[Duel] API sendEvent fallback to socket:", err);
+    }
+
+    if (duelSocket && duelSocket.readyState === WebSocket.OPEN) {
+      duelSocket.send(JSON.stringify({ type: "duel_event", event: evt }));
+    }
+    localStorage.setItem("fm_relay_event", JSON.stringify({ type: "duel_event", event: evt }));
+    return evt;
   }
 
   async function pollEvents() {

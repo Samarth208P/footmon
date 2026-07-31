@@ -435,6 +435,16 @@ const DuelManager = (() => {
       setLobbyStatus("Could not reach the lobby. Retrying…", "warn");
       showToast(err.message, "error");
     }
+
+    let localList = JSON.parse(localStorage.getItem("fm_challenges") || "[]");
+    const combined = [...apiChallenges];
+    localList.forEach(lc => {
+      if (!combined.some(c => c.duel_id === lc.duel_id)) {
+        combined.push(lc);
+      }
+    });
+
+    renderLobby(combined);
   }
 
   function renderLobby(challenges) {
@@ -449,11 +459,11 @@ const DuelManager = (() => {
     }
 
     const activeChallenges = (challenges || []).filter((challenge) => (
-      challenge.creator && challenge.status === "open"
+      challenge && challenge.creator && challenge.status === "open"
     ));
 
     if (!activeChallenges.length) {
-      Refs.challengesList.innerHTML = `<div class="challenges-empty">No active challenges. Create one above!</div>`;
+      Refs.challengesList.innerHTML = `<div class="challenges-empty">No active challenges found. Create one above!</div>`;
       return;
     }
 

@@ -4,15 +4,15 @@ import { getRoomByCode, getRoomPasswordHash, joinRoom } from "@/lib/duel-store";
 import { isValidRoomCode, normaliseRoomCode } from "@/lib/room-code";
 import { verifyPassword } from "@/lib/password";
 import { isValidAddress, normaliseAddress } from "@/lib/username";
-import { isChainConfigured, verifyDuelJoined } from "@/lib/chain";
 
 export const dynamic = "force-dynamic";
 
 /**
  * POST /api/duels/rooms/:code/join
  *
- * Order matters: the password is checked BEFORE anything else is revealed or
- * mutated, so a wrong password cannot be used to probe room state.
+ * Adds a joiner to a room. No on-chain interaction happens here — both
+ * players escrow their stake later, at the ready step. Password (for private
+ * rooms) is checked BEFORE any room state is revealed or mutated.
  *
  * Body: { joiner, password? }
  */
@@ -66,20 +66,6 @@ export async function POST(request, { params }) {
     }
     if (room.status !== "open" && room.joiner !== joinerAddress) {
       return NextResponse.json({ error: "This duel is no longer open" }, { status: 409 });
-    }
-
-    // ── Escrow gate ───────────────────────────────────────────────────────
-    // The joiner must have actually matched the stake on-chain. Without this a
-    // player could occupy a room without escrowing anything.
-    if (!isChainConfigured()) {
-      return NextResponse.json(
-        { error: "CONTRACT_ADDRESS is not configured on the server" },
-        { status: 503 }
-      );
-    }
-    const onChain = await verifyDuelJoined(room.duel_id, joinerAddress);
-    if (!onChain.ok) {
-      return NextResponse.json({ error: onChain.error }, { status: 409 });
     }
 
     // Idempotent: a retried join by the same player is fine.

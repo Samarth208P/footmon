@@ -59,11 +59,23 @@ export async function POST(request) {
   try {
     const seed = randomBytes(16).toString("hex");
 
-    // Build the player squad for the engine
+    // Build the player squad for the engine. Nation and year come from the
+    // client — they're stamped onto each placed player at draft time — and
+    // must reach the engine or the hidden chemistry system can't reward
+    // same-nation / same-year cores.
     const playerSquad = players.map((p, i) => ({
       name: p.name,
       position: p.position ?? slotPositionFor(i),
+      positions: p.positions,
       rating: Number(p.rating),
+      nation: p.draftedNation ?? p.nation ?? null,
+      year: Number.isFinite(Number(p.draftedYear ?? p.year))
+        ? Number(p.draftedYear ?? p.year)
+        : null,
+      draftedNation: p.draftedNation ?? p.nation ?? null,
+      draftedYear: Number.isFinite(Number(p.draftedYear ?? p.year))
+        ? Number(p.draftedYear ?? p.year)
+        : null,
     }));
 
     // Fetch real squads from the DB for AI opponents.
@@ -85,13 +97,20 @@ export async function POST(request) {
           .limit(11);
 
         if (data && data.length > 0) {
-          // Replace the placeholder squad with real players (keep engine rating scaling)
+          // Replace the placeholder squad with real players. Keep the
+          // placeholder's rating (which the engine has already scaled to
+          // the current tournament round) and preserve nation/year so
+          // the AI XI gets full same-nation, same-year chemistry.
           rung.players = rung.players.map((placeholder, idx) => {
             const real = data[idx % data.length];
             return {
               ...placeholder,
               name: real.name,
               position: real.position || placeholder.position,
+              nation: rung.nation,
+              year: rung.year,
+              draftedNation: rung.nation,
+              draftedYear: rung.year,
             };
           });
         }

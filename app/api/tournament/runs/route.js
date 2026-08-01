@@ -151,16 +151,32 @@ export async function POST(request) {
   // the same seed reproduces the exact result the client just previewed —
   // the module is deterministic on (seed, players).
   try {
+    // Preserve draftedNation/draftedYear on each pick so the hidden chemistry
+    // system can reward same-nation and same-year cores. The client stamps
+    // these when the pick is made; if they're missing (older clients),
+    // chemistry silently falls back to position-fit only.
     const playerSquad = players.map((p, i) => ({
       name: p.name,
       position: p.position ?? slotPositionFor(i),
+      positions: p.positions,
       rating: Number(p.rating),
+      nation: p.draftedNation ?? p.nation ?? null,
+      year: Number.isFinite(Number(p.draftedYear ?? p.year))
+        ? Number(p.draftedYear ?? p.year)
+        : null,
+      draftedNation: p.draftedNation ?? p.nation ?? null,
+      draftedYear: Number.isFinite(Number(p.draftedYear ?? p.year))
+        ? Number(p.draftedYear ?? p.year)
+        : null,
     }));
 
     const playerRating = teamRating(playerSquad);
     const ladder = buildTournamentLadder({ seed, playerRating, rounds: TOURNAMENT_ROUNDS });
 
-    // Hydrate AI squads with real players from DB (same as simulate endpoint)
+    // Hydrate AI squads with real players from DB (same as simulate endpoint).
+    // Preserving nation/year on each hydrated player is what lets the AI XI
+    // benefit from full same-nation, same-year chemistry — without it, the AI
+    // silently plays at 0 chemistry and the whole balance is off.
     const supabase = getServerClient();
     if (supabase) {
       for (const rung of ladder) {
@@ -180,6 +196,10 @@ export async function POST(request) {
               ...placeholder,
               name: real.name,
               position: real.position || placeholder.position,
+              nation: rung.nation,
+              year: rung.year,
+              draftedNation: rung.nation,
+              draftedYear: rung.year,
             };
           });
         }

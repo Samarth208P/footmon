@@ -78,6 +78,12 @@ export default function GamePage() {
         rating: s.player.rating,
         position: s.player.position || s.pos,
         positions: s.player.positions,
+        // draftedNation/draftedYear are stamped at pick time and drive the
+        // hidden chemistry system on the server. They're optional (older
+        // squads won't have them) but forwarding them unlocks same-nation
+        // and same-year chemistry bonuses.
+        draftedNation: s.player.draftedNation ?? null,
+        draftedYear: s.player.draftedYear ?? null,
       }));
 
     try {
@@ -129,6 +135,10 @@ export default function GamePage() {
         rating: s.player.rating,
         position: s.player.position || s.pos,
         positions: s.player.positions,
+        // Same as the preview payload — feed the server the origin of each
+        // pick so chemistry can be recomputed identically on the recorded run.
+        draftedNation: s.player.draftedNation ?? null,
+        draftedYear: s.player.draftedYear ?? null,
       }));
 
     const rep = game.slots.find((s) => s.player?.draftedNation);

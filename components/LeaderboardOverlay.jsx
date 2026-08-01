@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { motion, useInView } from "motion/react";
 import { ratingColor, getFlagUrl } from "@/lib/constants";
 import { formatEther } from "ethers";
+import DailyPrizeBadge from "./DailyPrizeBadge";
 
 /**
  * Table-row equivalent of AnimatedItem — a `<tr>` can't live inside
@@ -70,6 +71,8 @@ export default function LeaderboardOverlay({ open, onClose, contract, address, u
           <span className="lb-nav-title">🏆 Leaderboard · Daily Prize</span>
           <button onClick={onClose} title="Close">✕</button>
         </div>
+
+        <DailyPrizeBadge variant="banner" />
 
         <div className="lb-tabs" role="tablist">
           {["tournament", "duel", "daily"].map((b) => (
@@ -172,7 +175,7 @@ function DuelTable({ entries, myAddr }) {
 function DailyTable({ entries, myAddr, usernameFor }) {
   return (
     <div className="lb-scroll">
-      <p className="lb-blurb">On-chain squad ratings. Top score wins the daily prize pool.</p>
+      <p className="lb-blurb">On-chain squad ratings. Top score at payout time wins today&apos;s MON prize pool.</p>
       <table className="lb-table">
         <thead><tr><th>Rank</th><th>Player</th><th>Nation · Year</th><th>Formation</th><th>Rating</th></tr></thead>
         <tbody>

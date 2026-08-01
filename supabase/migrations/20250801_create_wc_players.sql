@@ -24,9 +24,15 @@ CREATE INDEX IF NOT EXISTS idx_wc_players_year_nation ON wc_players (year, natio
 -- RLS: public read access (no auth needed for reading player data)
 ALTER TABLE wc_players ENABLE ROW LEVEL SECURITY;
 
+-- Idempotent: this migration was originally applied outside the migration
+-- runner, so re-running it on an already-configured project would trip on
+-- "policy already exists". Dropping first keeps `supabase db push` clean
+-- on both fresh projects and any project where the policies were created
+-- manually.
+DROP POLICY IF EXISTS "wc_players_public_read" ON wc_players;
 CREATE POLICY "wc_players_public_read" ON wc_players
   FOR SELECT USING (true);
 
--- Only service role can insert/update/delete
+DROP POLICY IF EXISTS "wc_players_service_write" ON wc_players;
 CREATE POLICY "wc_players_service_write" ON wc_players
   FOR ALL USING (auth.role() = 'service_role');

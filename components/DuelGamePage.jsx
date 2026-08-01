@@ -8,14 +8,35 @@ import { useProfile } from "@/hooks/useProfile";
 import WalletGate from "./WalletGate";
 import PitchView from "./PitchView";
 import ProfileClaimModal from "./ProfileClaimModal";
+import DuelMatchScreen from "./DuelMatchScreen";
 import Toast from "./Toast";
 import { getFlagUrl, canPlayerFillSlot, ratingColor, REROLL_PRICE_MON, FORMATIONS } from "@/lib/constants";
 
-/** 32 random bytes → 0x-prefixed 64-char hex, matches the API's duelId regex. */
-function randomDuelId() {
-  const buf = new Uint8Array(32);
-  crypto.getRandomValues(buf);
-  return "0x" + Array.from(buf, (b) => b.toString(16).padStart(2, "0")).join("");
+/** Wei string → decimal MON string. */
+function weiToMon(wei) {
+  const s = String(wei ?? "0").padStart(19, "0");
+  const whole = s.slice(0, -18) || "0";
+  const frac = s.slice(-18).replace(/0+$/, "");
+  return frac ? `${whole}.${frac}` : whole;
+}
+
+/**
+ * Turn countdown clock. Renders remaining seconds against a deadline ISO
+ * string; ticks itself once a second and reports whether the clock has
+ * expired via the render prop.
+ */
+function TurnCountdown({ deadline, children }) {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (!deadline) return;
+    const id = setInterval(() => setNow(Date.now()), 500);
+    return () => clearInterval(id);
+  }, [deadline]);
+
+  const target = deadline ? Date.parse(deadline) : null;
+  const secondsLeft = target ? Math.max(0, Math.ceil((target - now) / 1000)) : null;
+  const expired = target != null && now > target;
+  return children({ secondsLeft, expired });
 }
 
 export default function DuelGamePage() {
@@ -50,6 +71,31 @@ export default function DuelGamePage() {
     }
   }, [duel.screen, isConnected]);
 
+  // Prefetch usernames for both participants so we never have to fall back
+  // to a truncated address once the room is populated.
+  useEffect(() => {
+    const addresses = [duel.room?.creator, duel.room?.joiner, duel.opponent].filter(Boolean);
+    if (addresses.length > 0) profile.prefetch(addresses);
+  }, [duel.room?.creator, duel.room?.joiner, duel.opponent, profile]);
+
+  const opponentUsername = duel.opponent ? profile.usernameFor(duel.opponent) : null;
+
+  // Kick off the head-to-head simulation as soon as we enter the match
+  // screen. The server is idempotent — repeated calls return the stored
+  // scoreline rather than re-rolling it.
+  const [simulateError, setSimulateError] = useState(null);
+  const runSimulate = useCallback(async () => {
+    setSimulateError(null);
+    const r = await duel.simulateMatch();
+    if (r?.error) setSimulateError(r.error);
+  }, [duel]);
+  useEffect(() => {
+    if (duel.screen !== "match") return;
+    if (duel.matchResult) return;
+    runSimulate();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [duel.screen, duel.matchResult]);
+
   // ── Toast system ────────────────────────────────────────────────────────
   const showToast = useCallback((msg, type = "info") => {
     if (type === "error" && typeof msg === "string") {
@@ -63,6 +109,8 @@ export default function DuelGamePage() {
   }, []);
 
   // ── Create room handler ─────────────────────────────────────────────────
+  // No on-chain interaction here. The stake is escrowed later, once BOTH
+  // players are in the room and hit "Ready".
   const handleCreate = async () => {
     const stake = parseFloat(stakeInput);
     if (isNaN(stake) || stake < 0.1) {
@@ -73,85 +121,74 @@ export default function DuelGamePage() {
       showToast("Password must be at least 4 characters", "error");
       return;
     }
-    if (!contract.isAvailable()) {
-      showToast("Wallet not ready — reconnect and try again", "error");
-      return;
-    }
 
-    // 1) Escrow the stake on-chain, using a fresh random duelId.
-    const duelId = randomDuelId();
-    try {
-      await contract.createDuel(duelId, stake);
-    } catch (err) {
-      const rejected = err?.code === "ACTION_REJECTED" || /reject|denied/i.test(err?.message || "");
-      showToast(rejected ? "Transaction cancelled" : (err.message || "Failed to escrow stake"), "error");
-      return;
-    }
-
-    // 2) Register the room server-side with the duelId the contract now knows about.
     const result = await duel.createRoom({
-      duelId,
+      stake: String(stake),
       isPrivate,
       password: isPrivate ? passwordInput : null,
     });
     if (result.error) {
       showToast(result.error, "error");
     } else {
-      showToast("Room created! Waiting for opponent...", "success");
+      showToast("Room created! Share the code with your friend.", "success");
     }
   };
 
-  // ── Escrow on-chain then register the join server-side ──────────────────
-  const escrowAndJoin = useCallback(async (code, password) => {
-    if (!contract.isAvailable()) {
-      showToast("Wallet not ready — reconnect and try again", "error");
-      return;
-    }
-    const codeNorm = String(code || "").trim().toUpperCase();
-    if (!codeNorm) {
+  // ── Join room handler ───────────────────────────────────────────────────
+  // No on-chain interaction here either — just server-side join.
+  const handleJoin = async () => {
+    const code = joinCodeInput.trim().toUpperCase();
+    if (!code) {
       showToast("Enter a room code", "error");
       return;
     }
-
-    // 1) Look up the room to get the on-chain duelId.
-    const lookup = await duel.fetchRoomByCode(codeNorm);
-    if (lookup.error) {
-      showToast(lookup.error, "error");
-      return;
-    }
-    const duelId = lookup.room?.duel_id;
-    if (!duelId) {
-      showToast("Room has no duelId — cannot join", "error");
-      return;
-    }
-
-    // 2) Match the stake on-chain.
-    try {
-      await contract.joinDuel(duelId);
-    } catch (err) {
-      const rejected = err?.code === "ACTION_REJECTED" || /reject|denied/i.test(err?.message || "");
-      showToast(rejected ? "Transaction cancelled" : (err.message || "Failed to escrow stake"), "error");
-      return;
-    }
-
-    // 3) Register the join with the server.
-    const result = await duel.joinRoom(codeNorm, password || null);
+    const result = await duel.joinRoom(code, joinPasswordInput || null);
     if (result.error) {
       showToast(result.error, "error");
     } else {
       showToast("Joined room!", "success");
     }
-  }, [contract, duel, showToast]);
-
-  // ── Join room handler ───────────────────────────────────────────────────
-  const handleJoin = async () => {
-    await escrowAndJoin(joinCodeInput, joinPasswordInput);
   };
 
   // ── Join from lobby ─────────────────────────────────────────────────────
   const handleJoinFromLobby = async (room) => {
-    await escrowAndJoin(room.room_code, null);
+    const result = await duel.joinRoom(room.room_code);
+    if (result.error) {
+      showToast(result.error, "error");
+    } else {
+      showToast("Joined room!", "success");
+    }
   };
+
+  // ── Ready handler — this is where stake is asked for ─────────────────────
+  // The escrow contract enforces ordering: the creator must call createDuel
+  // before the joiner can call joinDuel. So joiners see a disabled button
+  // until the creator has staked (see mustWaitForCreator in the ready screen).
+  //
+  // Steps: escrow on-chain → open session (if needed) → POST /ready.
+  const handleReady = useCallback(async () => {
+    if (!contract.isAvailable()) {
+      showToast("Wallet not ready — reconnect and try again", "error");
+      return;
+    }
+
+    // Extra guard for the joiner: if the creator hasn't staked yet on-chain,
+    // joinDuel will revert. Surface a clear message instead of a raw error.
+    if (!duel.isCreator && !duel.room?.creator_ready) {
+      showToast("Waiting for the creator to stake first.", "info");
+      return;
+    }
+
+    const result = await duel.readyUp({
+      escrowAsCreator: (duelId, stakeMon) => contract.createDuel(duelId, stakeMon),
+      escrowAsJoiner: (duelId) => contract.joinDuel(duelId),
+      formatStake: weiToMon,
+    });
+
+    if (result?.error) {
+      showToast(result.error, "error");
+    }
+  }, [contract, duel, showToast]);
 
   // ── Roll handler ────────────────────────────────────────────────────────
   const handleRoll = async () => {
@@ -360,7 +397,7 @@ export default function DuelGamePage() {
               <div className="waiting-panel">
                 <div className="waiting-spinner" />
                 <p className="waiting-title">Waiting for an opponent...</p>
-                <p className="waiting-sub">Your stake is escrowed. Share these to invite someone.</p>
+                <p className="waiting-sub">Share these with a friend. Stakes are only escrowed once both of you are here and ready.</p>
 
                 <div className="waiting-field">
                   <span className="waiting-label">Room code</span>
@@ -425,33 +462,119 @@ export default function DuelGamePage() {
           )}
 
           {/* ── Ready Screen ─────────────────────────────────────────────── */}
-          {duel.screen === "ready" && (
-            <section className="screen" style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
-              <div className="ready-panel">
-                <p className="ready-title">Opponent Joined!</p>
-                <p className="ready-sub">Both stakes are escrowed on-chain. Confirm you&apos;re ready to start the draft.</p>
-                <p className="ready-opponent">
-                  {duel.opponentReady ? "Opponent is ready!" : "Waiting for opponent to ready up..."}
-                </p>
-                <button 
-                  type="button" 
-                  className="ready-btn"
-                  onClick={duel.readyUp}
-                  disabled={duel.busy || duel.myReady}
-                >
-                  {duel.myReady ? "Waiting..." : "Ready Up ⚡"}
-                </button>
-              </div>
-            </section>
-          )}
+          {duel.screen === "ready" && (() => {
+            const stakeMon = weiToMon(duel.room?.stake);
+            const creatorReady = Boolean(duel.room?.creator_ready);
+            const joinerReady = Boolean(duel.room?.joiner_ready);
+
+            // The escrow contract enforces ordering: the joiner cannot call
+            // joinDuel until the creator has called createDuel. So the joiner
+            // must wait for the creator to stake first before their own
+            // ready button becomes active.
+            const isJoiner = !duel.isCreator;
+            const mustWaitForCreator = isJoiner && !creatorReady && !duel.myReady;
+
+            let statusMsg;
+            if (duel.myReady && duel.opponentReady) {
+              statusMsg = "Both ready — starting the draft…";
+            } else if (duel.myReady) {
+              statusMsg = "You're locked in. Waiting for your opponent to stake…";
+            } else if (duel.opponentReady) {
+              statusMsg = isJoiner
+                ? "Opponent has staked. Your turn — match the stake to start."
+                : "Opponent is ready. Stake now to start the draft.";
+            } else if (mustWaitForCreator) {
+              statusMsg = "Waiting for the creator to stake first…";
+            } else {
+              statusMsg = "Ready to stake? Both of you must confirm to start the draft.";
+            }
+
+            let buttonLabel;
+            if (duel.myReady) buttonLabel = "Locked in ✓";
+            else if (duel.busy) buttonLabel = "Confirming…";
+            else if (mustWaitForCreator) buttonLabel = "Waiting for opponent…";
+            else buttonLabel = `Stake ${stakeMon} MON & Ready ⚡`;
+
+            return (
+              <section className="screen" style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
+                <div className="ready-panel">
+                  <p className="ready-title">Opponent Joined!</p>
+                  <p className="ready-sub">
+                    Confirm to escrow <strong>{stakeMon} MON</strong> on-chain and start the draft.
+                  </p>
+                  <p className="ready-opponent">{statusMsg}</p>
+
+                  <div className="ready-status-grid">
+                    <div className={`ready-status-pill ${duel.isCreator ? "ready-status-pill--me" : ""}`}>
+                      <span className="ready-status-label">
+                        {duel.isCreator ? "You (creator)" : "Creator"}
+                      </span>
+                      <span className="ready-status-name">
+                        {profile.usernameFor(duel.room?.creator)}
+                      </span>
+                      <span className="ready-status-value">
+                        {creatorReady ? "Staked ✓" : "Not staked"}
+                      </span>
+                    </div>
+                    <div className={`ready-status-pill ${!duel.isCreator ? "ready-status-pill--me" : ""}`}>
+                      <span className="ready-status-label">
+                        {!duel.isCreator ? "You (joiner)" : "Joiner"}
+                      </span>
+                      <span className="ready-status-name">
+                        {duel.room?.joiner ? profile.usernameFor(duel.room?.joiner) : "Waiting…"}
+                      </span>
+                      <span className="ready-status-value">
+                        {joinerReady ? "Staked ✓" : "Not staked"}
+                      </span>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    className="ready-btn"
+                    onClick={handleReady}
+                    disabled={duel.busy || duel.myReady || mustWaitForCreator}
+                  >
+                    {buttonLabel}
+                  </button>
+                </div>
+              </section>
+            );
+          })()}
 
           {/* ── Draft Screen ─────────────────────────────────────────────── */}
           {duel.screen === "draft" && (
             <section className="screen" style={{ display: "flex" }}>
               <aside className="duel-left">
-                <div className={`duel-turn-banner ${duel.isMyTurn ? "duel-turn-banner--active" : ""}`}>
-                  <span>{duel.isMyTurn ? "YOUR TURN" : "OPPONENT'S TURN"}</span>
-                </div>
+                <TurnCountdown deadline={duel.room?.turn_deadline}>
+                  {({ secondsLeft, expired }) => (
+                    <div className={`duel-turn-banner ${duel.isMyTurn ? "duel-turn-banner--active" : ""} ${expired ? "duel-turn-banner--expired" : ""}`}>
+                      <span>
+                        {duel.isMyTurn
+                          ? "YOUR TURN"
+                          : `${opponentUsername || "OPPONENT"}'S TURN`}
+                      </span>
+                      {secondsLeft != null && (
+                        <span className="duel-turn-clock">
+                          {expired ? "0:00" : `0:${String(secondsLeft).padStart(2, "0")}`}
+                        </span>
+                      )}
+                      {expired && !duel.isMyTurn && (
+                        <button
+                          type="button"
+                          className="duel-forfeit-btn"
+                          onClick={async () => {
+                            const r = await duel.claimForfeit();
+                            if (r?.error) showToast(r.error, "error");
+                            else showToast("Opponent forfeited — you win by timeout!", "success");
+                          }}
+                        >
+                          Claim Forfeit ⚡
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </TurnCountdown>
 
                 <div className="draft-console">
                   <div className="rolls-left-row">
@@ -625,13 +748,17 @@ export default function DuelGamePage() {
 
           {/* ── Match/Result Screen ──────────────────────────────────────── */}
           {(duel.screen === "match" || duel.screen === "result") && (
-            <section className="screen" style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
-              <div className="result-panel">
-                <h2>Match in Progress...</h2>
-                <p>The match simulation is running.</p>
-                <button onClick={duel.resetDuel}>Back to Lobby</button>
-              </div>
-            </section>
+            <DuelMatchScreen
+              matchResult={duel.matchResult}
+              room={duel.room}
+              myAddress={address}
+              myUsername={profile.username}
+              opponentUsername={opponentUsername}
+              onBackToLobby={duel.resetDuel}
+              onRetry={runSimulate}
+              error={simulateError}
+              loading={!duel.matchResult && !simulateError}
+            />
           )}
         </WalletGate>
       </div>

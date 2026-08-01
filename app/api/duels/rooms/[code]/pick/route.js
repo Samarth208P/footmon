@@ -98,6 +98,12 @@ export async function POST(request, { params }) {
     }
 
     // ── Persist the pick ─────────────────────────────────────────────────
+    // Nation and year come from the wheel roll the player was on when they
+    // picked. They're stamped per-slot (not just per-squad) so a squad
+    // drafted across many nations/years can still compute chemistry at
+    // simulation time — a single same-nation or same-year core within
+    // eleven picks matters.
+    const bodyYear = Number.isFinite(Number(body.year)) ? Number(body.year) : null;
     let slot;
     try {
       slot = await pickSlot({
@@ -111,6 +117,8 @@ export async function POST(request, { params }) {
         playerRating: Number.isFinite(Number(body.playerRating))
           ? Number(body.playerRating)
           : null,
+        playerNation: typeof body.nation === "string" ? body.nation : null,
+        playerYear: bodyYear,
       });
     } catch (err) {
       // Unique constraints are the last line of defence against a double-submit.

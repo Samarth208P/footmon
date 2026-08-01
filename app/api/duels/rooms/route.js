@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
+import { randomBytes } from "node:crypto";
+import { parseEther } from "ethers";
 
-import { createRoom, getRoomByCode, getRoomByDuelId, listOpenRooms } from "@/lib/duel-store";
+import { createRoom, getRoomByCode, listOpenRooms } from "@/lib/duel-store";
 import { generateUniqueRoomCode } from "@/lib/room-code";
 import { hashPassword, validatePassword } from "@/lib/password";
 import { isValidAddress, normaliseAddress } from "@/lib/username";
-import { isChainConfigured, verifyDuelOpen } from "@/lib/chain";
 
 export const dynamic = "force-dynamic";
 
@@ -24,11 +25,15 @@ export async function GET() {
 /**
  * POST /api/duels/rooms
  *
- * Registers a room for a duel that is ALREADY escrowed on-chain. The stake is
- * read from the contract, never from the request body — otherwise a client
- * could advertise a 10 MON duel while escrowing nothing.
+ * Creates a room BEFORE any on-chain escrow. The creator advertises the stake
+ * they will match once their friend joins; the actual escrow happens when both
+ * players hit "Ready" (see /ready). This keeps the flow simple:
+ *   1. Create room, share code
+ *   2. Friend joins with code
+ *   3. Both hit "Ready" → each side signs one on-chain tx → draft starts
  *
- * Body: { duelId, creator, isPrivate?, password? }
+ * Body: { creator, stake, isPrivate?, password? }
+ *   stake — decimal MON string (e.g. "0.5")
  */
 export async function POST(request) {
   let body;
@@ -38,13 +43,30 @@ export async function POST(request) {
     return NextResponse.json({ error: "Malformed JSON body" }, { status: 400 });
   }
 
-  const { duelId, creator, isPrivate = false, password = null } = body ?? {};
+  const { creator, stake, isPrivate = false, password = null } = body ?? {};
 
-  if (typeof duelId !== "string" || !/^0x[0-9a-fA-F]{64}$/.test(duelId)) {
-    return NextResponse.json({ error: "Invalid duelId" }, { status: 400 });
-  }
   if (!isValidAddress(creator)) {
     return NextResponse.json({ error: "Invalid creator address" }, { status: 400 });
+  }
+
+  // Parse stake (decimal MON string) → wei string. Enforce a minimum so
+  // duels have real skin in the game and match the contract's expectations.
+  const MIN_STAKE_WEI = parseEther("0.1");
+  let stakeWei;
+  try {
+    const stakeStr = String(stake ?? "").trim();
+    if (!/^\d+(\.\d+)?$/.test(stakeStr)) {
+      return NextResponse.json({ error: "Invalid stake amount" }, { status: 400 });
+    }
+    stakeWei = parseEther(stakeStr);
+    if (stakeWei < MIN_STAKE_WEI) {
+      return NextResponse.json(
+        { error: "Minimum stake is 0.1 MON" },
+        { status: 400 }
+      );
+    }
+  } catch {
+    return NextResponse.json({ error: "Invalid stake amount" }, { status: 400 });
   }
 
   const wantsPrivate = Boolean(isPrivate);
@@ -55,38 +77,22 @@ export async function POST(request) {
     }
   }
 
-  const normalisedDuelId = duelId.toLowerCase();
   const normalisedCreator = normaliseAddress(creator);
 
   try {
-    // Idempotency: re-posting after a flaky response must not create a second room.
-    const existing = await getRoomByDuelId(normalisedDuelId);
-    if (existing) {
-      return NextResponse.json({ room: existing, existing: true });
-    }
-
-    if (!isChainConfigured()) {
-      return NextResponse.json(
-        { error: "CONTRACT_ADDRESS is not configured on the server" },
-        { status: 503 }
-      );
-    }
-
-    // The chain is the authority on who staked what.
-    const onChain = await verifyDuelOpen(normalisedDuelId, normalisedCreator);
-    if (!onChain.ok) {
-      return NextResponse.json({ error: onChain.error }, { status: 409 });
-    }
+    // Server-generated duelId — a 32-byte random hex. The client uses this
+    // when it later escrows on-chain during the ready step.
+    const duelId = "0x" + randomBytes(32).toString("hex");
 
     const roomCode = await generateUniqueRoomCode(
       async (code) => Boolean(await getRoomByCode(code))
     );
 
     const room = await createRoom({
-      duelId: normalisedDuelId,
+      duelId,
       roomCode,
       creator: normalisedCreator,
-      stake: onChain.stake.toString(),
+      stake: stakeWei.toString(),
       isPrivate: wantsPrivate,
       passwordHash: wantsPrivate ? await hashPassword(password) : null,
     });

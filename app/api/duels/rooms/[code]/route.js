@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
 
-import { getRoomByCode, listMatchLogs, listSquads } from "@/lib/duel-store";
+import {
+  getRoomByCode,
+  listMatchLogs,
+  listSquads,
+  listSquadSlots,
+} from "@/lib/duel-store";
 import { isValidRoomCode, normaliseRoomCode } from "@/lib/room-code";
 
 export const dynamic = "force-dynamic";
@@ -8,9 +13,9 @@ export const dynamic = "force-dynamic";
 /**
  * GET /api/duels/rooms/:code
  *
- * Returns the room plus enough state to restore the correct screen after a
- * refresh. Never returns the password hash — that lives in a separate,
- * server-only table and is not selected here.
+ * Returns the room plus, once a draft is underway, both squads' current
+ * pick slots so the client can render each player's growing team in real
+ * time. Password hashes are never selected here.
  */
 export async function GET(request, { params }) {
   const { code } = await params;
@@ -26,19 +31,35 @@ export async function GET(request, { params }) {
       return NextResponse.json({ error: "Room not found" }, { status: 404 });
     }
 
-    const { searchParams } = new URL(request.url);
-    const withState = searchParams.get("state") === "1";
+    // Once we're past the ready phase, always ship the picks so both clients
+    // can stream the opponent's growing squad. Before that there are no picks
+    // yet so we save a query.
+    const includeSquads = ["drafting", "simulating", "complete"].includes(room.status);
 
-    if (!withState) {
+    if (!includeSquads) {
       return NextResponse.json({ room });
     }
 
-    const [squads, logs] = await Promise.all([
-      listSquads(room.id),
-      listMatchLogs(room.id),
-    ]);
+    const squads = await listSquads(room.id);
+    const bySquad = await Promise.all(
+      squads.map(async (s) => ({
+        player: s.player,
+        formation: s.formation,
+        nation: s.nation,
+        year: s.year,
+        slots: await listSquadSlots(s.id),
+      }))
+    );
 
-    return NextResponse.json({ room, squads, matchLogs: logs });
+    const { searchParams } = new URL(request.url);
+    const withLogs = searchParams.get("state") === "1";
+    const matchLogs = withLogs ? await listMatchLogs(room.id) : undefined;
+
+    return NextResponse.json({
+      room,
+      squads: bySquad,
+      ...(matchLogs ? { matchLogs } : {}),
+    });
   } catch (error) {
     return NextResponse.json(
       { error: "Failed to load room", details: error.message },

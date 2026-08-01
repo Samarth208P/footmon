@@ -46,7 +46,11 @@ export default function DuelMatchScreen({
   const payoutMon = weiToMon(matchResult?.payoutWei);
   const isSettled = Boolean(matchResult?.settled);
 
-  const iAmCreator = room?.creator === myAddress;
+  // Wallet addresses come in checksum-cased from useAppKitAccount(), while
+  // room.creator / room.joiner are stored lowercased. Normalise before
+  // comparing so we don't flip creator/joiner when rendering the reveal.
+  const myAddressLc = myAddress ? String(myAddress).toLowerCase() : null;
+  const iAmCreator = Boolean(myAddressLc) && room?.creator === myAddressLc;
   const myLabel = myUsername || (myAddress ? shortAddr(myAddress) : "You");
   const oppAddr = iAmCreator ? room?.joiner : room?.creator;
   const oppLabel = opponentUsername || shortAddr(oppAddr);

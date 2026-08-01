@@ -122,8 +122,16 @@ function buildSessionMessage({ address, roomCode, issuedAt, nonce }) {
  *      stake is non-zero, then posts /ready.
  *   5. Once both are ready, the draft begins.
  */
-export function useDuel(address) {
+export function useDuel(rawAddress) {
   const { walletProvider } = useAppKitProvider("eip155");
+
+  // useAppKitAccount() returns EIP-55 checksummed addresses (mixed case),
+  // but every address we persist server-side is lowercased. Normalise once
+  // here so downstream equality checks against DB-sourced fields
+  // (current_turn, creator, joiner, squad.player, ...) actually match —
+  // without this, isMyTurn is permanently stuck at false and the Roll /
+  // Claim Forfeit buttons behave as if the opponent is always on the clock.
+  const address = rawAddress ? String(rawAddress).toLowerCase() : null;
 
   // Screen state
   const [screen, setScreen] = useState("lobby"); // "lobby" | "waiting" | "ready" | "draft" | "match" | "result"

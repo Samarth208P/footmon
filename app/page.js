@@ -1,5 +1,6 @@
 import Link from "next/link";
 import DailyPrizeBadge from "@/components/DailyPrizeBadge";
+import LandingLeaderboard from "@/components/LandingLeaderboard";
 import { CONTRACT_ADDRESS, MONAD_CHAIN, getFlagUrl } from "@/lib/constants";
 
 export const metadata = {
@@ -162,6 +163,8 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+
+      <LandingLeaderboard />
 
       <section className="landing-section" id="economics">
         <h2 className="section-heading">How the MON Flows</h2>

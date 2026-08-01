@@ -5706,3 +5706,96 @@ body.match-open { overflow: hidden; }
   }
   .landing-footer-links { gap: 14px; }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LANDING LEADERBOARD SECTION
+   Compact variant of the LeaderboardOverlay, embedded on the marketing page.
+   Reuses the shared .lb-* classes for the tabs/table so it stays visually
+   consistent with the in-game overlay, but tightens spacing and drops the
+   modal-height scroll so it reads as a natural section.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.landing-lb {
+  max-width: 820px;
+  margin: 0 auto;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  box-shadow: var(--shadow);
+}
+
+/* Landing-page wrapper for the leaderboard table. Overrides the overlay's
+   viewport-relative max-height so the section flows with the page instead of
+   introducing an inner scroll bar on desktop. */
+.landing-lb .landing-lb-scroll {
+  max-height: none;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.landing-lb-body { min-height: 240px; }
+
+/* Empty state — bigger and more inviting than the modal's plain "No entries" */
+.landing-lb-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 40px 20px;
+  text-align: center;
+  border: 1px dashed var(--border2);
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.02);
+}
+.landing-lb-empty-icon {
+  font-size: 2rem;
+  line-height: 1;
+}
+.landing-lb-empty-title {
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--text);
+}
+.landing-lb-empty-sub {
+  margin: 0;
+  max-width: 360px;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--text3);
+}
+
+/* Footer CTA under the table */
+.landing-lb-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+.landing-lb-footer-note {
+  font-size: 0.8rem;
+  color: var(--text3);
+}
+.landing-lb-cta {
+  padding: 10px 22px;
+  font-size: 0.85rem;
+}
+
+/* Mobile — stack the footer and drop the lowest-priority column */
+@media (max-width: 640px) {
+  .landing-lb { padding: 14px; }
+  .landing-lb-body { min-height: 200px; }
+  .landing-lb-footer {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+  }
+  .landing-lb-cta { width: 100%; }
+}

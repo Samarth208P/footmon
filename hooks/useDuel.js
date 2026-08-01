@@ -201,6 +201,18 @@ export function useDuel(rawAddress) {
   useEffect(() => { nationCodeRef.current = nationCode; }, [nationCode]);
   useEffect(() => { yearRef.current = year; }, [year]);
 
+  // Timestamp of the last successful roll response. Polling uses it to
+  // ignore stale room fetches that started BEFORE the roll POST wrote its
+  // result to the DB but arrived AFTER, which would otherwise wipe out the
+  // freshly-set nation/year on the client. A 3-second grace is plenty
+  // longer than a normal roll round-trip.
+  const rolledAtRef = useRef(0);
+
+  // Same trick for slot rearrangement: while a rearrange POST is in flight
+  // we shouldn't let the poller revert the optimistic swap with a stale
+  // reading of the old slot layout.
+  const rearrangeInFlightRef = useRef(false);
+
   // Opponent's live roll, streamed via the room GET response so the waiting
   // player can watch what nation/year their opponent has drawn and browse
   // their available players read-only.
@@ -579,6 +591,9 @@ export function useDuel(rawAddress) {
       setRolledThisTurn(true);
       setSelectedPlayer(null);
       setFilterPos(null);
+      // Record the local timestamp so an in-flight poll started before the
+      // server persisted this roll can't clear our fresh state on arrival.
+      rolledAtRef.current = Date.now();
       if (data.room) setRoom(data.room);
     } finally {
       setBusy(false);
@@ -680,6 +695,12 @@ export function useDuel(rawAddress) {
     // Optimistic local move so the pitch feels responsive. We revert if the
     // server rejects, but the happy path is the common one so we don't want
     // to wait a round-trip before showing the new layout.
+    //
+    // Also gate polling from rehydrating mySlots while the POST is in
+    // flight — otherwise a poll that returns the pre-swap layout would
+    // overwrite our optimistic move and the swap looks like it "snaps
+    // back" for ~1.5s before the next poll picks up the persisted state.
+    rearrangeInFlightRef.current = true;
     let snapshot;
     setMySlots((prev) => {
       snapshot = prev;
@@ -707,10 +728,17 @@ export function useDuel(rawAddress) {
         if (snapshot) setMySlots(snapshot);
         return { error: data.error || "Rearrange failed" };
       }
+      // Hydrate from the canonical server response so the client and DB
+      // agree without waiting for another poll tick.
+      if (Array.isArray(data.slots)) {
+        setMySlots((prev) => hydrateSlots(prev, data.slots));
+      }
       return { slots: data.slots, swapped: data.swapped };
     } catch (err) {
       if (snapshot) setMySlots(snapshot);
       return { error: err.message };
+    } finally {
+      rearrangeInFlightRef.current = false;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [roomCode]);
@@ -861,9 +889,15 @@ export function useDuel(rawAddress) {
         // Stream both sides' picks into the local pitch grids. Server sends
         // this block once we're past the ready phase, so we can render each
         // player's team growing in real time.
+        //
+        // Skip hydrating MY slots while a rearrange POST is in flight —
+        // otherwise a poll that raced ahead of the persisted swap would
+        // paint the pre-swap layout back on top of the optimistic move,
+        // producing a ~1.5s "snap back" that looked like broken latency.
         if (Array.isArray(data.squads)) {
           for (const sq of data.squads) {
             const isMine = sq.player === myAddr;
+            if (isMine && rearrangeInFlightRef.current) continue;
             const target = isMine ? setMySlots : setOpponentSlots;
             target((prev) => hydrateSlots(prev, sq.slots));
           }
@@ -927,7 +961,19 @@ export function useDuel(rawAddress) {
         // If the turn passed to me while I still had a stale local roll
         // hanging around (e.g. from a previous turn), wipe it so the UI
         // shows a fresh "Roll to draw" empty state.
-        if (nowMyTurn && !r.current_roll_nation && (nationCodeRef.current || yearRef.current)) {
+        //
+        // Grace window: if a roll POST finished within the last 3 seconds
+        // and this poll fetch was in flight during that gap, `r.current_roll_nation`
+        // will still read null even though the local state is correct. Skip
+        // the clear in that case — the next poll will see the persisted roll
+        // and the UI will stay in sync.
+        const rolledRecently = Date.now() - rolledAtRef.current < 3000;
+        if (
+          nowMyTurn &&
+          !r.current_roll_nation &&
+          !rolledRecently &&
+          (nationCodeRef.current || yearRef.current)
+        ) {
           setYear(null);
           setNationCode(null);
           setNationName(null);

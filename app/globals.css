@@ -4886,6 +4886,8 @@ body.match-open { overflow: hidden; }
 }
 
 /* ── Winner reveal overlay ──────────────────────────────────────────────── */
+/* The card floats above the scoreboard and commentary; keep the underlying
+   match content readable rather than hiding it behind a solid dim. */
 .duel-match-reveal {
   position: absolute;
   inset: 0;
@@ -4894,8 +4896,11 @@ body.match-open { overflow: hidden; }
   align-items: center;
   justify-content: center;
   padding: 24px;
-  background: radial-gradient(circle at 50% 50%, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.88) 100%);
-  backdrop-filter: blur(6px);
+  pointer-events: none;
+  background: transparent;
+}
+.duel-match-reveal > * {
+  pointer-events: auto;
 }
 
 .duel-match-reveal-card {

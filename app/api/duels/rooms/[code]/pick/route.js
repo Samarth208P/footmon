@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 
 import {
   getRoomByCode,
-  getSquad,
   listSquadSlots,
   pickSlot,
   updateRoom,
@@ -18,6 +17,7 @@ import {
   slotPositionFor,
   validatePick,
 } from "@/lib/draft";
+import { advanceExpiredTurn } from "@/lib/turn-timer";
 
 export const dynamic = "force-dynamic";
 
@@ -47,7 +47,11 @@ export async function POST(request, { params }) {
   }
 
   try {
-    const room = await getRoomByCode(roomCode);
+    // Lazy timeout enforcement: if the CURRENT drafter has already blown
+    // their 90-second deadline, we skip their turn before validating the
+    // pick. This handles the case where an offender tries to sneak in a
+    // pick milliseconds after their deadline while someone else is polling.
+    let room = await advanceExpiredTurn(await getRoomByCode(roomCode));
     if (!room) {
       return NextResponse.json({ error: "Room not found" }, { status: 404 });
     }
@@ -76,7 +80,10 @@ export async function POST(request, { params }) {
       listSquadSlots(joinerSquad.id),
     ]);
 
-    const totalPicks = creatorSlots.length + joinerSlots.length;
+    // Turn ordering is driven by pick_attempts (which counts BOTH successful
+    // picks and skips), not by how many slots are actually filled. That way
+    // a timeout doesn't leave the offender permanently on the clock.
+    const attempts = Number(room.pick_attempts ?? (creatorSlots.length + joinerSlots.length));
     const mine = room.creator === sender ? creatorSlots : joinerSlots;
     const mySquad = room.creator === sender ? creatorSquad : joinerSquad;
 
@@ -85,7 +92,7 @@ export async function POST(request, { params }) {
       sender,
       creator: room.creator,
       joiner: room.joiner,
-      totalPicks,
+      totalPicks: attempts,
       slotIndex,
       playerName: body?.playerName,
       playerPositions: body?.playerPositions,
@@ -95,6 +102,25 @@ export async function POST(request, { params }) {
 
     if (!verdict.ok) {
       return NextResponse.json({ error: verdict.error }, { status: verdict.status });
+    }
+
+    // ── Timeout penalty cap: rating <= 85 for the pick immediately after
+    //    a missed turn. Cleared once this pick lands successfully.
+    const isCreatorSender = room.creator === sender;
+    const penaltyCap = isCreatorSender
+      ? room.creator_penalty_max_rating
+      : room.joiner_penalty_max_rating;
+    const rawRating = Number.isFinite(Number(body.playerRating))
+      ? Number(body.playerRating)
+      : null;
+    if (penaltyCap != null && rawRating != null && rawRating > penaltyCap) {
+      return NextResponse.json(
+        {
+          error: `Timeout penalty: this pick must be rated ${penaltyCap} or lower`,
+          penaltyMaxRating: penaltyCap,
+        },
+        { status: 409 }
+      );
     }
 
     // ── Persist the pick ─────────────────────────────────────────────────
@@ -114,9 +140,7 @@ export async function POST(request, { params }) {
         playerPosition: Array.isArray(body.playerPositions)
           ? body.playerPositions[0]
           : body.playerPositions,
-        playerRating: Number.isFinite(Number(body.playerRating))
-          ? Number(body.playerRating)
-          : null,
+        playerRating: rawRating,
         playerNation: typeof body.nation === "string" ? body.nation : null,
         playerYear: bodyYear,
       });
@@ -143,14 +167,34 @@ export async function POST(request, { params }) {
     }
 
     // ── Advance the turn ─────────────────────────────────────────────────
-    const newTotal = totalPicks + 1;
-    const complete = isDraftComplete(newTotal);
+    const newAttempts = attempts + 1;
+    const complete = isDraftComplete(newAttempts);
+
+    // Clearing current_roll_* on every pick means the next drafter starts
+    // with a fresh wheel, and the just-departed drafter's roll doesn't
+    // linger on their opponent's screen after the turn passes. We also
+    // clear THIS sender's penalty since they successfully used their
+    // penalised turn.
+    const commonPatch = {
+      pick_attempts: newAttempts,
+      current_roll_nation: null,
+      current_roll_year: null,
+      current_roll_at: null,
+    };
+    if (isCreatorSender) commonPatch.creator_penalty_max_rating = null;
+    else commonPatch.joiner_penalty_max_rating = null;
 
     const patch = complete
-      ? { status: "simulating", current_turn: null, turn_deadline: null }
+      ? {
+          ...commonPatch,
+          status: "simulating",
+          current_turn: null,
+          turn_deadline: null,
+        }
       : {
+          ...commonPatch,
           current_turn: addressToPick({
-            totalPicks: newTotal,
+            totalPicks: newAttempts,
             creator: room.creator,
             joiner: room.joiner,
           }),
@@ -162,7 +206,7 @@ export async function POST(request, { params }) {
     return NextResponse.json({
       slot,
       room: updated,
-      totalPicks: newTotal,
+      totalPicks: newAttempts,
       draftComplete: complete,
       nextTurn: updated.current_turn,
     });

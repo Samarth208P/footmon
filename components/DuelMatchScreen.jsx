@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { ratingColor } from "@/lib/constants";
+import { useContract } from "@/hooks/useContract";
+import { play as playSound } from "@/lib/sound";
 
 // Real-time seconds to play out one 90-minute match. Lower = faster playback.
 const SECONDS_PER_MATCH = 8;
@@ -45,6 +47,39 @@ export default function DuelMatchScreen({
   const matchLogs = matchResult?.matchLogs ?? [];
   const payoutMon = weiToMon(matchResult?.payoutWei);
   const isSettled = Boolean(matchResult?.settled);
+
+  // On-chain claim wiring — the escrow pays into a per-address pool that the
+  // winner drains with a single claimDuelPrize() call. We surface it directly
+  // on the reveal card so the user doesn't have to hunt for a separate screen.
+  const contract = useContract();
+  const [claiming, setClaiming] = useState(false);
+  const [claimError, setClaimError] = useState(null);
+  const [claimedTx, setClaimedTx] = useState(null);
+  const pendingClaimMon = Number(contract.pendingClaim || 0);
+  const hasPending = pendingClaimMon > 0;
+
+  const onClaim = async () => {
+    if (!contract.isAvailable()) {
+      setClaimError("Reconnect your wallet and try again");
+      return;
+    }
+    setClaiming(true);
+    setClaimError(null);
+    try {
+      await contract.claimDuelPrize();
+      // Bump the pool balance so the button updates without waiting for
+      // the 30s refresh interval to come around.
+      await contract.refreshData();
+      setClaimedTx(true);
+      playSound("claim");
+    } catch (err) {
+      const msg = err?.message || "Claim failed";
+      const rejected = err?.code === "ACTION_REJECTED" || /reject|denied/i.test(msg);
+      setClaimError(rejected ? "Transaction cancelled" : msg);
+    } finally {
+      setClaiming(false);
+    }
+  };
 
   // Wallet addresses come in checksum-cased from useAppKitAccount(), while
   // room.creator / room.joiner are stored lowercased. Normalise before
@@ -118,6 +153,7 @@ export default function DuelMatchScreen({
       if (e.event_type === "goal") {
         const side = e.team === "home" || e.team === "creator" ? "creator" : "joiner";
         pulseFlash(side);
+        playSound("goal");
       }
     }
   }, [minute, timeline]);
@@ -167,6 +203,22 @@ export default function DuelMatchScreen({
   const iWon = phase === "reveal" && myScore > oppScore;
   const iLost = phase === "reveal" && myScore < oppScore;
   const isDraw = phase === "reveal" && myScore === oppScore;
+
+  // Play the reveal cue exactly once when we transition into the reveal
+  // phase. A ref guard avoids retriggers on subsequent renders of the same
+  // outcome.
+  const revealCuedRef = useRef(false);
+  useEffect(() => {
+    if (phase !== "reveal") {
+      revealCuedRef.current = false;
+      return;
+    }
+    if (revealCuedRef.current) return;
+    revealCuedRef.current = true;
+    if (iWon) playSound("victory");
+    else if (iLost) playSound("defeat");
+    else playSound("draw");
+  }, [phase, iWon, iLost, isDraw]);
 
   // Events visible so far, sliced to what's ticked past. Keep narrative
   // markers (kickoff / half_time / full_time / forfeit) alongside the goals
@@ -417,10 +469,29 @@ export default function DuelMatchScreen({
                 <div className="duel-match-payout">
                   <div className="duel-match-payout-amt">+{payoutMon} MON</div>
                   <div className="duel-match-payout-note">
-                    {isSettled
-                      ? "Prize sent to your on-chain claim balance."
-                      : "Prize will be released shortly."}
+                    {!isSettled
+                      ? "Prize will be released on-chain shortly."
+                      : claimedTx && !hasPending
+                        ? "Claimed."
+                        : hasPending
+                          ? `Ready to claim: ${pendingClaimMon.toFixed(4)} MON`
+                          : "Prize sent to your on-chain claim balance."}
                   </div>
+
+                  {isSettled && hasPending && (
+                    <button
+                      type="button"
+                      className="duel-match-claim"
+                      onClick={onClaim}
+                      disabled={claiming}
+                    >
+                      {claiming ? "Claiming..." : `Claim ${pendingClaimMon.toFixed(4)} MON`}
+                    </button>
+                  )}
+
+                  {claimError && (
+                    <div className="duel-match-claim-error">{claimError}</div>
+                  )}
                 </div>
               )}
 

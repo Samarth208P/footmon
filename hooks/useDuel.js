@@ -81,6 +81,11 @@ function hydrateSlots(baseSlots, serverSlots) {
       player: {
         name: row.player_name,
         rating: Number(row.player_rating ?? 0),
+        // jersey_number is enriched server-side in the room GET route by
+        // joining slots against wc_players. Missing means we lost the
+        // lookup (older slot without nation/year, or the join failed);
+        // the pitch view then falls back to showing the rating.
+        jerseyNumber: row.jersey_number != null ? Number(row.jersey_number) : null,
         position: row.player_position ?? slot.pos,
         positions: row.player_position ? [row.player_position] : [slot.pos],
         draftedNation: row.player_nation ?? null,
@@ -180,7 +185,7 @@ export function useDuel(rawAddress) {
   const [mySlots, setMySlots] = useState(() => buildSlots("4-3-3", "balanced"));
   const [opponentSlots, setOpponentSlots] = useState(() => buildSlots("4-3-3", "balanced"));
 
-  // Current roll
+  // Current roll (drafter's own view)
   const [nationCode, setNationCode] = useState(null);
   const [nationName, setNationName] = useState(null);
   const [year, setYear] = useState(null);
@@ -188,6 +193,23 @@ export function useDuel(rawAddress) {
   const [rolledThisTurn, setRolledThisTurn] = useState(false);
   const [selectedPlayer, setSelectedPlayer] = useState(null);
   const [filterPos, setFilterPos] = useState(null);
+
+  // Mirrors of the local roll state used by the polling loop to decide
+  // whether it needs to clear my roll (e.g., I picked, turn moved on).
+  const nationCodeRef = useRef(nationCode);
+  const yearRef = useRef(year);
+  useEffect(() => { nationCodeRef.current = nationCode; }, [nationCode]);
+  useEffect(() => { yearRef.current = year; }, [year]);
+
+  // Opponent's live roll, streamed via the room GET response so the waiting
+  // player can watch what nation/year their opponent has drawn and browse
+  // their available players read-only.
+  const [opponentRoll, setOpponentRoll] = useState(null);
+
+  // Timeout penalty: if I missed my previous turn, my NEXT pick is capped
+  // at this rating. null means no penalty. Cleared server-side on any
+  // successful pick.
+  const [myPenaltyMaxRating, setMyPenaltyMaxRating] = useState(null);
 
   // Turn state
   const [isMyTurn, setIsMyTurn] = useState(false);
@@ -276,10 +298,38 @@ export function useDuel(rawAddress) {
     }
   }, [address, walletProvider]);
 
+  // ── Reset draft state before a new duel ────────────────────────────────
+  // Called at the start of createRoom and joinRoom so nothing lingers from
+  // a previous match (mySlots showing the last squad, a half-eaten roll,
+  // the wrong isMyTurn flag, etc.). resetDuel does more — it also nukes the
+  // room code, session token and polling — so we can't reuse it here without
+  // erasing the values we're about to set.
+  const clearDraftState = useCallback(() => {
+    setMySlots(buildSlots(formation, style));
+    setOpponentSlots(buildSlots(formation, style));
+    setYear(null);
+    setNationCode(null);
+    setNationName(null);
+    setSquad([]);
+    setRolledThisTurn(false);
+    setSelectedPlayer(null);
+    setFilterPos(null);
+    setIsMyTurn(false);
+    setTurnDeadline(null);
+    setMatchResult(null);
+    setOpponentReady(false);
+    setMyReady(false);
+    setOpponent(null);
+    setOpponentRoll(null);
+    setMyPenaltyMaxRating(null);
+    setError(null);
+  }, [formation, style]);
+
   // ── Room creation ───────────────────────────────────────────────────────
 
   const createRoom = useCallback(async ({ stake, isPrivate = false, password = null }) => {
     if (!address) return { error: "Connect wallet first" };
+    clearDraftState();
     setBusy(true);
     setError(null);
 
@@ -349,6 +399,7 @@ export function useDuel(rawAddress) {
 
   const joinRoom = useCallback(async (code, password = null) => {
     if (!address) return { error: "Connect wallet first" };
+    clearDraftState();
     setBusy(true);
     setError(null);
 
@@ -486,7 +537,7 @@ export function useDuel(rawAddress) {
   // ── Roll ────────────────────────────────────────────────────────────────
 
   const roll = useCallback(async (mode = "full", payForRoll = null) => {
-    if (busy || !isMyTurn) return;
+    if (busy || !isMyTurn || !roomCode) return;
     setBusy(true);
 
     const isPaid = rolledThisTurn;
@@ -496,17 +547,25 @@ export function useDuel(rawAddress) {
         await payForRoll(REROLL_PRICE_MON);
       }
 
-      const params = new URLSearchParams();
-      if (mode === "nation") {
-        if (year) params.set("lockYear", year);
-        if (nationCode) params.set("excludeNation", nationCode);
-      } else if (mode === "year") {
-        if (nationCode) params.set("lockNation", nationCode);
-        if (year) params.set("excludeYear", year);
+      // Duel roll is server-authoritative: the server verifies it's our
+      // turn, records the (nation, year) on the room so the opponent can
+      // see it, and returns the squad. Reroll semantics (lock nation vs
+      // lock year) are derived on the server from the room's previous roll.
+      let token = sessionTokenRef.current;
+      if (!token) {
+        const sess = await openSession(roomCode);
+        if (sess.error) throw new Error(sess.error);
+        token = sess.token;
       }
 
-      const url = `/api/roll${params.toString() ? "?" + params : ""}`;
-      const res = await fetch(url, { cache: "no-store" });
+      const res = await fetch(`/api/duels/rooms/${roomCode}/roll`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ mode }),
+      });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
         throw new Error(body.error || `Roll failed (${res.status})`);
@@ -520,10 +579,12 @@ export function useDuel(rawAddress) {
       setRolledThisTurn(true);
       setSelectedPlayer(null);
       setFilterPos(null);
+      if (data.room) setRoom(data.room);
     } finally {
       setBusy(false);
     }
-  }, [busy, isMyTurn, rolledThisTurn, year, nationCode]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [busy, isMyTurn, rolledThisTurn, roomCode]);
 
   // ── Pick player ─────────────────────────────────────────────────────────
 
@@ -597,6 +658,62 @@ export function useDuel(rawAddress) {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [roomCode, address, isMyTurn, mySlots, nationCode, year]);
+
+  // ── Rearrange own slots ─────────────────────────────────────────────────
+  // Swap or move two of the caller's own placed players. Legal on either
+  // player's turn — this doesn't advance the draft, it just reshapes the
+  // pitch. The server does the compatibility check against wc_players so a
+  // dropped-in "ST as CB" won't slip through even if the client is buggy.
+  const rearrangeSlots = useCallback(async (fromSlot, toSlot) => {
+    if (!roomCode || fromSlot === toSlot) return { error: "Nothing to rearrange" };
+    if (!Number.isInteger(fromSlot) || !Number.isInteger(toSlot)) {
+      return { error: "Invalid slot" };
+    }
+
+    let token = sessionTokenRef.current;
+    if (!token) {
+      const sess = await openSession(roomCode);
+      if (sess.error) return { error: sess.error };
+      token = sess.token;
+    }
+
+    // Optimistic local move so the pitch feels responsive. We revert if the
+    // server rejects, but the happy path is the common one so we don't want
+    // to wait a round-trip before showing the new layout.
+    let snapshot;
+    setMySlots((prev) => {
+      snapshot = prev;
+      const next = prev.map((s) => ({ ...s }));
+      const a = next[fromSlot];
+      const b = next[toSlot];
+      const tmp = a.player;
+      a.player = b.player;
+      b.player = tmp;
+      return next;
+    });
+
+    try {
+      const res = await fetch(`/api/duels/rooms/${roomCode}/rearrange`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ fromSlot, toSlot }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        // Revert the optimistic move.
+        if (snapshot) setMySlots(snapshot);
+        return { error: data.error || "Rearrange failed" };
+      }
+      return { slots: data.slots, swapped: data.swapped };
+    } catch (err) {
+      if (snapshot) setMySlots(snapshot);
+      return { error: err.message };
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [roomCode]);
 
   // ── Simulate the match ──────────────────────────────────────────────────
 
@@ -775,16 +892,49 @@ export function useDuel(rawAddress) {
         ) {
           setScreen("draft");
         }
-        if (r.status === "simulating" || r.status === "completed") {
+        if (r.status === "simulating" || r.status === "complete") {
           setScreen("match");
         }
 
         // Turn state.
+        const nowMyTurn = r.current_turn ? r.current_turn === myAddr : false;
         if (r.current_turn) {
-          setIsMyTurn(r.current_turn === myAddr);
+          setIsMyTurn(nowMyTurn);
         }
         if (r.turn_deadline) {
           setTurnDeadline(r.turn_deadline);
+        }
+
+        // Timeout penalty flag for me. Server tracks it per side; we mirror
+        // whichever side I'm on. Null means "no penalty".
+        const myPenalty = meIsCreator
+          ? r.creator_penalty_max_rating
+          : r.joiner_penalty_max_rating;
+        setMyPenaltyMaxRating(
+          myPenalty != null && myPenalty !== "" ? Number(myPenalty) : null
+        );
+
+        // Opponent's live roll. When it's their turn and the server has
+        // recorded a wheel result, mirror it locally so we can render their
+        // draft panel read-only. On my own turn we don't need the mirror —
+        // we already own the roll state.
+        if (!nowMyTurn && data.currentRoll) {
+          setOpponentRoll(data.currentRoll);
+        } else if (nowMyTurn || !r.current_roll_nation) {
+          setOpponentRoll(null);
+        }
+
+        // If the turn passed to me while I still had a stale local roll
+        // hanging around (e.g. from a previous turn), wipe it so the UI
+        // shows a fresh "Roll to draw" empty state.
+        if (nowMyTurn && !r.current_roll_nation && (nationCodeRef.current || yearRef.current)) {
+          setYear(null);
+          setNationCode(null);
+          setNationName(null);
+          setSquad([]);
+          setRolledThisTurn(false);
+          setSelectedPlayer(null);
+          setFilterPos(null);
         }
       } catch (err) {
         console.error("Poll error:", err);
@@ -828,6 +978,8 @@ export function useDuel(rawAddress) {
     setSelectedPlayer(null);
     setFilterPos(null);
     setIsMyTurn(false);
+    setOpponentRoll(null);
+    setMyPenaltyMaxRating(null);
     setError(null);
   }, [formation, style, stopPolling]);
 
@@ -984,6 +1136,8 @@ export function useDuel(rawAddress) {
     setFilterPos,
     assignedIds,
     assignedNames,
+    opponentRoll,
+    myPenaltyMaxRating,
 
     // Turn
     isMyTurn,
@@ -1006,6 +1160,7 @@ export function useDuel(rawAddress) {
     readyUp,
     roll,
     pickPlayer,
+    rearrangeSlots,
     simulateMatch,
     matchResult,
     claimForfeit,

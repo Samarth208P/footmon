@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useAppKitAccount } from "@reown/appkit/react";
 import { useContract } from "@/hooks/useContract";
 import { useDuel } from "@/hooks/useDuel";
@@ -10,7 +10,9 @@ import PitchView from "./PitchView";
 import ProfileClaimModal from "./ProfileClaimModal";
 import DuelMatchScreen from "./DuelMatchScreen";
 import Toast from "./Toast";
+import SoundToggle from "./SoundToggle";
 import { getFlagUrl, canPlayerFillSlot, ratingColor, REROLL_PRICE_MON, FORMATIONS } from "@/lib/constants";
+import { play as playSound, unlockOnFirstGesture } from "@/lib/sound";
 
 /** Wei string → decimal MON string. */
 function weiToMon(wei) {
@@ -23,9 +25,12 @@ function weiToMon(wei) {
 /**
  * Turn countdown clock. Renders remaining seconds against a deadline ISO
  * string; ticks itself once a second and reports whether the clock has
- * expired via the render prop.
+ * expired via the render prop. When it's the local player's turn we
+ * also chirp a heartbeat at the last few seconds and play a buzzer on
+ * expiry — silent when it's the opponent's clock to keep the audio
+ * peripheral.
  */
-function TurnCountdown({ deadline, children }) {
+function TurnCountdown({ deadline, children, isMyTurn = false }) {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
     if (!deadline) return;
@@ -36,6 +41,35 @@ function TurnCountdown({ deadline, children }) {
   const target = deadline ? Date.parse(deadline) : null;
   const secondsLeft = target ? Math.max(0, Math.ceil((target - now) / 1000)) : null;
   const expired = target != null && now > target;
+
+  // Sound thresholds: warn at 10s and every second under 5s; buzzer once
+  // on the first expired frame. Ref-guarded so a re-render doesn't retrigger.
+  const lastWarnSecondRef = useRef(null);
+  const buzzedRef = useRef(false);
+  useEffect(() => {
+    if (!isMyTurn || !deadline) {
+      lastWarnSecondRef.current = null;
+      buzzedRef.current = false;
+      return;
+    }
+    if (expired) {
+      if (!buzzedRef.current) {
+        buzzedRef.current = true;
+        playSound("timerExpire");
+      }
+      return;
+    }
+    buzzedRef.current = false;
+    if (secondsLeft == null) return;
+    // Chirp at 10s and every second from 5 down.
+    if (secondsLeft === 10 || (secondsLeft <= 5 && secondsLeft >= 1)) {
+      if (lastWarnSecondRef.current !== secondsLeft) {
+        lastWarnSecondRef.current = secondsLeft;
+        playSound("timerWarn");
+      }
+    }
+  }, [isMyTurn, deadline, secondsLeft, expired]);
+
   return children({ secondsLeft, expired });
 }
 
@@ -51,6 +85,10 @@ export default function DuelGamePage() {
   const [passwordInput, setPasswordInput] = useState("");
   const [joinCodeInput, setJoinCodeInput] = useState("");
   const [joinPasswordInput, setJoinPasswordInput] = useState("");
+
+  // Slot rearrangement — track the currently "held" slot so a second click
+  // swaps its contents with the destination. null means no swap in flight.
+  const [swapFromIdx, setSwapFromIdx] = useState(null);
 
   // Parse join code from URL on mount
   useEffect(() => {
@@ -80,6 +118,86 @@ export default function DuelGamePage() {
 
   const opponentUsername = duel.opponent ? profile.usernameFor(duel.opponent) : null;
 
+  // Prime the AudioContext on the first user gesture anywhere on the page.
+  // Chromium won't play sound until a user gesture unlocks the context, so
+  // we do it once here to make sure poll-driven cues (my-turn splash,
+  // opponent joined, goals) can play without needing the user to click a
+  // specific sound-triggering button first.
+  useEffect(() => unlockOnFirstGesture(), []);
+
+  // "Your turn!" splash — fires the first time isMyTurn flips true after
+  // sitting on the opponent's turn. Auto-hides after ~1.4s so it doesn't
+  // block the pitch. Only shows on the draft screen to avoid flashing over
+  // the ready / match phases where isMyTurn also briefly toggles.
+  const [showTurnSplash, setShowTurnSplash] = useState(false);
+  const prevIsMyTurnRef = useRef(false);
+  useEffect(() => {
+    const wasMyTurn = prevIsMyTurnRef.current;
+    prevIsMyTurnRef.current = duel.isMyTurn;
+    if (duel.screen !== "draft") return;
+    if (!wasMyTurn && duel.isMyTurn) {
+      setShowTurnSplash(true);
+      playSound("myTurn");
+      const t = setTimeout(() => setShowTurnSplash(false), 1400);
+      return () => clearTimeout(t);
+    }
+    if (wasMyTurn && !duel.isMyTurn) {
+      // Turn passed to the opponent — softer descending cue.
+      playSound("opponentTurn");
+    }
+  }, [duel.isMyTurn, duel.screen]);
+
+  // Opponent joined the room — chirp when we cross into the ready screen
+  // for the first time (i.e., we were previously in the waiting screen).
+  const prevScreenRef = useRef(null);
+  useEffect(() => {
+    const prev = prevScreenRef.current;
+    prevScreenRef.current = duel.screen;
+    if (prev === "waiting" && duel.screen === "ready") {
+      playSound("opponentJoined");
+    }
+  }, [duel.screen]);
+
+  // Watch slot fill counts to play a click-y "pick landed" sound on each
+  // increment. The ref-based baseline means the very first hydration
+  // (which may bring several picks in one batch after a reconnect)
+  // doesn't blast a machine-gun of sounds.
+  const prevMyFilledRef = useRef(null);
+  const prevOppFilledRef = useRef(null);
+  useEffect(() => {
+    const filled = duel.mySlots.filter((s) => s.player).length;
+    if (prevMyFilledRef.current == null) {
+      prevMyFilledRef.current = filled;
+      return;
+    }
+    if (filled === prevMyFilledRef.current + 1) {
+      playSound("pickPlaced");
+    }
+    prevMyFilledRef.current = filled;
+  }, [duel.mySlots]);
+
+  useEffect(() => {
+    const filled = duel.opponentSlots.filter((s) => s.player).length;
+    if (prevOppFilledRef.current == null) {
+      prevOppFilledRef.current = filled;
+      return;
+    }
+    if (filled === prevOppFilledRef.current + 1) {
+      playSound("opponentPicked");
+    }
+    prevOppFilledRef.current = filled;
+  }, [duel.opponentSlots]);
+
+  // Reset the fill-count baselines on lobby / new duel so subsequent picks
+  // in a fresh room fire sounds correctly (rather than being silenced by a
+  // stale baseline left over from the last match).
+  useEffect(() => {
+    if (duel.screen === "lobby" || duel.screen === "waiting") {
+      prevMyFilledRef.current = null;
+      prevOppFilledRef.current = null;
+    }
+  }, [duel.screen]);
+
   // Kick off the head-to-head simulation as soon as we enter the match
   // screen. The server is idempotent — repeated calls return the stored
   // scoreline rather than re-rolling it.
@@ -103,6 +221,7 @@ export default function DuelGamePage() {
       else if (msg.includes("insufficient funds")) msg = "Insufficient funds";
       else if (msg.length > 80) msg = msg.substring(0, 77) + "...";
     }
+    if (type === "error") playSound("error");
     const id = Date.now() + Math.random();
     setToasts((prev) => [...prev, { id, msg, type }]);
     setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), 3500);
@@ -193,6 +312,7 @@ export default function DuelGamePage() {
   // ── Roll handler ────────────────────────────────────────────────────────
   const handleRoll = async () => {
     if (duel.busy || !duel.isMyTurn) return;
+    playSound("roll");
     try {
       const payFn = duel.rolledThisTurn && contract.isAvailable() ? contract.payForRoll : null;
       await duel.roll("full", payFn);
@@ -203,6 +323,7 @@ export default function DuelGamePage() {
 
   const handleReroll = async (mode) => {
     if (duel.busy || !duel.isMyTurn) return;
+    playSound("reroll");
     try {
       const payFn = contract.isAvailable() ? contract.payForRoll : null;
       await duel.roll(mode, payFn);
@@ -213,6 +334,9 @@ export default function DuelGamePage() {
 
   // ── Player/slot click handlers ──────────────────────────────────────────
   const handlePlayerClick = (player) => {
+    // Selecting a roll player and holding a slot for swap are mutually
+    // exclusive modes — starting one cancels the other.
+    setSwapFromIdx(null);
     if (duel.selectedPlayer?.id === player.id) {
       duel.setSelectedPlayer(null);
     } else {
@@ -220,8 +344,11 @@ export default function DuelGamePage() {
     }
   };
 
-  const handleSlotClick = (idx) => {
+  const handleSlotClick = async (idx) => {
     const slot = duel.mySlots[idx];
+
+    // Path A: user has a player picked from the current roll — this is a
+    // brand-new pick placement. Keeps the original semantics.
     if (duel.selectedPlayer) {
       if (!slot.player && canPlayerFillSlot(duel.selectedPlayer, slot.pos)) {
         duel.pickPlayer(duel.selectedPlayer, idx);
@@ -230,6 +357,47 @@ export default function DuelGamePage() {
       } else {
         showToast(`${duel.selectedPlayer.name} can't play ${slot.pos}`, "error");
       }
+      return;
+    }
+
+    // Path B: swap-in-progress — this click is the destination. Fire the
+    // rearrange call. Server does the real position compatibility check
+    // against wc_players; we just do a client-side hint first for the
+    // "swap two filled slots" case so we can bail out with a nicer toast.
+    if (swapFromIdx != null) {
+      if (swapFromIdx === idx) {
+        // Clicked the same slot twice — treat as a cancel.
+        setSwapFromIdx(null);
+        return;
+      }
+      const source = duel.mySlots[swapFromIdx];
+      if (!source?.player) {
+        setSwapFromIdx(null);
+        return;
+      }
+      // Optional client-side gate for two filled slots. Empty destination
+      // is trusted through — canPlayerFillSlot only knows the primary
+      // position, but the server has the full positions list.
+      if (slot.player) {
+        const sourceCanFillTarget = canPlayerFillSlot(source.player, slot.pos);
+        const targetCanFillSource = canPlayerFillSlot(slot.player, source.pos);
+        if (!sourceCanFillTarget || !targetCanFillSource) {
+          showToast("Those two players can't swap positions", "error");
+          setSwapFromIdx(null);
+          return;
+        }
+      }
+      const from = swapFromIdx;
+      setSwapFromIdx(null);
+      playSound("swap");
+      const r = await duel.rearrangeSlots(from, idx);
+      if (r?.error) showToast(r.error, "error");
+      return;
+    }
+
+    // Path C: neutral — user just clicked a filled slot. Start a swap.
+    if (slot.player) {
+      setSwapFromIdx(idx);
     }
   };
 
@@ -244,7 +412,7 @@ export default function DuelGamePage() {
   const allPos = [...new Set(duel.squad.flatMap((p) => p.positions || []))].sort();
 
   return (
-    <main className="min-h-screen">
+    <main className="duel-shell">
       <div className="game-card">
         <WalletGate isConnected={isConnected}>
           {/* ── Lobby Screen ─────────────────────────────────────────────── */}
@@ -544,9 +712,14 @@ export default function DuelGamePage() {
 
           {/* ── Draft Screen ─────────────────────────────────────────────── */}
           {duel.screen === "draft" && (
-            <section className="screen" style={{ display: "flex" }}>
+            <section className="screen" style={{ display: "flex", position: "relative" }}>
+              {showTurnSplash && (
+                <div className="turn-splash" aria-hidden="true">
+                  <div className="turn-splash-text">YOUR TURN</div>
+                </div>
+              )}
               <aside className="duel-left">
-                <TurnCountdown deadline={duel.room?.turn_deadline}>
+                <TurnCountdown deadline={duel.room?.turn_deadline} isMyTurn={duel.isMyTurn}>
                   {({ secondsLeft, expired }) => (
                     <div className={`duel-turn-banner ${duel.isMyTurn ? "duel-turn-banner--active" : ""} ${expired ? "duel-turn-banner--expired" : ""}`}>
                       <span>
@@ -556,7 +729,9 @@ export default function DuelGamePage() {
                       </span>
                       {secondsLeft != null && (
                         <span className="duel-turn-clock">
-                          {expired ? "0:00" : `0:${String(secondsLeft).padStart(2, "0")}`}
+                          {expired
+                            ? "0:00"
+                            : `${Math.floor(secondsLeft / 60)}:${String(secondsLeft % 60).padStart(2, "0")}`}
                         </span>
                       )}
                       {expired && !duel.isMyTurn && (
@@ -577,132 +752,208 @@ export default function DuelGamePage() {
                 </TurnCountdown>
 
                 <div className="draft-console">
-                  <div className="rolls-left-row">
-                    <span className="rolls-left-label">REROLLS: {REROLL_PRICE_MON} MON EACH</span>
-                    <div className="roll-cost-badge">{REROLL_PRICE_MON} MON</div>
-                  </div>
-                  <div className="reroll-btns">
-                    <button 
-                      className="btn-reroll" 
-                      onClick={() => handleReroll("nation")}
-                      disabled={duel.busy || !duel.isMyTurn || !duel.nationCode}
-                    >
-                      ↺ Nation
-                    </button>
-                    <button 
-                      className="btn-reroll"
-                      onClick={() => handleReroll("year")}
-                      disabled={duel.busy || !duel.isMyTurn || !duel.nationCode}
-                    >
-                      ↺ Year
-                    </button>
-                  </div>
-
-                  {!duel.nationCode ? (
-                    <div className="draft-empty">
-                      <div className="draft-empty-icon">🎲</div>
-                      <h3 className="draft-empty-title">Draft Next Player</h3>
-                      <p className="draft-empty-desc">
-                        {duel.isMyTurn 
-                          ? "Roll to draw a nation and year. Rerolls cost 0.01 MON."
-                          : "Wait for your opponent to finish their pick."}
-                      </p>
-                      <button 
-                        className="btn-play-roll"
-                        onClick={handleRoll}
-                        disabled={duel.busy || !duel.isMyTurn}
-                      >
-                        {duel.busy ? "Rolling ⚽" : "Roll 🎲"}
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="draft-active">
-                      <div className="drawn-card">
-                        <div className="drawn-flag">
-                          <img 
-                            src={getFlagUrl(duel.nationCode)} 
-                            alt={duel.nationName} 
-                            style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "50%" }} 
-                          />
-                        </div>
-                        <div className="drawn-info-wrap">
-                          <span className="drawn-nation">{duel.nationName}</span>
-                          <span className="drawn-year">{duel.year}</span>
-                        </div>
-                      </div>
-                      
-                      <div className="player-list-header">Select Player</div>
-                      
-                      <div className="pos-filters">
-                        <button 
-                          className={`pos-chip ${!duel.filterPos ? "active" : ""}`} 
-                          onClick={() => duel.setFilterPos(null)}
-                        >
-                          All
-                        </button>
-                        {allPos.map((p) => (
-                          <button 
-                            key={p} 
-                            className={`pos-chip ${duel.filterPos === p ? "active" : ""}`} 
-                            onClick={() => duel.setFilterPos(p)}
-                          >
-                            {p}
-                          </button>
-                        ))}
-                      </div>
-
-                      <div className="player-list-scroll">
-                        {duel.filteredSquad.length === 0 ? (
-                          <div className="player-empty">No players match this position</div>
-                        ) : duel.filteredSquad.map((p) => {
-                          const assigned = duel.assignedIds.has(p.id);
-                          const nameUsed = !assigned && duel.assignedNames.has(p.name);
-                          const hasSlot = duel.mySlots.some((s) => !s.player && canPlayerFillSlot(p, s.pos));
-                          const isSelected = duel.selectedPlayer?.id === p.id;
-                          const isElite = !!p.isLegendary;
-                          const rc = isElite ? "#f0c040" : "var(--text2)";
-
-                          let rowClass = "player-row";
-                          if (assigned || nameUsed) rowClass += " player-row--assigned";
-                          else if (!hasSlot) rowClass += " player-row--disabled";
-                          else if (isSelected) rowClass += " player-row--selected";
-
-                          return (
-                            <div
-                              key={p.id}
-                              className={rowClass}
-                              style={{ borderLeft: `3px solid ${isElite ? "#f0c040" : "var(--border2)"}` }}
-                              onClick={() => !assigned && !nameUsed && hasSlot && handlePlayerClick(p)}
-                            >
-                              <div className="player-row-left">
-                                <span className={`player-name ${isElite ? "player-name--elite" : ""}`}>{p.name}</span>
-                                <span className="player-pos-tags">{(p.positions || []).join(" / ")}</span>
-                              </div>
-                              <div className="player-rating-wrap">
-                                <div className="player-rating-bar">
-                                  <div 
-                                    className="player-rating-bar-fill" 
-                                    style={{ width: `${p.rating}%`, background: isElite ? "#f0c040" : "var(--text3)" }} 
-                                  />
-                                </div>
-                                <span className="player-rating" style={{ color: rc }}>{p.rating}</span>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
+                  {duel.isMyTurn && duel.myPenaltyMaxRating != null && (
+                    <div className="draft-penalty-note">
+                      Timeout penalty — this pick must be rated {duel.myPenaltyMaxRating} or lower.
                     </div>
                   )}
+                  {duel.isMyTurn && (
+                    <>
+                      <div className="rolls-left-row">
+                        <span className="rolls-left-label">REROLLS: {REROLL_PRICE_MON} MON EACH</span>
+                        <div className="roll-cost-badge">{REROLL_PRICE_MON} MON</div>
+                      </div>
+                      <div className="reroll-btns">
+                        <button
+                          className="btn-reroll"
+                          onClick={() => handleReroll("nation")}
+                          disabled={duel.busy || !duel.nationCode}
+                        >
+                          ↺ Nation
+                        </button>
+                        <button
+                          className="btn-reroll"
+                          onClick={() => handleReroll("year")}
+                          disabled={duel.busy || !duel.nationCode}
+                        >
+                          ↺ Year
+                        </button>
+                      </div>
+                    </>
+                  )}
+
+                  {(() => {
+                    // Three modes:
+                    //   (a) My turn, nothing rolled yet — show the Roll prompt.
+                    //   (b) My turn, rolled — full interactive draft (existing UX).
+                    //   (c) Opponent's turn — mirror their live roll read-only
+                    //       if the server has one, otherwise a wait message.
+                    const showOpponentRoll = !duel.isMyTurn && duel.opponentRoll;
+                    const activeNationCode = duel.isMyTurn
+                      ? duel.nationCode
+                      : duel.opponentRoll?.nationCode;
+                    const activeNationName = duel.isMyTurn
+                      ? duel.nationName
+                      : duel.opponentRoll?.nationName;
+                    const activeYear = duel.isMyTurn ? duel.year : duel.opponentRoll?.year;
+
+                    if (!activeNationCode) {
+                      return (
+                        <div className="draft-empty">
+                          <div className="draft-empty-icon">🎲</div>
+                          <h3 className="draft-empty-title">Draft Next Player</h3>
+                          <p className="draft-empty-desc">
+                            {duel.isMyTurn
+                              ? "Roll to draw a nation and year. Rerolls cost 0.01 MON."
+                              : "Wait for your opponent to roll their wheel..."}
+                          </p>
+                          {duel.isMyTurn && (
+                            <button
+                              className="btn-play-roll"
+                              onClick={handleRoll}
+                              disabled={duel.busy}
+                            >
+                              {duel.busy ? "Rolling ⚽" : "Roll 🎲"}
+                            </button>
+                          )}
+                        </div>
+                      );
+                    }
+
+                    // Squad list — filtered by position chip, deduped against
+                    // whichever player list applies (mine when picking, the
+                    // opponent's list when spectating).
+                    const activeSquad = duel.isMyTurn
+                      ? duel.filteredSquad
+                      : (duel.opponentRoll?.squad ?? []).filter(
+                          (p) => !duel.filterPos || p.positions?.includes(duel.filterPos)
+                        );
+
+                    return (
+                      <div className={`draft-active ${showOpponentRoll ? "draft-active--spectator" : ""}`}>
+                        <div className="drawn-card">
+                          <div className="drawn-flag">
+                            <img
+                              src={getFlagUrl(activeNationCode)}
+                              alt={activeNationName}
+                              style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "50%" }}
+                            />
+                          </div>
+                          <div className="drawn-info-wrap">
+                            <span className="drawn-nation">{activeNationName}</span>
+                            <span className="drawn-year">{activeYear}</span>
+                          </div>
+                        </div>
+
+                        <div className="player-list-header">
+                          {showOpponentRoll
+                            ? `${opponentUsername || "Opponent"}'s options`
+                            : "Select Player"}
+                        </div>
+
+                        <div className="pos-filters">
+                          <button
+                            className={`pos-chip ${!duel.filterPos ? "active" : ""}`}
+                            onClick={() => duel.setFilterPos(null)}
+                          >
+                            All
+                          </button>
+                          {allPos.map((p) => (
+                            <button
+                              key={p}
+                              className={`pos-chip ${duel.filterPos === p ? "active" : ""}`}
+                              onClick={() => duel.setFilterPos(p)}
+                            >
+                              {p}
+                            </button>
+                          ))}
+                        </div>
+
+                        <div className="player-list-scroll">
+                          {activeSquad.length === 0 ? (
+                            <div className="player-empty">No players match this position</div>
+                          ) : activeSquad.map((p) => {
+                            const isElite = !!p.isLegendary;
+                            const rc = isElite ? "#f0c040" : "var(--text2)";
+
+                            if (showOpponentRoll) {
+                              // Read-only row: no assignment state, no
+                              // click handler. Purely informational.
+                              return (
+                                <div
+                                  key={p.id}
+                                  className="player-row player-row--spectator"
+                                  style={{ borderLeft: `3px solid ${isElite ? "#f0c040" : "var(--border2)"}` }}
+                                >
+                                  <div className="player-row-left">
+                                    <span className={`player-name ${isElite ? "player-name--elite" : ""}`}>{p.name}</span>
+                                    <span className="player-pos-tags">{(p.positions || []).join(" / ")}</span>
+                                  </div>
+                                  <div className="player-rating-wrap">
+                                    <div className="player-rating-bar">
+                                      <div
+                                        className="player-rating-bar-fill"
+                                        style={{ width: `${p.rating}%`, background: isElite ? "#f0c040" : "var(--text3)" }}
+                                      />
+                                    </div>
+                                    <span className="player-rating" style={{ color: rc }}>{p.rating}</span>
+                                  </div>
+                                </div>
+                              );
+                            }
+
+                            const assigned = duel.assignedIds.has(p.id);
+                            const nameUsed = !assigned && duel.assignedNames.has(p.name);
+                            const hasSlot = duel.mySlots.some((s) => !s.player && canPlayerFillSlot(p, s.pos));
+                            const isSelected = duel.selectedPlayer?.id === p.id;
+                            const overPenalty =
+                              duel.myPenaltyMaxRating != null &&
+                              Number(p.rating) > duel.myPenaltyMaxRating;
+
+                            let rowClass = "player-row";
+                            if (assigned || nameUsed) rowClass += " player-row--assigned";
+                            else if (!hasSlot || overPenalty) rowClass += " player-row--disabled";
+                            else if (isSelected) rowClass += " player-row--selected";
+
+                            return (
+                              <div
+                                key={p.id}
+                                className={rowClass}
+                                style={{ borderLeft: `3px solid ${isElite ? "#f0c040" : "var(--border2)"}` }}
+                                onClick={() => !assigned && !nameUsed && hasSlot && !overPenalty && handlePlayerClick(p)}
+                              >
+                                <div className="player-row-left">
+                                  <span className={`player-name ${isElite ? "player-name--elite" : ""}`}>{p.name}</span>
+                                  <span className="player-pos-tags">{(p.positions || []).join(" / ")}</span>
+                                </div>
+                                <div className="player-rating-wrap">
+                                  <div className="player-rating-bar">
+                                    <div
+                                      className="player-rating-bar-fill"
+                                      style={{ width: `${p.rating}%`, background: isElite ? "#f0c040" : "var(--text3)" }}
+                                    />
+                                  </div>
+                                  <span className="player-rating" style={{ color: rc }}>{p.rating}</span>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 <div className="duel-actions-box">
-                  <button 
+                  <button
                     className="btn-cancel-draft"
                     onClick={duel.cancelRoom}
                     disabled={duel.busy}
+                    style={{ flex: 1 }}
                   >
                     Quit Duel
                   </button>
+                  <SoundToggle />
                 </div>
               </aside>
 
@@ -730,7 +981,17 @@ export default function DuelGamePage() {
                     <div className="duel-pitch-title">Your Pitch</div>
                     <PitchView
                       slots={duel.mySlots}
-                      highlightPlayer={duel.selectedPlayer}
+                      // When holding a filled slot for swap, treat that
+                      // slot's player as the "highlight" so PitchView can
+                      // light up compatible destinations.
+                      highlightPlayer={
+                        duel.selectedPlayer ||
+                        (swapFromIdx != null ? duel.mySlots[swapFromIdx]?.player : null)
+                      }
+                      selectedSlotIdx={swapFromIdx}
+                      swapSourcePos={
+                        swapFromIdx != null ? duel.mySlots[swapFromIdx]?.pos : null
+                      }
                       onSlotClick={handleSlotClick}
                     />
                   </div>

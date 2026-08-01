@@ -7,6 +7,8 @@ import {
   listSquadSlots,
 } from "@/lib/duel-store";
 import { isValidRoomCode, normaliseRoomCode } from "@/lib/room-code";
+import { getServerClient } from "@/lib/supabase-server";
+import { advanceExpiredTurn } from "@/lib/turn-timer";
 
 export const dynamic = "force-dynamic";
 
@@ -26,7 +28,9 @@ export async function GET(request, { params }) {
   }
 
   try {
-    const room = await getRoomByCode(roomCode);
+    // Lazy timeout enforcement — whichever client polls next drives the
+    // auto-advance, so an offender who tabbed away doesn't stall the draft.
+    const room = await advanceExpiredTurn(await getRoomByCode(roomCode));
     if (!room) {
       return NextResponse.json({ error: "Room not found" }, { status: 404 });
     }
@@ -51,6 +55,25 @@ export async function GET(request, { params }) {
       }))
     );
 
+    // Jersey numbers live on wc_players, not on duel_squad_slots. We look
+    // them up per (name, nation, year) so both players can render the
+    // opponent's pitch with real shirt numbers instead of raw ratings.
+    // Older slot rows that predate the chemistry migration will have
+    // player_nation/year = null; those simply won't get enriched, which
+    // is fine — the client falls back to the rating.
+    await enrichSlotsWithJersey(bySquad);
+
+    // Fetch the drafter's currently-rolled squad so the OPPONENT can see
+    // what they're picking from. Only makes sense during 'drafting'; other
+    // statuses have no live wheel to show.
+    let currentRoll = null;
+    if (room.status === "drafting" && room.current_roll_nation && room.current_roll_year) {
+      currentRoll = await loadCurrentRollSquad(
+        room.current_roll_nation,
+        Number(room.current_roll_year)
+      );
+    }
+
     const { searchParams } = new URL(request.url);
     const withLogs = searchParams.get("state") === "1";
     const matchLogs = withLogs ? await listMatchLogs(room.id) : undefined;
@@ -58,6 +81,7 @@ export async function GET(request, { params }) {
     return NextResponse.json({
       room,
       squads: bySquad,
+      ...(currentRoll ? { currentRoll } : {}),
       ...(matchLogs ? { matchLogs } : {}),
     });
   } catch (error) {
@@ -65,5 +89,114 @@ export async function GET(request, { params }) {
       { error: "Failed to load room", details: error.message },
       { status: 500 }
     );
+  }
+}
+
+/**
+ * Enrich slot rows in-place with the shirt number from wc_players.
+ *
+ * One bulk query per response (up to ~22 rows across both squads). If the
+ * table isn't reachable or a row can't be matched we simply leave
+ * jersey_number as null and let the client fall back to the rating —
+ * this is a display nicety, not a correctness requirement.
+ */
+async function enrichSlotsWithJersey(bySquad) {
+  const supabase = getServerClient();
+  if (!supabase) return;
+
+  const needles = [];
+  for (const sq of bySquad) {
+    for (const slot of sq.slots || []) {
+      if (slot.player_nation && slot.player_year && slot.player_name) {
+        needles.push({
+          name: slot.player_name,
+          nation: slot.player_nation,
+          year: slot.player_year,
+          slot,
+        });
+      }
+    }
+  }
+  if (needles.length === 0) return;
+
+  const names = [...new Set(needles.map((n) => n.name))];
+  const nations = [...new Set(needles.map((n) => n.nation))];
+  const years = [...new Set(needles.map((n) => n.year))];
+
+  try {
+    const { data, error } = await supabase
+      .from("wc_players")
+      .select("name, nation_code, year, jersey_number")
+      .in("name", names)
+      .in("nation_code", nations)
+      .in("year", years);
+    if (error || !data) return;
+
+    // Bucket by exact (name|nation|year) triple. Duplicate (name, nation, year)
+    // shouldn't exist in wc_players, but if it does we just take the first.
+    const byKey = new Map();
+    for (const row of data) {
+      const key = `${row.name}|${row.nation_code}|${row.year}`;
+      if (!byKey.has(key)) byKey.set(key, row.jersey_number);
+    }
+
+    for (const needle of needles) {
+      const key = `${needle.name}|${needle.nation}|${needle.year}`;
+      const jersey = byKey.get(key);
+      if (typeof jersey === "number" || typeof jersey === "string") {
+        needle.slot.jersey_number = Number(jersey);
+      }
+    }
+  } catch {
+    /* enrichment is best-effort */
+  }
+}
+
+/**
+ * Look up the full squad for a (nation, year) pair. Used so the opponent's
+ * client can render the list of players the current drafter is choosing
+ * from without needing its own roll endpoint or a shared seed.
+ *
+ * Returns null on any failure — the caller treats that as "no live roll".
+ */
+async function loadCurrentRollSquad(nationCode, year) {
+  const supabase = getServerClient();
+  if (!supabase) return null;
+  try {
+    const { data: nationRow } = await supabase
+      .from("wc_players")
+      .select("nation_code, nation_name")
+      .eq("year", year)
+      .eq("nation_code", nationCode)
+      .limit(1);
+    if (!nationRow || nationRow.length === 0) return null;
+
+    const { data: squadRows } = await supabase
+      .from("wc_players")
+      .select("id, name, jersey_number, rating, position, positions, attack, defense, is_legendary")
+      .eq("year", year)
+      .eq("nation_code", nationCode)
+      .order("rating", { ascending: false });
+
+    return {
+      nationCode,
+      nationName: nationRow[0].nation_name,
+      year,
+      // Deterministic (rating-desc) order so both sides see the same list.
+      // Shuffle only makes sense for the drafter's own private view.
+      squad: (squadRows || []).map((p) => ({
+        id: p.id,
+        name: p.name,
+        jerseyNumber: p.jersey_number,
+        rating: p.rating,
+        position: p.position,
+        positions: p.positions || [p.position],
+        attack: p.attack,
+        defense: p.defense,
+        isLegendary: p.is_legendary,
+      })),
+    };
+  } catch {
+    return null;
   }
 }

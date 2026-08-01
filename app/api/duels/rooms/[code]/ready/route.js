@@ -108,6 +108,13 @@ export async function POST(request, { params }) {
       patch.status = "drafting";
       patch.current_turn = room.creator; // creator picks first
       patch.turn_deadline = nextTurnDeadline();
+      // Reset the turn-timeout state to a fresh draft: no attempts made,
+      // no penalties carried over. (New rooms should already be at zero
+      // by column default, but a re-ready path could otherwise reuse
+      // stale values.)
+      patch.pick_attempts = 0;
+      patch.creator_penalty_max_rating = null;
+      patch.joiner_penalty_max_rating = null;
       // Seeds recorded BEFORE any pick, so the result can be re-derived later.
       patch.draft_seed = room.draft_seed || randomBytes(16).toString("hex");
       patch.match_seed = room.match_seed || randomBytes(16).toString("hex");

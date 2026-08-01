@@ -94,6 +94,9 @@ export async function POST(request, { params }) {
       is_draw: false,
       current_turn: null,
       turn_deadline: null,
+      current_roll_nation: null,
+      current_roll_year: null,
+      current_roll_at: null,
     });
 
     let settlement = { ok: false, error: "chain not configured" };

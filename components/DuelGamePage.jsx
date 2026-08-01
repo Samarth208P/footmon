@@ -480,13 +480,14 @@ export default function DuelGamePage() {
                           <div className="player-empty">No players match this position</div>
                         ) : duel.filteredSquad.map((p) => {
                           const assigned = duel.assignedIds.has(p.id);
+                          const nameUsed = !assigned && duel.assignedNames.has(p.name);
                           const hasSlot = duel.mySlots.some((s) => !s.player && canPlayerFillSlot(p, s.pos));
                           const isSelected = duel.selectedPlayer?.id === p.id;
                           const isElite = !!p.isLegendary;
                           const rc = isElite ? "#f0c040" : "var(--text2)";
 
                           let rowClass = "player-row";
-                          if (assigned) rowClass += " player-row--assigned";
+                          if (assigned || nameUsed) rowClass += " player-row--assigned";
                           else if (!hasSlot) rowClass += " player-row--disabled";
                           else if (isSelected) rowClass += " player-row--selected";
 
@@ -495,7 +496,7 @@ export default function DuelGamePage() {
                               key={p.id}
                               className={rowClass}
                               style={{ borderLeft: `3px solid ${isElite ? "#f0c040" : "var(--border2)"}` }}
-                              onClick={() => !assigned && hasSlot && handlePlayerClick(p)}
+                              onClick={() => !assigned && !nameUsed && hasSlot && handlePlayerClick(p)}
                             >
                               <div className="player-row-left">
                                 <span className={`player-name ${isElite ? "player-name--elite" : ""}`}>{p.name}</span>

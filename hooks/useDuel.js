@@ -243,6 +243,12 @@ export function useDuel(address) {
     
     const slot = mySlots[slotIdx];
     if (!slot || slot.player || !canPlayerFillSlot(player, slot.pos)) return;
+
+    // Block if same player name (from a different year) is already in the squad
+    const nameAlreadyUsed = mySlots.some(
+      (s) => s.player && s.player.name === player.name && s.player.id !== player.id
+    );
+    if (nameAlreadyUsed) return;
     
     setBusy(true);
     
@@ -420,6 +426,7 @@ export function useDuel(address) {
 
   const isSquadComplete = mySlots.every((s) => s.player !== null);
   const assignedIds = new Set(mySlots.filter((s) => s.player).map((s) => s.player.id));
+  const assignedNames = new Set(mySlots.filter((s) => s.player).map((s) => s.player.name));
 
   // Filtered squad
   const filteredSquad = filterPos
@@ -471,6 +478,7 @@ export function useDuel(address) {
     filterPos,
     setFilterPos,
     assignedIds,
+    assignedNames,
     
     // Turn
     isMyTurn,

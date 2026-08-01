@@ -13,7 +13,7 @@ export default function PlayScreen({ game, contract, isConnected, onSubmit, onLe
   const {
     slots, nationCode, nationName, year, squad, filteredSquad,
     rolledThisTurn, selectedPlayer, selectedPlacedSlotIdx,
-    filterPos, busy, isSquadComplete, assignedIds,
+    filterPos, busy, isSquadComplete, assignedIds, assignedNames,
     roll, assignPlayer, movePlayer,
     setSelectedPlayer, setSelectedPlacedSlotIdx,
     setFilterPos, resetDraft, getTeamStats, getSubmitScore,
@@ -176,13 +176,14 @@ export default function PlayScreen({ game, contract, isConnected, onSubmit, onLe
                 </div>
               ) : filteredSquad.map((p, idx) => {
                 const assigned = assignedIds.has(p.id);
+                const nameUsed = !assigned && assignedNames.has(p.name);
                 const hasSlot = slots.some((s) => !s.player && canPlayerFillSlot(p, s.pos));
                 const isSelected = selectedPlayer?.id === p.id;
                 const isElite = !!p.isLegendary;
                 const rc = isElite ? "#f0c040" : "var(--text2)";
 
                 let rowClass = "player-row";
-                if (assigned) rowClass += " player-row--assigned";
+                if (assigned || nameUsed) rowClass += " player-row--assigned";
                 else if (!hasSlot) rowClass += " player-row--disabled";
                 else if (isSelected) rowClass += " player-row--selected";
 
@@ -192,7 +193,7 @@ export default function PlayScreen({ game, contract, isConnected, onSubmit, onLe
                     index={idx}
                     className={rowClass}
                     style={{ borderLeft: `3px solid ${isElite ? "#f0c040" : "var(--border2)"}` }}
-                    onClick={!assigned && hasSlot ? () => handlePlayerClick(p) : undefined}
+                    onClick={!assigned && !nameUsed && hasSlot ? () => handlePlayerClick(p) : undefined}
                   >
                     <div className="player-row-left">
                       {isElite ? (

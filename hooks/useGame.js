@@ -96,6 +96,12 @@ export function useGame() {
       const target = prev[slotIdx];
       if (!target || !canPlayerFillSlot(player, target.pos)) return prev;
 
+      // Block if same player name (from a different year) is already in the squad
+      const nameAlreadyUsed = prev.some(
+        (s) => s.player && s.player.name === player.name && s.player.id !== player.id
+      );
+      if (nameAlreadyUsed) return prev;
+
       // Stamp draft info
       const stamped = { ...player, draftedNation: nationCode, draftedYear: year };
 
@@ -199,6 +205,7 @@ export function useGame() {
     : squad;
 
   const assignedIds = new Set(slots.filter((s) => s.player).map((s) => s.player.id));
+  const assignedNames = new Set(slots.filter((s) => s.player).map((s) => s.player.name));
 
   return {
     // State
@@ -219,6 +226,7 @@ export function useGame() {
     matchResult,
     isSquadComplete,
     assignedIds,
+    assignedNames,
 
     // Actions
     setFormation,

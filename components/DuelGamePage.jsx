@@ -11,6 +11,13 @@ import ProfileClaimModal from "./ProfileClaimModal";
 import Toast from "./Toast";
 import { getFlagUrl, canPlayerFillSlot, ratingColor, REROLL_PRICE_MON, FORMATIONS } from "@/lib/constants";
 
+/** 32 random bytes → 0x-prefixed 64-char hex, matches the API's duelId regex. */
+function randomDuelId() {
+  const buf = new Uint8Array(32);
+  crypto.getRandomValues(buf);
+  return "0x" + Array.from(buf, (b) => b.toString(16).padStart(2, "0")).join("");
+}
+
 export default function DuelGamePage() {
   const { address, isConnected } = useAppKitAccount();
   const contract = useContract();
@@ -66,8 +73,27 @@ export default function DuelGamePage() {
       showToast("Password must be at least 4 characters", "error");
       return;
     }
-    
-    const result = await duel.createRoom(stake, isPrivate, isPrivate ? passwordInput : null);
+    if (!contract.isAvailable()) {
+      showToast("Wallet not ready — reconnect and try again", "error");
+      return;
+    }
+
+    // 1) Escrow the stake on-chain, using a fresh random duelId.
+    const duelId = randomDuelId();
+    try {
+      await contract.createDuel(duelId, stake);
+    } catch (err) {
+      const rejected = err?.code === "ACTION_REJECTED" || /reject|denied/i.test(err?.message || "");
+      showToast(rejected ? "Transaction cancelled" : (err.message || "Failed to escrow stake"), "error");
+      return;
+    }
+
+    // 2) Register the room server-side with the duelId the contract now knows about.
+    const result = await duel.createRoom({
+      duelId,
+      isPrivate,
+      password: isPrivate ? passwordInput : null,
+    });
     if (result.error) {
       showToast(result.error, "error");
     } else {
@@ -75,29 +101,56 @@ export default function DuelGamePage() {
     }
   };
 
-  // ── Join room handler ───────────────────────────────────────────────────
-  const handleJoin = async () => {
-    if (!joinCodeInput.trim()) {
+  // ── Escrow on-chain then register the join server-side ──────────────────
+  const escrowAndJoin = useCallback(async (code, password) => {
+    if (!contract.isAvailable()) {
+      showToast("Wallet not ready — reconnect and try again", "error");
+      return;
+    }
+    const codeNorm = String(code || "").trim().toUpperCase();
+    if (!codeNorm) {
       showToast("Enter a room code", "error");
       return;
     }
-    
-    const result = await duel.joinRoom(joinCodeInput.trim().toUpperCase(), joinPasswordInput || null);
+
+    // 1) Look up the room to get the on-chain duelId.
+    const lookup = await duel.fetchRoomByCode(codeNorm);
+    if (lookup.error) {
+      showToast(lookup.error, "error");
+      return;
+    }
+    const duelId = lookup.room?.duel_id;
+    if (!duelId) {
+      showToast("Room has no duelId — cannot join", "error");
+      return;
+    }
+
+    // 2) Match the stake on-chain.
+    try {
+      await contract.joinDuel(duelId);
+    } catch (err) {
+      const rejected = err?.code === "ACTION_REJECTED" || /reject|denied/i.test(err?.message || "");
+      showToast(rejected ? "Transaction cancelled" : (err.message || "Failed to escrow stake"), "error");
+      return;
+    }
+
+    // 3) Register the join with the server.
+    const result = await duel.joinRoom(codeNorm, password || null);
     if (result.error) {
       showToast(result.error, "error");
     } else {
       showToast("Joined room!", "success");
     }
+  }, [contract, duel, showToast]);
+
+  // ── Join room handler ───────────────────────────────────────────────────
+  const handleJoin = async () => {
+    await escrowAndJoin(joinCodeInput, joinPasswordInput);
   };
 
   // ── Join from lobby ─────────────────────────────────────────────────────
   const handleJoinFromLobby = async (room) => {
-    const result = await duel.joinRoom(room.room_code);
-    if (result.error) {
-      showToast(result.error, "error");
-    } else {
-      showToast("Joined room!", "success");
-    }
+    await escrowAndJoin(room.room_code, null);
   };
 
   // ── Roll handler ────────────────────────────────────────────────────────

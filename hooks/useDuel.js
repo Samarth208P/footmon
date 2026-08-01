@@ -83,38 +83,39 @@ export function useDuel(address) {
 
   // ── Room creation ───────────────────────────────────────────────────────
 
-  const createRoom = useCallback(async (stake, isPrivate = false, password = null) => {
+  const createRoom = useCallback(async ({ duelId, isPrivate = false, password = null }) => {
     if (!address) return { error: "Connect wallet first" };
+    if (!duelId) return { error: "Missing duelId" };
     setBusy(true);
     setError(null);
-    
+
     try {
       const res = await fetch("/api/duels/rooms", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          duelId,
           creator: address,
-          stake: String(stake),
           isPrivate,
           password: password || undefined,
         }),
       });
-      
+
       const data = await res.json();
       if (!res.ok) {
         setError(data.error || "Failed to create room");
-        return { error: data.error };
+        return { error: data.error || "Failed to create room" };
       }
-      
+
       setRoom(data.room);
       setRoomCode(data.room.room_code);
       setIsCreator(true);
       setScreen("waiting");
       setCreateModalOpen(false);
-      
+
       // Start polling for opponent
       startPolling(data.room.room_code);
-      
+
       return { room: data.room };
     } catch (err) {
       setError(err.message);
@@ -122,15 +123,31 @@ export function useDuel(address) {
     } finally {
       setBusy(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [address]);
 
   // ── Room joining ────────────────────────────────────────────────────────
+
+  /**
+   * Look up a room by code so the caller can escrow on-chain first.
+   * Returns { room } on success or { error }.
+   */
+  const fetchRoomByCode = useCallback(async (code) => {
+    try {
+      const res = await fetch(`/api/duels/rooms/${code}`, { cache: "no-store" });
+      const data = await res.json();
+      if (!res.ok) return { error: data.error || "Room not found" };
+      return { room: data.room };
+    } catch (err) {
+      return { error: err.message };
+    }
+  }, []);
 
   const joinRoom = useCallback(async (code, password = null) => {
     if (!address) return { error: "Connect wallet first" };
     setBusy(true);
     setError(null);
-    
+
     try {
       const res = await fetch(`/api/duels/rooms/${code}/join`, {
         method: "POST",
@@ -140,23 +157,23 @@ export function useDuel(address) {
           password: password || undefined,
         }),
       });
-      
+
       const data = await res.json();
       if (!res.ok) {
         setError(data.error || "Failed to join room");
-        return { error: data.error };
+        return { error: data.error || "Failed to join room" };
       }
-      
+
       setRoom(data.room);
       setRoomCode(code);
       setIsCreator(false);
       setOpponent(data.room.creator);
       setScreen("ready");
       setJoinModalOpen(false);
-      
+
       // Start polling for room state
       startPolling(code);
-      
+
       return { room: data.room };
     } catch (err) {
       setError(err.message);
@@ -164,6 +181,7 @@ export function useDuel(address) {
     } finally {
       setBusy(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [address]);
 
   // ── Ready up ────────────────────────────────────────────────────────────
@@ -496,6 +514,7 @@ export function useDuel(address) {
     // Actions
     createRoom,
     joinRoom,
+    fetchRoomByCode,
     readyUp,
     roll,
     pickPlayer,

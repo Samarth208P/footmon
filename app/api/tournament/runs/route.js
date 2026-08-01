@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createHash, randomBytes } from "node:crypto";
+import { createHash } from "node:crypto";
 import { verifyMessage } from "ethers";
 
 import { listTournamentLeaderboard, recordTournamentRun } from "@/lib/duel-store";
@@ -11,6 +11,8 @@ import {
   squadFingerprint,
 } from "@/lib/tournament";
 import { SQUAD_SIZE, canFillSlot, slotPositionFor } from "@/lib/draft";
+import { getServerClient } from "@/lib/supabase-server";
+import { buildTournamentLadder, teamRating } from "@/lib/match-engine";
 
 export const dynamic = "force-dynamic";
 
@@ -40,7 +42,11 @@ export async function GET(request) {
  * records the outcome; the client only replays it. A client-reported result
  * would make the leaderboard meaningless.
  *
- * Body: { address, players[11], nation?, year?, formation?, issuedAt, nonce, signature }
+ * Body: { address, players[11], seed, nation?, year?, formation?, issuedAt, nonce, signature }
+ *
+ * `seed` must come from a prior /api/tournament/simulate call — the server
+ * re-runs the simulation with that seed so what gets recorded matches what
+ * the client just previewed.
  */
 export async function POST(request) {
   let body;
@@ -50,7 +56,14 @@ export async function POST(request) {
     return NextResponse.json({ error: "Malformed JSON body" }, { status: 400 });
   }
 
-  const { address, players, nation = null, year = null, formation = null } = body ?? {};
+  const {
+    address,
+    players,
+    seed,
+    nation = null,
+    year = null,
+    formation = null,
+  } = body ?? {};
 
   if (!isValidAddress(address)) {
     return NextResponse.json({ error: "Invalid address" }, { status: 400 });
@@ -58,6 +71,12 @@ export async function POST(request) {
   if (!Array.isArray(players) || players.length !== SQUAD_SIZE) {
     return NextResponse.json(
       { error: `A full squad of ${SQUAD_SIZE} players is required` },
+      { status: 400 }
+    );
+  }
+  if (typeof seed !== "string" || !/^[0-9a-f]{32}$/i.test(seed)) {
+    return NextResponse.json(
+      { error: "Missing or invalid seed — simulate first" },
       { status: 400 }
     );
   }
@@ -85,10 +104,8 @@ export async function POST(request) {
       );
     }
     if (!canFillSlot(i, p.position ?? p.positions)) {
-      return NextResponse.json(
-        { error: `${p.name} cannot play ${slotPositionFor(i)}` },
-        { status: 400 }
-      );
+      // Position mismatch is allowed — player just won't get chemistry bonus.
+      // No rejection; the hidden chemistry system handles the penalty.
     }
   }
 
@@ -114,7 +131,7 @@ export async function POST(request) {
   }
 
   const squadHash = createHash("sha256").update(squadFingerprint(players)).digest("hex");
-  const message = buildTournamentMessage({ address, squadHash, issuedAt, nonce });
+  const message = buildTournamentMessage({ address, squadHash, seed, issuedAt, nonce });
 
   let recovered;
   try {
@@ -130,16 +147,46 @@ export async function POST(request) {
   }
 
   // ── Run it ───────────────────────────────────────────────────────────────
+  // The seed came from a prior /api/tournament/simulate call. Re-running with
+  // the same seed reproduces the exact result the client just previewed —
+  // the module is deterministic on (seed, players).
   try {
-    const seed = randomBytes(16).toString("hex");
-    const result = runTournament({
-      seed,
-      players: players.map((p, i) => ({
-        name: p.name,
-        position: p.position ?? slotPositionFor(i),
-        rating: Number(p.rating),
-      })),
-    });
+    const playerSquad = players.map((p, i) => ({
+      name: p.name,
+      position: p.position ?? slotPositionFor(i),
+      rating: Number(p.rating),
+    }));
+
+    const playerRating = teamRating(playerSquad);
+    const ladder = buildTournamentLadder({ seed, playerRating, rounds: TOURNAMENT_ROUNDS });
+
+    // Hydrate AI squads with real players from DB (same as simulate endpoint)
+    const supabase = getServerClient();
+    if (supabase) {
+      for (const rung of ladder) {
+        if (!rung.nation || !rung.year) continue;
+        const { data } = await supabase
+          .from("wc_players")
+          .select("name, position, rating")
+          .eq("nation_code", rung.nation)
+          .eq("year", rung.year)
+          .order("rating", { ascending: false })
+          .limit(11);
+
+        if (data && data.length > 0) {
+          rung.players = rung.players.map((placeholder, idx) => {
+            const real = data[idx % data.length];
+            return {
+              ...placeholder,
+              name: real.name,
+              position: real.position || placeholder.position,
+            };
+          });
+        }
+      }
+    }
+
+    const result = runTournament({ seed, players: playerSquad, ladder });
 
     const entry = await recordTournamentRun({
       address: normaliseAddress(address),

@@ -1,4 +1,4 @@
-import HomePage from "@/app/page";
+import { redirect } from "next/navigation";
 
 export const metadata = {
   title: "FootMon — Duel invite",
@@ -7,11 +7,10 @@ export const metadata = {
 
 /**
  * Invite links land here: /duel/<ROOMCODE>#pw=<password>
- *
- * The same app is rendered; the client reads the room code from the path and the
- * password from the URL fragment. The fragment is never sent to the server, so a
- * room password cannot end up in server logs or an access log.
+ * Redirects to the duel page which handles the invite link parsing client-side.
+ * The fragment (#pw=...) is preserved by the browser during redirect.
  */
-export default function DuelInvitePage() {
-  return <HomePage />;
+export default async function DuelInvitePage({ params }) {
+  const { code } = await params;
+  redirect(`/play/duel?join=${code}`);
 }

@@ -41,9 +41,9 @@ contract FootMon {
 
     address public owner;
 
-    uint256 public rollPrice      = 0.001 ether;   // MON per paid roll
+    uint256 public rollPrice      = 0.01 ether;    // MON per paid roll
     uint256 public prizePoolPct   = 50;             // % of roll revenue → prize
-    uint256 public payoutInterval = 3600;           // seconds between payouts
+    uint256 public payoutInterval = 86400;          // seconds between payouts (daily)
     uint256 public lastPayoutTime;
     uint256 public prizePool;
     uint256 public roundNumber;

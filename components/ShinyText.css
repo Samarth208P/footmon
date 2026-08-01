@@ -1,0 +1,7 @@
+.shiny-text {
+  display: inline-block;
+  /* Decorative overlay — let clicks fall through to the interactive parent
+     (e.g. the player row wrapper). If you enable pauseOnHover on a
+     ShinyText, override this on that specific instance. */
+  pointer-events: none;
+}

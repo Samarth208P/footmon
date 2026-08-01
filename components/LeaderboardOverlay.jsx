@@ -64,7 +64,7 @@ export default function LeaderboardOverlay({ open, onClose, contract, address, u
   if (!open) return null;
 
   return (
-    <div className="lb-overlay open" onClick={(e) => e.target === e.currentTarget && onClose()}>
+    <div id="leaderboardOverlay" className="open" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className="lb-panel">
         <div className="lb-nav">
           <span className="lb-nav-title">🏆 Leaderboard · Daily Prize</span>

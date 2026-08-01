@@ -360,6 +360,127 @@ h1, h2, h3 { font-family: "Space Grotesk", sans-serif; font-weight: 700; letter-
   background: rgba(109, 92, 255, 0.06);
 }
 
+/* Hide the mobile leaderboard button on desktop — leaderboard is always visible in sidebar */
+.btn-home-leaderboard--mobile {
+  display: none;
+}
+
+/* ── Formation Right Panel (Inline Leaderboard) ──────────────────────────── */
+.formation-right {
+  width: 280px;
+  min-width: 260px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--panel);
+  border-left: 1px solid var(--border2);
+  overflow: hidden;
+}
+
+.side-lb {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.side-lb-header {
+  padding: 16px 16px 8px;
+  flex-shrink: 0;
+}
+
+.side-lb-title {
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.side-lb-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 0 16px 12px;
+  flex-shrink: 0;
+}
+
+.side-lb-tab {
+  padding: 5px 12px;
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text2);
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.side-lb-tab:hover { border-color: var(--text2); color: var(--text); }
+.side-lb-tab--active {
+  background: var(--text);
+  border-color: var(--text);
+  color: var(--surface);
+}
+
+.side-lb-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 12px 12px;
+}
+
+.side-lb-loading,
+.side-lb-empty {
+  text-align: center;
+  padding: 24px 12px;
+  color: var(--text3);
+  font-size: 0.78rem;
+}
+
+.side-lb-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.side-lb-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--panel2);
+  border: 1px solid var(--border);
+  font-size: 0.75rem;
+}
+.side-lb-row:nth-child(-n+3) {
+  background: rgba(109, 92, 255, 0.05);
+  border-color: rgba(109, 92, 255, 0.15);
+}
+
+.side-lb-rank {
+  width: 28px;
+  flex-shrink: 0;
+  text-align: center;
+  font-weight: 700;
+  font-size: 0.72rem;
+}
+
+.side-lb-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text);
+  font-weight: 500;
+}
+
+.side-lb-stat {
+  flex-shrink: 0;
+  font-weight: 600;
+  font-size: 0.7rem;
+  color: var(--text2);
+}
+
 /* ═══════════════════════════════════════════════════════════════════════════
    PITCH  (shared by both screens)
    ═══════════════════════════════════════════════════════════════════════════ */
@@ -1481,6 +1602,7 @@ h1, h2, h3 { font-family: "Space Grotesk", sans-serif; font-weight: 700; letter-
     border: none;
   }
   .formation-panel { width: 260px; padding: 16px 14px; gap: 16px; }
+  .formation-right { width: 220px; min-width: 200px; }
   .play-left  { width: 260px; min-width: 260px; }
   .play-right { width: 230px; min-width: 220px; }
 }
@@ -1547,6 +1669,9 @@ h1, h2, h3 { font-family: "Space Grotesk", sans-serif; font-weight: 700; letter-
   .game-card { max-width: 100vw; overflow-x: hidden; }
   .btn-group { flex-wrap: wrap; max-width: 100%; }
   .mob-home-hero { display: flex; order: 1; }
+
+  .formation-right { display: none; }
+  .btn-home-leaderboard--mobile { display: flex; }
 
   .formation-pitch-wrap {
     order: 2;

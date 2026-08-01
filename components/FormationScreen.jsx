@@ -1,6 +1,7 @@
 "use client";
 
-import { FORMATIONS } from "@/lib/constants";
+import { useCallback, useEffect, useState } from "react";
+import { FORMATIONS, ratingColor } from "@/lib/constants";
 import PitchView from "./PitchView";
 
 /**
@@ -71,13 +72,89 @@ export default function FormationScreen({ game, onStart, onLeaderboard, prizePoo
           <button id="btnStart" onClick={handleStart} disabled={busy}>
             {busy ? "Rolling ⚽" : "Start Rolling 🎲"}
           </button>
-          <button className="btn-home-leaderboard" onClick={onLeaderboard}>Leaderboard 🏆</button>
+          <button className="btn-home-leaderboard btn-home-leaderboard--mobile" onClick={onLeaderboard}>Leaderboard 🏆</button>
         </div>
       </aside>
 
       <div className="formation-pitch-wrap">
         <PitchView slots={slots} onSlotClick={() => {}} />
       </div>
+
+      {/* Right — inline leaderboard */}
+      <aside className="formation-right">
+        <SideLeaderboard />
+      </aside>
     </section>
+  );
+}
+
+/**
+ * Compact leaderboard panel for the formation screen sidebar.
+ * Fetches tournament leaderboard on mount.
+ */
+function SideLeaderboard() {
+  const [board, setBoard] = useState("tournament");
+  const [entries, setEntries] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    fetch(`/api/leaderboard?board=${board}&limit=20`, { cache: "no-store" })
+      .then((r) => r.json())
+      .then((json) => {
+        if (!cancelled) setEntries(json[board] || []);
+      })
+      .catch(() => {
+        if (!cancelled) setEntries([]);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, [board]);
+
+  return (
+    <div className="side-lb">
+      <div className="side-lb-header">
+        <span className="side-lb-title">🏆 Leaderboard</span>
+      </div>
+      <div className="side-lb-tabs">
+        {["tournament", "duel"].map((b) => (
+          <button
+            key={b}
+            className={`side-lb-tab ${board === b ? "side-lb-tab--active" : ""}`}
+            onClick={() => setBoard(b)}
+          >
+            {b === "tournament" ? "Tournament" : "Duels"}
+          </button>
+        ))}
+      </div>
+      <div className="side-lb-body">
+        {loading ? (
+          <div className="side-lb-loading">Loading…</div>
+        ) : entries.length === 0 ? (
+          <div className="side-lb-empty">No entries yet.</div>
+        ) : (
+          <div className="side-lb-list">
+            {entries.map((e, i) => (
+              <div key={i} className="side-lb-row">
+                <span className="side-lb-rank">{i < 3 ? ["🥇", "🥈", "🥉"][i] : `#${i + 1}`}</span>
+                <span className="side-lb-name">{e.username || `${(e.address || "").slice(0, 6)}…`}</span>
+                {board === "tournament" ? (
+                  <span className="side-lb-stat" style={{ color: ratingColor(Number(e.team_rating || 0)) }}>
+                    {Number(e.wins)}/7 · {Number(e.team_rating || 0).toFixed(1)}
+                  </span>
+                ) : (
+                  <span className="side-lb-stat">
+                    {e.wins}W {e.losses}L
+                  </span>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
   );
 }

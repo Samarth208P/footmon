@@ -2,10 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
 /* ── Reset & Base ────────────────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -39,9 +35,11 @@ button:focus-visible, a:focus-visible {
   --panel2:      #13151c;
   --panel3:      #1a1d28;
   
-  --border:      rgba(255,255,255,0.04);
-  --border2:     rgba(255,255,255,0.08);
-  --border-glow: rgba(255,255,255,0.15);
+  --border:      rgba(255,255,255,0.05);
+  --border2:     rgba(255,255,255,0.09);
+  /* Formerly a bright "glow" border. Kept as a variable so existing rules
+     compile, but tuned down to a plain hover-focus border — no glow.  */
+  --border-glow: rgba(255,255,255,0.14);
   
   --accent:      #ffffff;
   --accent-dim:  #94a3b8;
@@ -559,41 +557,30 @@ h1, h2, h3 { font-family: "Space Grotesk", sans-serif; font-weight: 700; letter-
   letter-spacing: 0.04em;
 }
 
-/* Compatible slot highlight */
+/* Compatible slot highlight. Gentle scale + solid green border — no
+   coloured glow. The old shadow pulse read as flashy; a quiet breathing
+   ring is enough to draw the eye to a legal drop target. */
 .slot--compatible {
   border-color: var(--green);
   border-style: solid;
-  background: rgba(16,185,129,0.15);
-  box-shadow: 0 0 16px rgba(16,185,129,0.25);
+  background: rgba(16,185,129,0.16);
   animation: pulse-slot 2s infinite ease-in-out;
 }
 @keyframes pulse-slot {
-  0%, 100% {
-    transform: translate(-50%, -50%) scale(1);
-    box-shadow: 0 0 12px rgba(16,185,129,0.20);
-  }
-  50% {
-    transform: translate(-50%, -50%) scale(1.06);
-    box-shadow: 0 0 20px rgba(16,185,129,0.40);
-  }
+  0%, 100% { transform: translate(-50%, -50%) scale(1); }
+  50%      { transform: translate(-50%, -50%) scale(1.05); }
 }
 
-/* Active slot (selected for rearrangement) */
+/* Active slot (selected for rearrangement). A clean white border says
+   "held" without a spotlight glow. */
 .slot--active {
   border-color: #fff !important;
   border-style: solid !important;
-  box-shadow: 0 0 20px rgba(255,255,255,0.3) !important;
   animation: pulse-active 1.5s infinite ease-in-out;
 }
 @keyframes pulse-active {
-  0%, 100% {
-    transform: translate(-50%, -50%) scale(1);
-    box-shadow: 0 0 12px rgba(255,255,255,0.15);
-  }
-  50% {
-    transform: translate(-50%, -50%) scale(1.08);
-    box-shadow: 0 0 24px rgba(255,255,255,0.35);
-  }
+  0%, 100% { transform: translate(-50%, -50%) scale(1); }
+  50%      { transform: translate(-50%, -50%) scale(1.06); }
 }
 
 /* Filled slot */
@@ -603,27 +590,27 @@ h1, h2, h3 { font-family: "Space Grotesk", sans-serif; font-weight: 700; letter-
   backdrop-filter: blur(4px);
   width: 50px; height: 50px;
 }
-/* Filled slot that is ALSO a legal swap target — preserve the green highlight */
+/* Filled slot that is ALSO a legal swap target — preserve the green ring
+   using the same shadow-free pulse. */
 .slot--filled.slot--compatible {
   border-color: var(--green);
   background: rgba(16, 185, 129, 0.22);
-  box-shadow: 0 0 16px rgba(16, 185, 129, 0.35);
   animation: pulse-slot 2s infinite ease-in-out;
 }
-/* When a legendary target is swap-compatible, favour the green pulse over the gold glow */
+/* Legendary target that's also swap-compatible: green pulse takes over
+   from the (now static) gold accent. */
 .slot--elite.slot--compatible {
   animation: pulse-slot 2s infinite ease-in-out;
 }
+/* Elite players used to have their own gold glow animation; now they wear
+   a static gold border and a subtle breathing scale — legible at a glance,
+   no distracting halo. */
 .slot--elite {
-  animation: elite-glow 2s infinite ease-in-out;
+  animation: elite-breathe 2.6s infinite ease-in-out;
 }
-@keyframes elite-glow {
-  0%, 100% {
-    transform: translate(-50%, -50%) scale(1);
-  }
-  50% {
-    transform: translate(-50%, -50%) scale(1.05);
-  }
+@keyframes elite-breathe {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); }
+  50%      { transform: translate(-50%, -50%) scale(1.04); }
 }
 .slot-player-jersey {
   display: flex;
@@ -891,8 +878,7 @@ h1, h2, h3 { font-family: "Space Grotesk", sans-serif; font-weight: 700; letter-
 }
 .player-row--selected {
   background: var(--panel3) !important;
-  border-color: var(--border-glow) !important;
-  box-shadow: 0 0 10px rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.18) !important;
 }
 .player-row--disabled {
   pointer-events: none;
@@ -1130,7 +1116,6 @@ h1, h2, h3 { font-family: "Space Grotesk", sans-serif; font-weight: 700; letter-
 }
 .sc-name--elite {
   color: #f0c040;
-  text-shadow: 0 0 8px rgba(240, 192, 64, 0.3);
 }
 .sc-rating {
   font-family: "Space Grotesk", sans-serif;
@@ -2106,12 +2091,14 @@ h1, h2, h3 { font-family: "Space Grotesk", sans-serif; font-weight: 700; letter-
   cursor: not-allowed;
   pointer-events: none;
 }
+/* Formerly a purple pulse-glow. Toned down to a subtle border pulse so
+   the "call to action" reads clearly without lighting the whole page.  */
 @keyframes btn-pulse-glow {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(138, 92, 246, 0.4); }
-  50% { box-shadow: 0 0 12px 4px rgba(138, 92, 246, 0.6); }
+  0%, 100% { box-shadow: inset 0 0 0 1px rgba(138, 92, 246, 0.30); }
+  50%      { box-shadow: inset 0 0 0 2px rgba(138, 92, 246, 0.65); }
 }
 .btn-pulse {
-  animation: btn-pulse-glow 1.2s ease-in-out infinite;
+  animation: btn-pulse-glow 1.4s ease-in-out infinite;
 }
 
 .lobby-main {
@@ -2237,14 +2224,16 @@ h1, h2, h3 { font-family: "Space Grotesk", sans-serif; font-weight: 700; letter-
   transition: background 260ms ease, box-shadow 260ms ease;
 }
 .duel-turn-banner--active {
-  background: rgba(52, 211, 153, 0.12);
-  box-shadow: inset 0 0 0 1px rgba(52, 211, 153, 0.4);
+  background: rgba(52, 211, 153, 0.10);
+  box-shadow: inset 0 0 0 1px rgba(52, 211, 153, 0.38);
   animation: turn-banner-pulse 1.6s ease-in-out;
 }
+/* A short, shadow-free border thickening — enough to feel the transition
+   without turning it into a green light show. */
 @keyframes turn-banner-pulse {
-  0%   { box-shadow: inset 0 0 0 1px rgba(52, 211, 153, 0.15); }
-  40%  { box-shadow: inset 0 0 0 2px rgba(52, 211, 153, 0.75), 0 0 24px rgba(52, 211, 153, 0.35); }
-  100% { box-shadow: inset 0 0 0 1px rgba(52, 211, 153, 0.4); }
+  0%   { box-shadow: inset 0 0 0 1px rgba(52, 211, 153, 0.20); }
+  40%  { box-shadow: inset 0 0 0 2px rgba(52, 211, 153, 0.60); }
+  100% { box-shadow: inset 0 0 0 1px rgba(52, 211, 153, 0.38); }
 }
 
 /* Full-screen "YOUR TURN" splash. Rendered inside the draft section so it
@@ -2258,7 +2247,9 @@ h1, h2, h3 { font-family: "Space Grotesk", sans-serif; font-weight: 700; letter-
   justify-content: center;
   pointer-events: none;
   z-index: 60;
-  background: radial-gradient(circle at center, rgba(52, 211, 153, 0.28) 0%, rgba(9, 9, 11, 0) 60%);
+  /* Subtle vignette instead of a neon burst — the word alone carries the
+     moment. */
+  background: radial-gradient(circle at center, rgba(52, 211, 153, 0.10) 0%, rgba(9, 9, 11, 0) 70%);
   animation: turn-splash-fade 1.4s ease-out forwards;
 }
 .turn-splash-text {
@@ -2267,9 +2258,6 @@ h1, h2, h3 { font-family: "Space Grotesk", sans-serif; font-weight: 700; letter-
   font-weight: 900;
   letter-spacing: 0.14em;
   color: #34d399;
-  text-shadow:
-    0 0 12px rgba(52, 211, 153, 0.55),
-    0 0 40px rgba(52, 211, 153, 0.3);
   animation: turn-splash-pop 1.4s cubic-bezier(0.2, 0.9, 0.3, 1.2) forwards;
 }
 @keyframes turn-splash-fade {
@@ -3641,9 +3629,10 @@ body.match-open { overflow: hidden; }
 .hero-btn--primary {
   background: linear-gradient(135deg, var(--monad1), var(--monad2));
   color: #fff;
-  box-shadow: 0 4px 24px rgba(138,92,246,0.25), inset 0 1px 0 rgba(255,255,255,0.1);
+  /* Depth shadow only, no purple halo. */
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255,255,255,0.1);
 }
-.hero-btn--primary:hover { box-shadow: 0 8px 32px rgba(138,92,246,0.4), inset 0 1px 0 rgba(255,255,255,0.1); }
+.hero-btn--primary:hover { box-shadow: 0 10px 24px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255,255,255,0.12); }
 .hero-btn--secondary {
   background: rgba(255,255,255,0.04);
   color: var(--text1);
@@ -3758,12 +3747,12 @@ body.match-open { overflow: hidden; }
   box-shadow: 0 16px 48px rgba(0,0,0,0.3);
 }
 .mode-card--accent {
-  border-color: rgba(138,92,246,0.2);
+  border-color: rgba(138,92,246,0.22);
   background: linear-gradient(160deg, rgba(138,92,246,0.06), var(--bg2));
 }
 .mode-card--accent:hover {
-  border-color: rgba(138,92,246,0.4);
-  box-shadow: 0 16px 48px rgba(138,92,246,0.12);
+  border-color: rgba(138,92,246,0.42);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
 }
 .mode-badge {
   display: inline-block;
@@ -4025,7 +4014,7 @@ body.match-open { overflow: hidden; }
   color: #fff;
   background: var(--monad);
   font-weight: 700;
-  box-shadow: 0 4px 14px rgba(109, 92, 255, 0.35);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
 }
 .header-link--active:hover {
   color: #fff;
@@ -4055,10 +4044,10 @@ body.match-open { overflow: hidden; }
   font-size: 0.8rem;
   font-weight: 600;
   text-decoration: none;
-  box-shadow: 0 2px 12px rgba(138,92,246,0.2);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
 }
 .header-cta:hover {
-  box-shadow: 0 4px 20px rgba(138,92,246,0.35);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.45);
   transform: translateY(-1px);
 }
 .header-wallet-btn {
@@ -4178,10 +4167,10 @@ body.match-open { overflow: hidden; }
   background: linear-gradient(135deg, var(--monad1), var(--monad2));
   color: #fff;
   border: none;
-  box-shadow: 0 2px 12px rgba(138,92,246,0.2);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
 }
 .btn-lobby-action--create:hover {
-  box-shadow: 0 4px 20px rgba(138,92,246,0.35);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.45);
   transform: translateY(-1px);
 }
 .btn-lobby-action--join {
@@ -4310,11 +4299,11 @@ body.match-open { overflow: hidden; }
   font-weight: 700;
   border: none;
   cursor: pointer;
-  box-shadow: 0 4px 20px rgba(138,92,246,0.3);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
 }
 .wallet-gate-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 32px rgba(138,92,246,0.4);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.5);
 }
 .wallet-gate-btn:disabled {
   opacity: 0.5;
@@ -4362,7 +4351,7 @@ body.match-open { overflow: hidden; }
 }
 .ladder-pip--won { background: rgba(52,211,153,0.18); border-color: var(--green); color: var(--green); }
 .ladder-pip--lost { background: rgba(244,63,94,0.15); border-color: var(--red); color: var(--red); }
-.ladder-pip--current { background: var(--monad); border-color: var(--monad); color: #fff; box-shadow: 0 0 18px rgba(109,92,255,0.45); transform: scale(1.18); }
+.ladder-pip--current { background: var(--monad); border-color: var(--monad2); color: #fff; transform: scale(1.18); }
 
 /* ── Live match card ─────────────────────────────────────────────────────── */
 .match-card {
@@ -4481,8 +4470,8 @@ body.match-open { overflow: hidden; }
 /* Actions */
 .campaign-actions { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-top: 20px; max-width: 380px; width: 100%; align-self: center; }
 .campaign-outcome-text { font-size: 0.88rem; color: var(--text2); text-align: center; line-height: 1.5; margin-bottom: 4px; }
-.btn-match-register { width: 100%; padding: 14px 20px; background: linear-gradient(135deg, #f0c040 0%, #c2951b 100%); border: none; border-radius: var(--radius-md); color: #0e1014; font-family: inherit; font-size: 0.95rem; font-weight: 800; cursor: pointer; letter-spacing: 0.02em; transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1); box-shadow: 0 6px 20px rgba(240,192,64,0.35); }
-.btn-match-register:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 8px 26px rgba(240,192,64,0.5); }
+.btn-match-register { width: 100%; padding: 14px 20px; background: linear-gradient(135deg, #f0c040 0%, #c2951b 100%); border: none; border-radius: var(--radius-md); color: #0e1014; font-family: inherit; font-size: 0.95rem; font-weight: 800; cursor: pointer; letter-spacing: 0.02em; transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1); box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45); }
+.btn-match-register:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 10px 24px rgba(0, 0, 0, 0.55); }
 .btn-match-register:disabled { opacity: 0.6; cursor: not-allowed; }
 .btn-match-back { width: 100%; padding: 12px 20px; background: transparent; border: 1px solid var(--border2); border-radius: var(--radius-md); color: var(--text2); font-family: inherit; font-size: 0.88rem; font-weight: 600; cursor: pointer; transition: all 0.15s; }
 .btn-match-back:hover:not(:disabled) { border-color: var(--text2); color: var(--text); background: var(--panel3); }
@@ -4517,22 +4506,24 @@ body.match-open { overflow: hidden; }
   z-index: 0;
 }
 
+/* Ambient background blobs used to glow. They're now a whisper of colour
+   that just gives the match view a little tonal warmth, no light show. */
 .duel-match-bg-glow {
   position: absolute;
-  top: 20%;
-  width: 420px;
-  height: 420px;
+  top: 22%;
+  width: 380px;
+  height: 380px;
   border-radius: 50%;
-  filter: blur(120px);
-  opacity: 0.45;
+  filter: blur(130px);
+  opacity: 0.18;
 }
 .duel-match-bg-glow--left {
-  left: -160px;
-  background: rgba(52, 211, 153, 0.35);
+  left: -180px;
+  background: rgba(52, 211, 153, 0.28);
 }
 .duel-match-bg-glow--right {
-  right: -160px;
-  background: rgba(167, 139, 250, 0.35);
+  right: -180px;
+  background: rgba(167, 139, 250, 0.28);
 }
 
 /* ── Loading state ──────────────────────────────────────────────────────── */
@@ -4569,7 +4560,6 @@ body.match-open { overflow: hidden; }
   height: 14px;
   border-radius: 50%;
   background: radial-gradient(circle at 30% 30%, #fff, #6ee7b7 65%, #10b981);
-  box-shadow: 0 0 20px rgba(52, 211, 153, 0.6);
 }
 
 @keyframes duelmatch-orbit {
@@ -4638,9 +4628,8 @@ body.match-open { overflow: hidden; }
 .duel-match-side--right { text-align: right; }
 
 .duel-match-side--flash {
-  background: linear-gradient(180deg, rgba(52, 211, 153, 0.28), rgba(52, 211, 153, 0.05));
+  background: linear-gradient(180deg, rgba(52, 211, 153, 0.24), rgba(52, 211, 153, 0.04));
   border-color: rgba(52, 211, 153, 0.5);
-  box-shadow: 0 0 40px rgba(52, 211, 153, 0.25);
 }
 
 .duel-match-side-tag {
@@ -4698,22 +4687,24 @@ body.match-open { overflow: hidden; }
 
 .duel-match-clock-num {
   font-family: "Space Grotesk", sans-serif;
-  font-size: 1.4rem;
+  font-size: 1.5rem;
   font-weight: 800;
   color: var(--text);
   letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
 }
 .duel-match-clock-num--ft {
   color: var(--green);
-  font-size: 1.1rem;
+  font-size: 1.15rem;
 }
 
 .duel-match-clock-label {
   font-size: 0.6rem;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--text3);
   font-weight: 700;
+  margin-top: 2px;
 }
 
 .duel-match-ring {
@@ -4731,7 +4722,6 @@ body.match-open { overflow: hidden; }
   stroke-width: 4;
   stroke-linecap: round;
   transition: stroke-dasharray 0.1s linear;
-  filter: drop-shadow(0 0 6px rgba(52, 211, 153, 0.5));
 }
 
 /* ── Half-time banner ───────────────────────────────────────────────────── */
@@ -4749,7 +4739,8 @@ body.match-open { overflow: hidden; }
   color: #06281c;
   background: linear-gradient(135deg, #34d399, #10b981);
   border-radius: 6px;
-  box-shadow: 0 12px 40px rgba(52, 211, 153, 0.45);
+  /* Dark depth shadow — no green halo. */
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.55);
 }
 
 /* ── Event feed ─────────────────────────────────────────────────────────── */
@@ -4911,21 +4902,22 @@ body.match-open { overflow: hidden; }
   padding: 32px 28px 24px;
   text-align: center;
   border-radius: 20px;
-  background: linear-gradient(160deg, rgba(255,255,255,0.05), rgba(255,255,255,0.01));
+  background:
+    linear-gradient(160deg, rgba(255,255,255,0.06), rgba(255,255,255,0.01)),
+    rgba(10, 12, 16, 0.86);
   border: 1px solid var(--border2);
+  /* Depth-only shadow — the outcome ring is carried by the border colour. */
   box-shadow: 0 40px 80px rgba(0, 0, 0, 0.6);
 }
 
 .duel-match-reveal-card--won {
-  border-color: rgba(52, 211, 153, 0.6);
-  box-shadow: 0 0 60px rgba(52, 211, 153, 0.35), 0 40px 80px rgba(0,0,0,0.6);
+  border-color: rgba(52, 211, 153, 0.55);
 }
 .duel-match-reveal-card--lost {
-  border-color: rgba(239, 68, 68, 0.5);
-  box-shadow: 0 0 40px rgba(239, 68, 68, 0.22), 0 40px 80px rgba(0,0,0,0.6);
+  border-color: rgba(239, 68, 68, 0.48);
 }
 .duel-match-reveal-card--draw {
-  border-color: rgba(250, 204, 21, 0.4);
+  border-color: rgba(250, 204, 21, 0.42);
 }
 
 .duel-match-reveal-tag {
@@ -4939,7 +4931,6 @@ body.match-open { overflow: hidden; }
 }
 .duel-match-reveal-card--won .duel-match-reveal-tag {
   color: #a7f3d0;
-  text-shadow: 0 0 20px rgba(52, 211, 153, 0.6);
 }
 .duel-match-reveal-card--lost .duel-match-reveal-tag {
   color: #fecaca;
@@ -5000,8 +4991,9 @@ body.match-open { overflow: hidden; }
   margin: 16px 0 20px;
   padding: 14px 16px;
   border-radius: var(--radius-md);
-  background: rgba(52, 211, 153, 0.1);
+  background: rgba(52, 211, 153, 0.09);
   border: 1px solid rgba(52, 211, 153, 0.28);
+  text-align: center;
 }
 .duel-match-reveal-card--lost .duel-match-payout,
 .duel-match-reveal-card--draw .duel-match-payout {
@@ -5011,41 +5003,55 @@ body.match-open { overflow: hidden; }
 
 .duel-match-payout-amt {
   font-family: "Space Grotesk", sans-serif;
-  font-size: 1.6rem;
+  font-size: 1.7rem;
   font-weight: 800;
   color: #34d399;
   letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
 }
 
 .duel-match-payout-note {
-  margin-top: 4px;
-  font-size: 0.72rem;
-  color: var(--text3);
+  margin-top: 6px;
+  font-size: 0.76rem;
+  line-height: 1.4;
+  color: var(--text2);
 }
 
+.duel-match-payout-tx {
+  margin-top: 6px;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 0.66rem;
+  letter-spacing: 0.06em;
+  color: var(--text3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Retry button used only when the user cancelled the auto-fired wallet
+   prompt. Quiet, secondary treatment — the primary payout path shows a
+   status line rather than a button. */
 .duel-match-claim {
   margin-top: 12px;
   width: 100%;
   padding: 10px 14px;
   font-family: "Space Grotesk", sans-serif;
-  font-size: 0.85rem;
-  font-weight: 800;
-  letter-spacing: 0.05em;
-  color: #0a2418;
-  background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
-  border: 0;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--text);
+  background: rgba(52, 211, 153, 0.14);
+  border: 1px solid rgba(52, 211, 153, 0.4);
   border-radius: var(--radius-md);
   cursor: pointer;
-  box-shadow: 0 6px 16px rgba(52, 211, 153, 0.22);
-  transition: filter 120ms ease, transform 120ms ease;
+  transition: background 160ms ease, border-color 160ms ease, transform 120ms ease;
 }
 .duel-match-claim:hover:not(:disabled) {
-  filter: brightness(1.08);
+  background: rgba(52, 211, 153, 0.22);
+  border-color: rgba(52, 211, 153, 0.6);
   transform: translateY(-1px);
 }
 .duel-match-claim:disabled {
   cursor: not-allowed;
-  opacity: 0.6;
+  opacity: 0.5;
 }
 
 .duel-match-claim-error {
@@ -5087,7 +5093,6 @@ body.match-open { overflow: hidden; }
   width: 8px;
   height: 14px;
   border-radius: 2px;
-  box-shadow: 0 0 6px currentColor;
 }
 
 /* ── Mobile ─────────────────────────────────────────────────────────────── */
@@ -5268,14 +5273,15 @@ body.match-open { overflow: hidden; }
   border: 0;
   border-radius: var(--radius-sm);
   cursor: pointer;
-  box-shadow: 0 4px 16px rgba(239, 68, 68, 0.35);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
   animation: duel-forfeit-pulse 1.4s ease-in-out infinite;
 }
 .duel-forfeit-btn:hover { filter: brightness(1.08); }
 
+/* Scale-only pulse — no red halo. The button already reads urgent. */
 @keyframes duel-forfeit-pulse {
-  0%, 100% { transform: scale(1); box-shadow: 0 4px 16px rgba(239, 68, 68, 0.35); }
-  50%      { transform: scale(1.04); box-shadow: 0 6px 22px rgba(239, 68, 68, 0.55); }
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.04); }
 }
 
 /* ── Daily Prize Badge ─────────────────────────────────────────────────────
@@ -5290,30 +5296,20 @@ body.match-open { overflow: hidden; }
   margin: 0 auto 40px;
   padding: 16px 26px;
   background: linear-gradient(135deg,
-    rgba(138, 92, 246, 0.14) 0%,
-    rgba(109, 92, 255, 0.08) 100%);
-  border: 1px solid rgba(138, 92, 246, 0.35);
+    rgba(138, 92, 246, 0.12) 0%,
+    rgba(109, 92, 255, 0.06) 100%);
+  border: 1px solid rgba(138, 92, 246, 0.32);
   border-radius: 16px;
+  /* Depth shadow only — the tint + border is enough to make the pill pop
+     out from the hero copy. */
   box-shadow:
-    0 8px 32px rgba(138, 92, 246, 0.18),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    0 8px 24px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
   position: relative;
   overflow: hidden;
 }
-.daily-prize-hero::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(
-    circle at 20% 50%,
-    rgba(139, 122, 255, 0.18) 0%,
-    transparent 60%
-  );
-  pointer-events: none;
-}
 .daily-prize-hero-icon {
   font-size: 2rem;
-  filter: drop-shadow(0 2px 8px rgba(139, 122, 255, 0.6));
   position: relative;
 }
 .daily-prize-hero-body {
@@ -5365,7 +5361,6 @@ body.match-open { overflow: hidden; }
 }
 .daily-prize-banner-icon {
   font-size: 1.4rem;
-  filter: drop-shadow(0 1px 4px rgba(139, 122, 255, 0.55));
 }
 .daily-prize-banner-text {
   display: flex;
@@ -5526,12 +5521,11 @@ body.match-open { overflow: hidden; }
 .econ-card:hover {
   border-color: rgba(138, 92, 246, 0.35);
   transform: translateY(-3px);
-  box-shadow: 0 12px 32px rgba(138, 92, 246, 0.1);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
 }
 .econ-icon {
   font-size: 1.6rem;
   margin-bottom: 10px;
-  filter: drop-shadow(0 2px 6px rgba(139, 122, 255, 0.4));
 }
 .econ-value {
   font-family: "Space Grotesk", sans-serif;

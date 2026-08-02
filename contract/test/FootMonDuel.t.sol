@@ -255,18 +255,26 @@ contract FootMonDuelTest is Test {
     }
 
     // ── resolveDuel (happy path) ─────────────────────────────────────────────
+    //
+    // Since v2, resolveDuel PUSHES the prize directly to the winner's wallet
+    // rather than crediting pendingClaims. These tests assert on the winner's
+    // .balance directly. pendingClaims stays at zero for a normal EOA winner
+    // — it's only populated as a fallback when a contract wallet rejects the
+    // push (covered by test_PushFallsBackToPendingWhenWinnerRejects).
 
-    function test_ResolveDuelCreditsSeventyPercentToWinner() public {
+    function test_ResolveDuelSendsSeventyPercentToWinner() public {
         _createAndJoin(DUEL);
 
         uint256 pot      = STAKE * 2;
         uint256 houseCut = (pot * 30) / 100;
         uint256 payout   = pot - houseCut;
 
+        uint256 bobBefore = bob.balance;
         vm.prank(resolver);
         footmon.resolveDuel(DUEL, bob);
 
-        assertEq(footmon.pendingClaims(bob), payout, "winner credited 70%");
+        assertEq(bob.balance - bobBefore, payout, "winner paid 70% directly");
+        assertEq(footmon.pendingClaims(bob), 0, "no pending claim needed");
         assertEq(footmon.pendingClaims(alice), 0, "loser gets nothing");
         assertEq(footmon.houseBalance(), houseCut, "house keeps 30%");
         assertEq(footmon.totalEscrowed(), 0, "escrow released");
@@ -274,45 +282,33 @@ contract FootMonDuelTest is Test {
         _assertSolvent();
     }
 
-    function test_FullHappyPath_CreateJoinResolveClaim() public {
+    function test_FullHappyPath_CreateJoinResolve_PushesFundsDirectly() public {
         _createAndJoin(DUEL);
 
         uint256 payout = (STAKE * 2 * 70) / 100;
 
+        uint256 before = bob.balance;
         vm.prank(resolver);
         footmon.resolveDuel(DUEL, bob);
 
-        uint256 before = bob.balance;
-        vm.prank(bob);
-        footmon.claimDuelPrize();
-
-        assertEq(bob.balance - before, payout, "winner paid out");
+        // No claim step — funds land in the winner's wallet the moment the
+        // resolver's tx confirms.
+        assertEq(bob.balance - before, payout, "winner paid out directly");
         assertEq(footmon.pendingClaims(bob), 0);
         assertEq(footmon.totalPendingClaims(), 0);
         assertEq(address(footmon).balance, footmon.houseBalance());
         _assertSolvent();
     }
 
-    function test_ClaimPrizeAndClaimDuelPrizeShareOneLedger() public {
-        _createAndJoin(DUEL);
-        vm.prank(resolver);
-        footmon.resolveDuel(DUEL, bob);
-
-        // Duel winnings are claimable through either entry point.
-        uint256 before = bob.balance;
-        vm.prank(bob);
-        footmon.claimPrize();
-        assertEq(bob.balance - before, (STAKE * 2 * 70) / 100);
-    }
-
     function test_ResolveHonoursUpdatedHousePct() public {
         footmon.setDuelHousePct(10);
         _createAndJoin(DUEL);
 
+        uint256 aliceBefore = alice.balance;
         vm.prank(resolver);
         footmon.resolveDuel(DUEL, alice);
 
-        assertEq(footmon.pendingClaims(alice), (STAKE * 2 * 90) / 100);
+        assertEq(alice.balance - aliceBefore, (STAKE * 2 * 90) / 100, "winner paid 90%");
         assertEq(footmon.houseBalance(), (STAKE * 2 * 10) / 100);
         _assertSolvent();
     }
@@ -321,10 +317,11 @@ contract FootMonDuelTest is Test {
         footmon.setDuelHousePct(0);
         _createAndJoin(DUEL);
 
+        uint256 aliceBefore = alice.balance;
         vm.prank(resolver);
         footmon.resolveDuel(DUEL, alice);
 
-        assertEq(footmon.pendingClaims(alice), STAKE * 2);
+        assertEq(alice.balance - aliceBefore, STAKE * 2, "winner paid full pot");
         assertEq(footmon.houseBalance(), 0);
         _assertSolvent();
     }
@@ -388,11 +385,17 @@ contract FootMonDuelTest is Test {
     function test_DrawRefundsBothStakesWithNoRake() public {
         _createAndJoin(DUEL);
 
+        uint256 aliceBefore = alice.balance;
+        uint256 bobBefore   = bob.balance;
+
         vm.prank(resolver);
         footmon.resolveDuelDraw(DUEL);
 
-        assertEq(footmon.pendingClaims(alice), STAKE);
-        assertEq(footmon.pendingClaims(bob), STAKE);
+        // Push refunds land in both wallets — no pending claim step.
+        assertEq(alice.balance - aliceBefore, STAKE, "alice refunded");
+        assertEq(bob.balance - bobBefore, STAKE, "bob refunded");
+        assertEq(footmon.pendingClaims(alice), 0);
+        assertEq(footmon.pendingClaims(bob), 0);
         assertEq(footmon.houseBalance(), 0, "no rake on a draw");
         assertEq(footmon.totalEscrowed(), 0);
         _assertSolvent();
@@ -544,15 +547,18 @@ contract FootMonDuelTest is Test {
     }
 
     // ── claim semantics ──────────────────────────────────────────────────────
+    //
+    // With push-payment, winners get their MON at resolveDuel time, so an
+    // EOA winner has nothing to claim afterwards. The claimDuelPrize path
+    // stays alive purely as a safety net for contract wallets that refused
+    // the push; these tests confirm the two paths interact correctly.
 
-    function test_RevertWhen_ClaimingTwice() public {
+    function test_RevertWhen_WinnerTriesToClaimAfterPush() public {
         _createAndJoin(DUEL);
         vm.prank(resolver);
         footmon.resolveDuel(DUEL, bob);
 
-        vm.prank(bob);
-        footmon.claimDuelPrize();
-
+        // Push already delivered — pendingClaims is empty for the winner.
         vm.prank(bob);
         vm.expectRevert("FootMon: nothing to claim");
         footmon.claimDuelPrize();
@@ -570,7 +576,36 @@ contract FootMonDuelTest is Test {
 
     // ── reentrancy ───────────────────────────────────────────────────────────
 
-    function test_ReentrantClaimIsBlockedAndPaysExactlyOnce() public {
+    function test_PushFallsBackToPendingWhenWinnerRejects() public {
+        // A contract wallet that reverts on receive() should NOT strand the
+        // resolver — the push fails silently and the funds land in
+        // pendingClaims for a later manual claim.
+        RevertingReceiver hostile = new RevertingReceiver(footmon);
+        vm.deal(address(hostile), STAKE);
+
+        // Hostile creates the duel, bob joins as the counterparty.
+        hostile.createDuel(DUEL, STAKE);
+        vm.prank(bob);
+        footmon.joinDuel{value: STAKE}(DUEL);
+
+        uint256 payout = (STAKE * 2 * 70) / 100;
+        vm.prank(resolver);
+        footmon.resolveDuel(DUEL, address(hostile));
+
+        // Direct push failed (hostile reverts on receive) → fallback ledger.
+        assertEq(address(hostile).balance, 0, "push rejected, no direct delivery");
+        assertEq(footmon.pendingClaims(address(hostile)), payout, "credited as pending");
+        assertEq(uint8(footmon.duelStatus(DUEL)), uint8(FootMon.DuelStatus.Resolved));
+        _assertSolvent();
+    }
+
+    function test_ReentrantResolveIsBlockedByNonReentrantGuard() public {
+        // A malicious winner cannot re-enter resolveDuel or claimDuelPrize
+        // from inside receive() during the push — both are guarded by the
+        // shared nonReentrant modifier. Depending on gas dynamics the outer
+        // push either succeeds cleanly OR falls back to pendingClaims; the
+        // guarantee we care about is that the reentry itself never
+        // succeeds and the attacker is paid exactly once in total.
         ReentrantClaimer attacker = new ReentrantClaimer(footmon);
         vm.deal(address(attacker), STAKE);
 
@@ -578,22 +613,21 @@ contract FootMonDuelTest is Test {
         footmon.createDuel{value: STAKE}(DUEL);
         attacker.joinDuel(DUEL, STAKE);
 
+        uint256 payout = (STAKE * 2 * 70) / 100;
         vm.prank(resolver);
         footmon.resolveDuel(DUEL, address(attacker));
 
-        uint256 payout = (STAKE * 2 * 70) / 100;
-        uint256 balanceBefore = address(footmon).balance;
-
-        attacker.claim();
-
-        assertTrue(attacker.reentryBlocked(), "re-entry should have been rejected");
         assertFalse(attacker.reenteredSuccessfully(), "re-entry must never succeed");
-        assertEq(address(attacker).balance, payout, "paid exactly once");
-        assertEq(
-            balanceBefore - address(footmon).balance,
-            payout,
-            "contract released exactly the payout"
-        );
+
+        // Either the push made it in one hop, or it fell back to pending
+        // and needs a manual claim. Both paths must total exactly `payout`.
+        uint256 pending = footmon.pendingClaims(address(attacker));
+        if (pending > 0) {
+            assertEq(pending, payout, "pending equals payout");
+            attacker.setAttack(false); // don't re-enter on the successful pull
+            attacker.claim();
+        }
+        assertEq(address(attacker).balance, payout, "attacker paid exactly once total");
         assertEq(footmon.pendingClaims(address(attacker)), 0);
         _assertSolvent();
     }
@@ -659,19 +693,17 @@ contract FootMonDuelTest is Test {
         _assertSolvent();
     }
 
-    function test_EmergencyWithdrawCannotTouchPendingClaims() public {
+    function test_EmergencyWithdrawCannotTouchDuelFunds() public {
         _createAndJoin(DUEL);
         vm.prank(resolver);
         footmon.resolveDuel(DUEL, bob);
 
-        // Everything is now either owed to bob or booked as house rake.
+        // The 70% went straight to bob; the remaining 30% sits as house
+        // rake and is untouchable by emergencyWithdraw.
         assertEq(footmon.freeBalance(), 0);
         vm.expectRevert("FootMon: nothing free to withdraw");
         footmon.emergencyWithdraw();
 
-        vm.prank(bob);
-        footmon.claimDuelPrize();
-        assertEq(footmon.pendingClaims(bob), 0);
         _assertSolvent();
     }
 
@@ -692,7 +724,7 @@ contract FootMonDuelTest is Test {
 
     function test_RollRevenueAndDuelEscrowStaySeparate() public {
         vm.prank(alice);
-        footmon.payForRoll{value: 0.001 ether}();
+        footmon.payForRoll{value: 0.01 ether}(); // matches the default rollPrice
         uint256 poolAfterRoll = footmon.prizePool();
         assertGt(poolAfterRoll, 0);
 
@@ -715,8 +747,9 @@ contract FootMonDuelTest is Test {
 
         assertEq(owner.balance - before, houseCut);
         assertEq(footmon.houseBalance(), 0);
-        // Winner is still fully covered.
-        assertEq(address(footmon).balance, footmon.pendingClaims(bob));
+        // Winner already got their share directly; contract now empty
+        // aside from any leftover unclaimed prize-pool balance.
+        assertEq(address(footmon).balance, 0);
         _assertSolvent();
     }
 
@@ -764,16 +797,17 @@ contract FootMonDuelTest is Test {
         _assertSolvent();
     }
 
-    function test_PauseDoesNotBlockResolvingOrClaimingInFlightDuels() public {
+    function test_PauseDoesNotBlockResolvingInFlightDuels() public {
         _createAndJoin(DUEL);
         footmon.setDuelsPaused(true);
 
+        uint256 before = bob.balance;
         vm.prank(resolver);
         footmon.resolveDuel(DUEL, bob);
 
-        vm.prank(bob);
-        footmon.claimDuelPrize();
-
+        // Pause blocks NEW duels but a resolvable in-flight one still
+        // pays out directly to the winner.
+        assertEq(bob.balance - before, (STAKE * 2 * 70) / 100);
         assertEq(footmon.pendingClaims(bob), 0);
         _assertSolvent();
     }
@@ -795,17 +829,17 @@ contract FootMonDuelTest is Test {
         vm.prank(bob);
         footmon.joinDuel{value: amount}(DUEL);
 
+        uint256 aliceBefore = alice.balance;
         vm.prank(resolver);
         footmon.resolveDuel(DUEL, alice);
 
         uint256 pot = amount * 2;
         uint256 houseCut = (pot * pct) / 100;
+        uint256 payout   = pot - houseCut;
 
-        assertEq(
-            footmon.pendingClaims(alice) + footmon.houseBalance(),
-            pot,
-            "no wei created or destroyed"
-        );
+        // Direct push + house rake must account for the entire pot,
+        // regardless of the split percentage.
+        assertEq(alice.balance - aliceBefore, payout, "winner paid net-of-rake");
         assertEq(footmon.houseBalance(), houseCut);
         assertEq(footmon.totalEscrowed(), 0);
         _assertSolvent();

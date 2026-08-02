@@ -3,12 +3,14 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { ratingColor } from "@/lib/constants";
-import { useContract } from "@/hooks/useContract";
 import { play as playSound } from "@/lib/sound";
 
-// Real-time seconds to play out one 90-minute match. Lower = faster playback.
-const SECONDS_PER_MATCH = 8;
-const HALF_TIME_PAUSE_MS = 900;
+// Real-time seconds to play out one 90-minute match. Duels are the
+// wagered format so the pacing is deliberately unhurried — each virtual
+// second is worth ~2 game minutes, giving both players time to read the
+// commentary feed and feel the score tick. Solo tournament matches run
+// on a separate, faster clock (MatchScreen).
+const SECONDS_PER_MATCH = 45;
 const RESULT_REVEAL_MS = 1600;
 
 /**
@@ -47,39 +49,15 @@ export default function DuelMatchScreen({
   const matchLogs = matchResult?.matchLogs ?? [];
   const payoutMon = weiToMon(matchResult?.payoutWei);
   const isSettled = Boolean(matchResult?.settled);
-
-  // On-chain claim wiring — the escrow pays into a per-address pool that the
-  // winner drains with a single claimDuelPrize() call. We surface it directly
-  // on the reveal card so the user doesn't have to hunt for a separate screen.
-  const contract = useContract();
-  const [claiming, setClaiming] = useState(false);
-  const [claimError, setClaimError] = useState(null);
-  const [claimedTx, setClaimedTx] = useState(null);
-  const pendingClaimMon = Number(contract.pendingClaim || 0);
-  const hasPending = pendingClaimMon > 0;
-
-  const onClaim = async () => {
-    if (!contract.isAvailable()) {
-      setClaimError("Reconnect your wallet and try again");
-      return;
-    }
-    setClaiming(true);
-    setClaimError(null);
-    try {
-      await contract.claimDuelPrize();
-      // Bump the pool balance so the button updates without waiting for
-      // the 30s refresh interval to come around.
-      await contract.refreshData();
-      setClaimedTx(true);
-      playSound("claim");
-    } catch (err) {
-      const msg = err?.message || "Claim failed";
-      const rejected = err?.code === "ACTION_REJECTED" || /reject|denied/i.test(msg);
-      setClaimError(rejected ? "Transaction cancelled" : msg);
-    } finally {
-      setClaiming(false);
-    }
-  };
+  // Server surfaces a settlement error string when the resolver push
+  // failed (RPC dropped, resolver out of gas, etc.). We show it verbatim
+  // on the reveal card so the winner isn't stuck staring at a
+  // "hold tight…" spinner forever.
+  const settlementError = matchResult?.settlementError || null;
+  // Optional server hint: some settle paths tell us the exact tx that
+  // pushed the funds. We surface it in the payout note when we have it.
+  const settlementTx =
+    matchResult?.settlementTx || matchResult?.resolver_tx || null;
 
   // Wallet addresses come in checksum-cased from useAppKitAccount(), while
   // room.creator / room.joiner are stored lowercased. Normalise before
@@ -219,6 +197,10 @@ export default function DuelMatchScreen({
     else if (iLost) playSound("defeat");
     else playSound("draw");
   }, [phase, iWon, iLost, isDraw]);
+
+  // Note: the winning stake is pushed directly from the contract to the
+  // winner's wallet the moment the resolver calls resolveDuel — there's
+  // no pull-payment step and no claim button in the UI.
 
   // Events visible so far, sliced to what's ticked past. Keep narrative
   // markers (kickoff / half_time / full_time / forfeit) alongside the goals
@@ -469,28 +451,16 @@ export default function DuelMatchScreen({
                 <div className="duel-match-payout">
                   <div className="duel-match-payout-amt">+{payoutMon} MON</div>
                   <div className="duel-match-payout-note">
-                    {!isSettled
-                      ? "Prize will be released on-chain shortly."
-                      : claimedTx && !hasPending
-                        ? "Claimed."
-                        : hasPending
-                          ? `Ready to claim: ${pendingClaimMon.toFixed(4)} MON`
-                          : "Prize sent to your on-chain claim balance."}
+                    {isSettled
+                      ? `Prize delivered · ${payoutMon} MON is in your wallet.`
+                      : settlementError
+                        ? `Result recorded, payout couldn't settle: ${settlementError}. We'll retry shortly.`
+                        : "Settling on-chain, hold tight…"}
                   </div>
-
-                  {isSettled && hasPending && (
-                    <button
-                      type="button"
-                      className="duel-match-claim"
-                      onClick={onClaim}
-                      disabled={claiming}
-                    >
-                      {claiming ? "Claiming..." : `Claim ${pendingClaimMon.toFixed(4)} MON`}
-                    </button>
-                  )}
-
-                  {claimError && (
-                    <div className="duel-match-claim-error">{claimError}</div>
+                  {isSettled && settlementTx && (
+                    <div className="duel-match-payout-tx">
+                      tx {String(settlementTx).slice(0, 10)}…{String(settlementTx).slice(-6)}
+                    </div>
                   )}
                 </div>
               )}
@@ -498,7 +468,7 @@ export default function DuelMatchScreen({
               {isDraw && (
                 <div className="duel-match-payout">
                   <div className="duel-match-payout-note">
-                    Draw — both stakes are being refunded on-chain.
+                    Draw — both stakes have been returned to your wallets.
                   </div>
                 </div>
               )}

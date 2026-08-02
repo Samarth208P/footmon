@@ -93,6 +93,9 @@ export async function POST(request, { params }) {
       // Surfaced so the UI can say "result recorded, payout pending" rather than
       // pretending nothing happened.
       settlementError: settlement.ok ? null : settlement.error,
+      // Tx hash of the resolver's push-payment call. Shown in the reveal
+      // card so a curious winner can look the transfer up on-chain.
+      settlementTx: settlement.txHash ?? null,
       payoutWei,
     });
   } catch (error) {

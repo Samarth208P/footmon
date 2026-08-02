@@ -780,6 +780,7 @@ export function useDuel(rawAddress) {
         matchLogs: data.matchLogs || [],
         settled: Boolean(data.settled),
         settlementError: data.settlementError || null,
+        settlementTx: data.settlementTx || null,
         payoutWei: data.payoutWei || "0",
       });
       if (data.room) setRoom(data.room);
@@ -818,6 +819,7 @@ export function useDuel(rawAddress) {
         matchLogs: [],
         settled: Boolean(data.settled),
         settlementError: data.settlementError || null,
+        settlementTx: data.settlementTx || null,
         payoutWei: data.payoutWei || "0",
         forfeit: true,
       });

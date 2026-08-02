@@ -317,12 +317,18 @@ contract FootMon {
     }
 
     /**
-     * @notice Resolver declares the winner of a filled duel.
-     *         Credits (100 - duelHousePct)% of the pot to the winner's
-     *         pendingClaims; the rake accrues to houseBalance.
-     * @dev No value is transferred here — winner pulls via claimDuelPrize().
+     * @notice Resolver declares the winner of a filled duel and PUSHES the
+     *         payout directly to the winner's wallet in the same transaction.
+     *         (100 - duelHousePct)% of the pot goes to the winner; the rake
+     *         accrues to houseBalance.
+     * @dev Push-payment path. If the winner is a contract wallet that
+     *      rejects the transfer (or burns its 60k gas budget), we fall back
+     *      to crediting pendingClaims so the funds are never stuck — the
+     *      claimDuelPrize() path stays as a safety net. In practice every
+     *      EOA winner receives the prize automatically, no wallet action
+     *      required from them.
      */
-    function resolveDuel(bytes32 duelId, address winner) external onlyResolver {
+    function resolveDuel(bytes32 duelId, address winner) external onlyResolver nonReentrant {
         Duel storage duel = duels[duelId];
         require(duel.status == DuelStatus.Full, "FootMon: duel not resolvable");
         require(
@@ -334,21 +340,33 @@ contract FootMon {
         uint256 houseCut = (pot * duelHousePct) / 100;
         uint256 payout   = pot - houseCut;
 
-        duel.status = DuelStatus.Resolved;   // effects before any credit
+        // Effects before the external call.
+        duel.status = DuelStatus.Resolved;
+        totalEscrowed -= pot;
+        houseBalance  += houseCut;
 
-        totalEscrowed         -= pot;
-        houseBalance          += houseCut;
-        pendingClaims[winner] += payout;
-        totalPendingClaims    += payout;
+        // Bounded gas so a griefing contract-wallet can't consume the whole
+        // resolver tx budget. 60 000 is comfortable for typical fallback /
+        // receive handlers on a smart-account wallet.
+        (bool ok,) = payable(winner).call{value: payout, gas: 60000}("");
+        if (!ok) {
+            // Push failed — record it and let the winner pull instead.
+            pendingClaims[winner] += payout;
+            totalPendingClaims    += payout;
+        }
 
         emit DuelResolved(duelId, winner, payout, houseCut);
     }
 
     /**
-     * @notice Resolver declares a draw. Both players get their full stake back
-     *         via pendingClaims; the house takes no rake on a draw.
+     * @notice Resolver declares a draw and PUSHES each player's stake back
+     *         to them in the same transaction. The house takes no rake on
+     *         a draw.
+     * @dev Same push-with-fallback pattern as resolveDuel. Each side is
+     *      handled independently so one failing wallet can't strand the
+     *      other player's refund.
      */
-    function resolveDuelDraw(bytes32 duelId) external onlyResolver {
+    function resolveDuelDraw(bytes32 duelId) external onlyResolver nonReentrant {
         Duel storage duel = duels[duelId];
         require(duel.status == DuelStatus.Full, "FootMon: duel not resolvable");
 
@@ -357,11 +375,19 @@ contract FootMon {
         address joiner  = duel.joiner;
 
         duel.status = DuelStatus.Resolved;
+        totalEscrowed -= stake * 2;
 
-        totalEscrowed          -= stake * 2;
-        pendingClaims[creator] += stake;
-        pendingClaims[joiner]  += stake;
-        totalPendingClaims     += stake * 2;
+        (bool okC,) = payable(creator).call{value: stake, gas: 60000}("");
+        if (!okC) {
+            pendingClaims[creator] += stake;
+            totalPendingClaims     += stake;
+        }
+
+        (bool okJ,) = payable(joiner).call{value: stake, gas: 60000}("");
+        if (!okJ) {
+            pendingClaims[joiner] += stake;
+            totalPendingClaims    += stake;
+        }
 
         emit DuelDrawn(duelId, stake);
     }

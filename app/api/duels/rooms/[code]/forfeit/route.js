@@ -129,6 +129,7 @@ export async function POST(request, { params }) {
       winner: claimant,
       settled: settlement.ok,
       settlementError: settlement.ok ? null : settlement.error,
+      settlementTx: settlement.txHash ?? null,
       payoutWei,
     });
   } catch (error) {

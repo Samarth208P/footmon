@@ -5345,6 +5345,28 @@ body.match-open { overflow: hidden; }
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.02em;
 }
+.daily-prize-hero-leader {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding-left: 18px;
+  border-left: 1px solid rgba(138, 92, 246, 0.3);
+  position: relative;
+}
+.daily-prize-hero-leader-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text3);
+}
+.daily-prize-hero-leader-name {
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--monad2);
+  margin-top: 2px;
+}
 
 /* Banner variant — used in the LeaderboardOverlay header */
 .daily-prize-banner {

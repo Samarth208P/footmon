@@ -17,6 +17,7 @@ import { CONTRACT_ADDRESS, FOOTMON_ABI, MONAD_CHAIN } from "@/lib/constants";
 export default function DailyPrizeBadge({ variant = "hero" }) {
   const [prizePool, setPrizePool] = useState(null);
   const [timeUntilPayout, setTimeUntilPayout] = useState(null);
+  const [leader, setLeader] = useState(null); // { address, username, score }
   const [loaded, setLoaded] = useState(false);
 
   const readContractRef = useRef(null);
@@ -38,13 +39,51 @@ export default function DailyPrizeBadge({ variant = "hero" }) {
       const rc = readContractRef.current;
       if (!rc) return;
       try {
-        const [pool, time] = await Promise.all([
+        const [pool, time, count] = await Promise.all([
           rc.prizePool(),
           rc.getTimeUntilPayout(),
+          rc.getEntriesCount(),
         ]);
         if (cancelled) return;
         setPrizePool(formatEther(pool));
         setTimeUntilPayout(Number(time));
+
+        // Find the current leader
+        const entryCount = Number(count);
+        if (entryCount > 0) {
+          const entries = [];
+          for (let i = 0; i < entryCount; i++) {
+            entries.push(rc.getEntry(i));
+          }
+          const raw = await Promise.all(entries);
+          if (cancelled) return;
+
+          let topEntry = null;
+          for (const e of raw) {
+            const score = Number(e.score) / 100;
+            if (!topEntry || score > topEntry.score) {
+              topEntry = { address: e.player, score };
+            }
+          }
+
+          if (topEntry) {
+            // Try to resolve username
+            try {
+              const res = await fetch(`/api/profile?addresses=${topEntry.address.toLowerCase()}`, { cache: "no-store" });
+              if (res.ok) {
+                const { usernames } = await res.json();
+                const name = usernames[topEntry.address.toLowerCase()];
+                if (name && !cancelled) {
+                  topEntry.username = name;
+                }
+              }
+            } catch {}
+            if (!cancelled) setLeader(topEntry);
+          }
+        } else {
+          if (!cancelled) setLeader(null);
+        }
+
         setLoaded(true);
       } catch {
         // Contract might not be deployed / RPC hiccup — stay quiet.
@@ -75,6 +114,10 @@ export default function DailyPrizeBadge({ variant = "hero" }) {
     : "— MON";
 
   const countdown = formatCountdown(timeUntilPayout);
+
+  const leaderDisplay = leader
+    ? leader.username || shortAddress(leader.address)
+    : null;
 
   if (variant === "banner") {
     return (
@@ -112,6 +155,12 @@ export default function DailyPrizeBadge({ variant = "hero" }) {
           <div className="daily-prize-hero-timer">Payout in {countdown}</div>
         )}
       </div>
+      {leaderDisplay && (
+        <div className="daily-prize-hero-leader">
+          <span className="daily-prize-hero-leader-label">Leading</span>
+          <span className="daily-prize-hero-leader-name">{leaderDisplay}</span>
+        </div>
+      )}
     </div>
   );
 }
@@ -126,4 +175,9 @@ function formatCountdown(seconds) {
   if (h > 0) return `${h}h ${m}m`;
   if (m > 0) return `${m}m ${s}s`;
   return `${s}s`;
+}
+
+function shortAddress(addr) {
+  if (!addr) return "";
+  return `${addr.slice(0, 6)}…${addr.slice(-4)}`;
 }

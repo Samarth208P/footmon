@@ -153,6 +153,23 @@ const GooeyNav = ({
 
   useEffect(() => {
     if (!navRef.current || !containerRef.current) return;
+
+    // When activeIndex is -1 (no tab active), hide the effect elements.
+    if (activeIndex < 0) {
+      if (filterRef.current) {
+        filterRef.current.style.width = "0";
+        filterRef.current.style.height = "0";
+        filterRef.current.classList.remove("active");
+      }
+      if (textRef.current) {
+        textRef.current.style.width = "0";
+        textRef.current.style.height = "0";
+        textRef.current.classList.remove("active");
+        textRef.current.innerText = "";
+      }
+      return;
+    }
+
     const activeLi = navRef.current.querySelectorAll("li")[activeIndex];
     if (activeLi) {
       updateEffectPosition(activeLi);

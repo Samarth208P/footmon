@@ -672,6 +672,29 @@ export default function DuelGamePage() {
                   </p>
                   <p className="ready-opponent">{statusMsg}</p>
 
+                  {/* ── Formation Picker ────────────────────────────────── */}
+                  {!duel.myReady && (
+                    <div className="ready-formation-picker">
+                      <p className="section-label">Choose Your Formation</p>
+                      <p className="ready-formation-hint">Your formation affects tactical matchups during the match!</p>
+                      <div className="btn-group ready-formation-grid">
+                        {Object.keys(FORMATIONS).map((key) => (
+                          <button
+                            key={key}
+                            className={`btn-formation ${duel.formation === key ? "active" : ""}`}
+                            onClick={() => duel.setFormation(key)}
+                            type="button"
+                          >
+                            {key}
+                          </button>
+                        ))}
+                      </div>
+                      <div className="ready-formation-preview">
+                        <PitchView slots={duel.mySlots} onSlotClick={() => {}} className="ready-pitch-mini" />
+                      </div>
+                    </div>
+                  )}
+
                   <div className="ready-status-grid">
                     <div className={`ready-status-pill ${duel.isCreator ? "ready-status-pill--me" : ""}`}>
                       <span className="ready-status-label">
@@ -978,7 +1001,10 @@ export default function DuelGamePage() {
 
                 <div className="duel-split-container">
                   <div className="duel-pitch-block">
-                    <div className="duel-pitch-title">Your Pitch</div>
+                    <div className="duel-pitch-title">
+                      Your Pitch
+                      <span className="duel-formation-badge">{duel.formation}</span>
+                    </div>
                     <PitchView
                       slots={duel.mySlots}
                       // When holding a filled slot for swap, treat that
@@ -996,7 +1022,10 @@ export default function DuelGamePage() {
                     />
                   </div>
                   <div className="duel-pitch-block">
-                    <div className="duel-pitch-title">Opponent&apos;s Pitch</div>
+                    <div className="duel-pitch-title">
+                      Opponent&apos;s Pitch
+                      <span className="duel-formation-badge">{duel.room?.creator === duel.room?.joiner ? duel.formation : (duel.isCreator ? (duel.room?.joiner_formation || "4-3-3") : (duel.room?.creator_formation || "4-3-3"))}</span>
+                    </div>
                     <PitchView
                       slots={duel.opponentSlots}
                       onSlotClick={() => {}}

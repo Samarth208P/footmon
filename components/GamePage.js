@@ -213,7 +213,7 @@ export default function GamePage() {
   }, [game]);
 
   return (
-    <main className="min-h-screen">
+    <main>
       <div className="game-card">
         <WalletGate isConnected={isConnected}>
           {game.screen === "formation" && (

@@ -43,9 +43,53 @@ const FAQ = [
   },
 ];
 
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  name: "FootMon",
+  url: "https://footmon.gg",
+  description:
+    "Roll for legendary World Cup squads, draft your dream 11, and win MON in daily tournaments and 1v1 staked duels on Monad.",
+  applicationCategory: "GameApplication",
+  operatingSystem: "Web",
+  offers: {
+    "@type": "Offer",
+    price: "0",
+    priceCurrency: "USD",
+    description: "Free to play with optional on-chain rolls (0.01 MON each)",
+  },
+  author: {
+    "@type": "Organization",
+    name: "FootMon",
+    url: "https://footmon.gg",
+  },
+  screenshot: "https://footmon.gg/footmon.png",
+};
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: FAQ.map((item) => ({
+    "@type": "Question",
+    name: item.q,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: item.a,
+    },
+  })),
+};
+
 export default function LandingPage() {
   return (
     <main className="landing">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+      />
       <section className="landing-hero">
         <div className="hero-content">
           <div className="hero-badge">&#9917; LIVE ON MONAD TESTNET</div>

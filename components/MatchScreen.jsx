@@ -460,6 +460,7 @@ function CampaignView({
   const goalsAgainst = run.goalsAgainst ?? 0;
   const gd = goalsFor - goalsAgainst;
   const wins = run.wins ?? 0;
+  const losses = rounds.length - wins;
 
   return (
     <div className="match-screen campaign-screen">
@@ -564,14 +565,18 @@ function CampaignView({
       {/* Bottom score card */}
       <div className={`campaign-bottom ${champion ? "campaign-bottom--champ" : ""}`}>
         <div className="campaign-bottom-score">
-          <span className="campaign-bottom-big">{goalsFor}</span>
+          <span className="campaign-bottom-big campaign-bottom-big--win">{wins}</span>
           <span className="campaign-bottom-sep">-</span>
-          <span className="campaign-bottom-big">{goalsAgainst}</span>
+          <span className="campaign-bottom-big campaign-bottom-big--loss">{losses}</span>
         </div>
         <div className="campaign-bottom-stats">
           <div className="campaign-bottom-stat">
             <span className="campaign-bottom-stat-val">{wins}</span>
-            <span className="campaign-bottom-stat-label">WINS</span>
+            <span className="campaign-bottom-stat-label">WON</span>
+          </div>
+          <div className="campaign-bottom-stat">
+            <span className="campaign-bottom-stat-val">{losses}</span>
+            <span className="campaign-bottom-stat-label">LOST</span>
           </div>
           <div className="campaign-bottom-stat">
             <span className="campaign-bottom-stat-val">{goalsFor}</span>

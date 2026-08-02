@@ -10,6 +10,7 @@ import { isValidRoomCode, normaliseRoomCode } from "@/lib/room-code";
 import { authoriseRoomRequest } from "@/lib/session";
 import {
   canFillSlot,
+  DUEL_FORMATION,
   isValidSlotIndex,
   slotPositionFor,
 } from "@/lib/draft";
@@ -92,6 +93,7 @@ export async function POST(request, { params }) {
       return NextResponse.json({ error: "Squad not initialised" }, { status: 409 });
     }
 
+    const myFormation = squad.formation || DUEL_FORMATION;
     const slots = await listSquadSlots(squad.id);
     const fromRow = slots.find((s) => s.slot_index === fromSlot) || null;
     const toRow = slots.find((s) => s.slot_index === toSlot) || null;
@@ -103,12 +105,12 @@ export async function POST(request, { params }) {
       );
     }
 
-    const fromPos = slotPositionFor(fromSlot);
-    const toPos = slotPositionFor(toSlot);
+    const fromPos = slotPositionFor(fromSlot, myFormation);
+    const toPos = slotPositionFor(toSlot, myFormation);
 
     // Fast path: skip wc_players lookup if primary positions already work.
-    const fromPrimaryFits = canFillSlot(toSlot, [fromRow.player_position]);
-    const toPrimaryFits = !toRow || canFillSlot(fromSlot, [toRow.player_position]);
+    const fromPrimaryFits = canFillSlot(toSlot, [fromRow.player_position], myFormation);
+    const toPrimaryFits = !toRow || canFillSlot(fromSlot, [toRow.player_position], myFormation);
 
     let fromPositions;
     let toPositions;
@@ -128,14 +130,14 @@ export async function POST(request, { params }) {
       toPositions = toRow ? (pickPositions(positionsMap, toRow) || [toRow.player_position]) : null;
     }
 
-    if (!canFillSlot(toSlot, fromPositions)) {
+    if (!canFillSlot(toSlot, fromPositions, myFormation)) {
       return NextResponse.json(
         { error: `${fromRow.player_name} can't play ${toPos}` },
         { status: 400 }
       );
     }
 
-    if (toRow && toPositions && !canFillSlot(fromSlot, toPositions)) {
+    if (toRow && toPositions && !canFillSlot(fromSlot, toPositions, myFormation)) {
       return NextResponse.json(
         { error: `${toRow.player_name} can't play ${fromPos}` },
         { status: 400 }

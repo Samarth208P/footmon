@@ -54,7 +54,6 @@ export default function Header() {
         <Link href="/" className="header-logo">
           <img src="/footmon.svg" alt="FootMon" width={28} height={28} />
           <span className="header-logo-text">FootMon</span>
-          <span className="header-logo-badge">MONAD</span>
         </Link>
 
         <div className="header-nav-wrap" aria-label="Primary">

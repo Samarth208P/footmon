@@ -2,6 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { SQUAD_TURNS, REROLL_PRICE_MON, buildSlots, canPlayerFillSlot } from "@/lib/constants";
+import { attackRating, defenceRating } from "@/lib/match-engine";
 
 /**
  * Hook managing the core solo game state: formation, rolls, player assignment.
@@ -168,10 +169,14 @@ export function useGame() {
     if (assigned === 0) return { avg: "0.0", attack: 0, defense: 0, assigned, total };
 
     const avg = filled.reduce((s, sl) => s + sl.player.rating, 0) / assigned;
-    const attack = filled.reduce((s, sl) => s + (sl.player.attack ?? 0), 0) / assigned;
-    const defense = filled.reduce((s, sl) => s + (sl.player.defense ?? 0), 0) / assigned;
 
-    return { avg: avg.toFixed(1), attack: Math.round(attack), defense: Math.round(defense), assigned, total };
+    // Use the game engine's position-weighted ratings so the UI reflects
+    // the actual ATK/DEF strengths used during match simulation.
+    const playersWithSlotPos = filled.map((sl) => ({ ...sl.player, slotPos: sl.pos }));
+    const attack = Math.round(attackRating(playersWithSlotPos));
+    const defense = Math.round(defenceRating(playersWithSlotPos));
+
+    return { avg: avg.toFixed(1), attack, defense, assigned, total };
   }, [slots]);
 
   const isSquadComplete = slots.every((s) => s.player !== null);

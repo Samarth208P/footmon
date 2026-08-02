@@ -71,8 +71,8 @@ export async function POST(request, { params }) {
 
     // ── Load both squads to count picks and detect reuse ──────────────────
     const [creatorSquad, joinerSquad] = await Promise.all([
-      upsertSquad({ roomId: room.id, player: room.creator, formation: DUEL_FORMATION }),
-      upsertSquad({ roomId: room.id, player: room.joiner, formation: DUEL_FORMATION }),
+      upsertSquad({ roomId: room.id, player: room.creator, formation: room.creator_formation || DUEL_FORMATION }),
+      upsertSquad({ roomId: room.id, player: room.joiner, formation: room.joiner_formation || DUEL_FORMATION }),
     ]);
 
     const [creatorSlots, joinerSlots] = await Promise.all([
@@ -86,6 +86,7 @@ export async function POST(request, { params }) {
     const attempts = Number(room.pick_attempts ?? (creatorSlots.length + joinerSlots.length));
     const mine = room.creator === sender ? creatorSlots : joinerSlots;
     const mySquad = room.creator === sender ? creatorSquad : joinerSquad;
+    const myFormation = mySquad.formation || DUEL_FORMATION;
 
     const slotIndex = Number(body?.slotIndex);
     const verdict = validatePick({
@@ -98,6 +99,7 @@ export async function POST(request, { params }) {
       playerPositions: body?.playerPositions,
       usedSlotIndexes: mine.map((s) => s.slot_index),
       usedPlayerNames: mine.map((s) => s.player_name),
+      formation: myFormation,
     });
 
     if (!verdict.ok) {
@@ -135,7 +137,7 @@ export async function POST(request, { params }) {
       slot = await pickSlot({
         squadId: mySquad.id,
         slotIndex,
-        slotPos: slotPositionFor(slotIndex),
+        slotPos: slotPositionFor(slotIndex, myFormation),
         playerName: body.playerName,
         playerPosition: Array.isArray(body.playerPositions)
           ? body.playerPositions[0]
@@ -162,7 +164,7 @@ export async function POST(request, { params }) {
         player: sender,
         nation: body.nation ?? mySquad.nation,
         year: Number.isFinite(Number(body.year)) ? Number(body.year) : mySquad.year,
-        formation: DUEL_FORMATION,
+        formation: myFormation,
       });
     }
 

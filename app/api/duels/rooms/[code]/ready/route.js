@@ -6,6 +6,7 @@ import { isValidRoomCode, normaliseRoomCode } from "@/lib/room-code";
 import { authoriseRoomRequest } from "@/lib/session";
 import {
   DUEL_FORMATION,
+  DUEL_FORMATIONS,
   nextTurnDeadline,
   readyDeadline,
 } from "@/lib/draft";
@@ -39,6 +40,23 @@ export async function POST(request, { params }) {
 
   if (!isValidRoomCode(roomCode)) {
     return NextResponse.json({ error: "Invalid room code" }, { status: 400 });
+  }
+
+  // Parse optional body — formation choice is submitted with the ready call.
+  let body = {};
+  try {
+    body = await request.json();
+  } catch {
+    // Body is optional for backwards compatibility (pre-formation clients).
+  }
+
+  // Validate formation choice. Default to 4-3-3 if not provided.
+  const chosenFormation = body?.formation || DUEL_FORMATION;
+  if (!DUEL_FORMATIONS.includes(chosenFormation)) {
+    return NextResponse.json(
+      { error: `Invalid formation. Choose one of: ${DUEL_FORMATIONS.join(", ")}` },
+      { status: 400 }
+    );
   }
 
   try {
@@ -93,7 +111,9 @@ export async function POST(request, { params }) {
       return NextResponse.json({ error: check.error }, { status: 409 });
     }
 
-    const patch = isCreator ? { creator_ready: true } : { joiner_ready: true };
+    const patch = isCreator
+      ? { creator_ready: true, creator_formation: chosenFormation }
+      : { joiner_ready: true, joiner_formation: chosenFormation };
 
     // Start the ready countdown on the first ready, so a no-show opponent can
     // be refunded rather than leaving the stake stuck.
@@ -127,10 +147,16 @@ export async function POST(request, { params }) {
     const updated = await updateRoom(room.id, patch);
 
     // Ensure both squad rows exist so picks have somewhere to land.
+    // Each player's formation is stored per-squad so the engine can use it.
     if (bothReady) {
+      // The current caller's formation is from this request body;
+      // the opponent's formation was stored when THEY readied up.
+      // If both ready simultaneously (rare race), both get their own choice.
+      const creatorFormation = isCreator ? chosenFormation : (room.creator_formation || DUEL_FORMATION);
+      const joinerFormation = isJoiner ? chosenFormation : (room.joiner_formation || DUEL_FORMATION);
       await Promise.all([
-        upsertSquad({ roomId: room.id, player: room.creator, formation: DUEL_FORMATION }),
-        upsertSquad({ roomId: room.id, player: room.joiner, formation: DUEL_FORMATION }),
+        upsertSquad({ roomId: room.id, player: room.creator, formation: creatorFormation }),
+        upsertSquad({ roomId: room.id, player: room.joiner, formation: joinerFormation }),
       ]);
     }
 

@@ -66,9 +66,9 @@ button:focus-visible, a:focus-visible {
   --shadow-lg:   0 20px 50px rgba(0,0,0,0.85);
 }
 
-html { min-height: 100%; }
+html { height: 100%; }
 body {
-  min-height: 100%;
+  height: 100%;
   font-family: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
   background: var(--bg);
   color: var(--text);
@@ -80,6 +80,10 @@ body {
 /* Game and duel routes lock the viewport (their .game-card / .duel-shell
    fills 100vh-header). Only the landing page and any content taller than
    the viewport should trigger the body scrollbar. */
+body:has(.duel-shell),
+body:has(.game-card) {
+  overflow: hidden;
+}
 .duel-shell {
   display: block;
   height: calc(100vh - 52px);
@@ -2438,6 +2442,23 @@ h1, h2, h3 { font-family: "Space Grotesk", sans-serif; font-weight: 700; letter-
   text-transform: uppercase;
   margin-bottom: 12px;
   z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.duel-formation-badge {
+  display: inline-block;
+  padding: 2px 7px;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--green);
+  background: rgba(52, 211, 153, 0.12);
+  border: 1px solid rgba(52, 211, 153, 0.3);
+  border-radius: 4px;
+  text-transform: none;
 }
 .duel-pitch-block .pitch {
   width: 100%;
@@ -3176,6 +3197,69 @@ body.match-open { overflow: hidden; }
   color: var(--text2);
   background: var(--panel3);
   cursor: default;
+}
+
+/* ── Formation picker in ready screen ────────────────────────────────────── */
+
+.ready-formation-picker {
+  margin: 12px 0 16px;
+  padding: 14px 12px;
+  background: rgba(52, 211, 153, 0.04);
+  border: 1px solid rgba(52, 211, 153, 0.15);
+  border-radius: var(--radius-md);
+}
+
+.ready-formation-hint {
+  margin: 2px 0 10px;
+  font-size: 0.7rem;
+  color: var(--text3);
+}
+
+.ready-formation-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+}
+
+.ready-formation-grid .btn-formation {
+  min-width: 54px;
+  padding: 6px 10px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border2);
+  background: var(--panel);
+  color: var(--text2);
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.ready-formation-grid .btn-formation:hover {
+  border-color: var(--green);
+  color: var(--text);
+}
+
+.ready-formation-grid .btn-formation.active {
+  background: rgba(52, 211, 153, 0.18);
+  border-color: var(--green);
+  color: var(--green);
+  box-shadow: 0 0 8px rgba(52, 211, 153, 0.25);
+}
+
+.ready-formation-preview {
+  margin-top: 12px;
+  position: relative;
+  width: 100%;
+  max-width: 220px;
+  margin-left: auto;
+  margin-right: auto;
+  aspect-ratio: 3 / 4;
+}
+
+.ready-pitch-mini {
+  transform: scale(0.85);
+  transform-origin: center center;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -4405,7 +4489,7 @@ body.match-open { overflow: hidden; }
 /* ═══════════════════════════════════════════════════════════════════════════
    CAMPAIGN VIEW (post-run sheet)
    ═══════════════════════════════════════════════════════════════════════════ */
-.campaign-screen { max-width: 780px; margin: 0 auto; width: 100%; gap: 0; padding: 28px 24px 32px; }
+.campaign-screen { max-width: 960px; margin: 0 auto; width: 100%; gap: 0; padding: 28px 32px 32px; }
 
 .campaign-header { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 8px; }
 .campaign-header-left { display: flex; flex-direction: column; gap: 4px; }
@@ -4419,9 +4503,9 @@ body.match-open { overflow: hidden; }
 .campaign-match-block:last-child { border-bottom: none; }
 .campaign-row {
   display: grid;
-  grid-template-columns: 100px auto auto 1fr auto auto auto;
-  align-items: center; gap: 10px;
-  padding: 14px 12px;
+  grid-template-columns: 120px auto auto 1fr auto auto auto;
+  align-items: center; gap: 12px;
+  padding: 16px 16px;
   cursor: pointer; transition: background 0.12s ease;
   border-left: 3px solid transparent;
 }
@@ -4429,11 +4513,11 @@ body.match-open { overflow: hidden; }
 .campaign-row--won { border-left-color: var(--green); }
 .campaign-row--lost { border-left-color: var(--red); }
 
-.campaign-row-stage { font-family: "Space Grotesk", sans-serif; font-size: 0.62rem; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text3); line-height: 1.3; }
+.campaign-row-stage { font-family: "Space Grotesk", sans-serif; font-size: 0.65rem; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text3); line-height: 1.3; }
 .campaign-row-vs { font-size: 0.72rem; color: var(--text3); font-weight: 500; }
-.campaign-row-flag { width: 22px; height: 16px; object-fit: cover; border-radius: 2px; border: 1px solid var(--border2); }
-.campaign-row-opponent { font-family: "Space Grotesk", sans-serif; font-size: 1rem; font-weight: 800; color: var(--text); letter-spacing: -0.01em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.campaign-row-score { font-family: "Space Grotesk", sans-serif; font-size: 1.1rem; font-weight: 900; color: var(--text); min-width: 56px; text-align: right; font-variant-numeric: tabular-nums; }
+.campaign-row-flag { width: 24px; height: 18px; object-fit: cover; border-radius: 2px; border: 1px solid var(--border2); }
+.campaign-row-opponent { font-family: "Space Grotesk", sans-serif; font-size: 1.05rem; font-weight: 800; color: var(--text); letter-spacing: -0.01em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.campaign-row-score { font-family: "Space Grotesk", sans-serif; font-size: 1.15rem; font-weight: 900; color: var(--text); min-width: 60px; text-align: right; font-variant-numeric: tabular-nums; }
 .campaign-row-score--lost { color: var(--red); }
 .campaign-row-result { font-size: 0.9rem; min-width: 28px; text-align: center; }
 .campaign-row--won .campaign-row-result { color: var(--green); }
@@ -4461,8 +4545,10 @@ body.match-open { overflow: hidden; }
 .campaign-bottom--champ { border-color: rgba(240,192,64,0.35); background: linear-gradient(135deg, rgba(240,192,64,0.06), var(--surface)); }
 .campaign-bottom-score { display: flex; align-items: baseline; gap: 6px; }
 .campaign-bottom-big { font-family: "Space Grotesk", sans-serif; font-size: 4rem; font-weight: 900; color: var(--text); line-height: 1; letter-spacing: -0.04em; }
+.campaign-bottom-big--win { color: var(--green); }
+.campaign-bottom-big--loss { color: var(--red); }
 .campaign-bottom-sep { font-family: "Space Grotesk", sans-serif; font-size: 2.4rem; font-weight: 400; color: var(--text3); }
-.campaign-bottom-stats { display: flex; gap: 24px; flex: 1; }
+.campaign-bottom-stats { display: flex; gap: 28px; flex: 1; justify-content: space-around; }
 .campaign-bottom-stat { display: flex; flex-direction: column; gap: 2px; }
 .campaign-bottom-stat-val { font-family: "Space Grotesk", sans-serif; font-size: 1.5rem; font-weight: 900; color: var(--text); letter-spacing: -0.02em; }
 .campaign-bottom-stat-label { font-family: "Space Grotesk", sans-serif; font-size: 0.55rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text3); }
@@ -4628,8 +4714,9 @@ body.match-open { overflow: hidden; }
 .duel-match-side--right { text-align: right; }
 
 .duel-match-side--flash {
-  background: linear-gradient(180deg, rgba(52, 211, 153, 0.24), rgba(52, 211, 153, 0.04));
-  border-color: rgba(52, 211, 153, 0.5);
+  background: linear-gradient(180deg, rgba(52, 211, 153, 0.28), rgba(52, 211, 153, 0.06));
+  border-color: rgba(52, 211, 153, 0.6);
+  box-shadow: 0 0 20px rgba(52, 211, 153, 0.3), inset 0 0 12px rgba(52, 211, 153, 0.1);
 }
 
 .duel-match-side-tag {
@@ -4912,12 +4999,15 @@ body.match-open { overflow: hidden; }
 
 .duel-match-reveal-card--won {
   border-color: rgba(52, 211, 153, 0.55);
+  box-shadow: 0 40px 80px rgba(0, 0, 0, 0.6), 0 0 40px rgba(52, 211, 153, 0.2), 0 0 80px rgba(52, 211, 153, 0.1);
 }
 .duel-match-reveal-card--lost {
   border-color: rgba(239, 68, 68, 0.48);
+  box-shadow: 0 40px 80px rgba(0, 0, 0, 0.6), 0 0 30px rgba(239, 68, 68, 0.15);
 }
 .duel-match-reveal-card--draw {
   border-color: rgba(250, 204, 21, 0.42);
+  box-shadow: 0 40px 80px rgba(0, 0, 0, 0.6), 0 0 30px rgba(250, 204, 21, 0.12);
 }
 
 .duel-match-reveal-tag {
@@ -5093,6 +5183,55 @@ body.match-open { overflow: hidden; }
   width: 8px;
   height: 14px;
   border-radius: 2px;
+}
+
+/* ── Goal celebration flash ─────────────────────────────────────────────── */
+.duel-match-goal-flash {
+  position: absolute;
+  inset: 0;
+  z-index: 15;
+  pointer-events: none;
+  border-radius: var(--radius-lg);
+}
+
+.duel-match-goal-flash--me {
+  background: radial-gradient(ellipse at center, rgba(52, 211, 153, 0.5), transparent 70%);
+}
+
+.duel-match-goal-flash--them {
+  background: radial-gradient(ellipse at center, rgba(239, 68, 68, 0.35), transparent 70%);
+}
+
+/* ── Screen shake on goal ───────────────────────────────────────────────── */
+@keyframes match-shake {
+  0%, 100% { transform: translateX(0) translateY(0); }
+  10% { transform: translateX(-3px) translateY(1px); }
+  20% { transform: translateX(4px) translateY(-2px); }
+  30% { transform: translateX(-2px) translateY(3px); }
+  40% { transform: translateX(3px) translateY(-1px); }
+  50% { transform: translateX(-1px) translateY(2px); }
+  60% { transform: translateX(2px) translateY(-2px); }
+  70% { transform: translateX(-3px) translateY(1px); }
+  80% { transform: translateX(1px) translateY(-1px); }
+  90% { transform: translateX(-1px) translateY(1px); }
+}
+
+.duel-match--shake {
+  animation: match-shake 0.6s ease-out;
+}
+
+/* ── Enhanced atmosphere glow pulse ─────────────────────────────────────── */
+@keyframes atmosphere-pulse {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50% { opacity: 0.7; transform: scale(1.05); }
+}
+
+.duel-match-bg-glow {
+  animation: atmosphere-pulse 4s ease-in-out infinite;
+}
+
+.duel-match-bg-glow--right {
+  animation-delay: 2s;
 }
 
 /* ── Mobile ─────────────────────────────────────────────────────────────── */

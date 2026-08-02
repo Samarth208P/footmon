@@ -4,6 +4,7 @@ import { useCallback, useState, useEffect, useRef } from "react";
 import { BrowserProvider } from "ethers";
 import { useAppKitProvider } from "@reown/appkit/react";
 import { FORMATIONS, buildSlots, canPlayerFillSlot, REROLL_PRICE_MON } from "@/lib/constants";
+import { attackRating, defenceRating } from "@/lib/match-engine";
 
 // ── Session persistence ─────────────────────────────────────────────────────
 // We stash the active duel session in localStorage so a page refresh mid-duel
@@ -554,13 +555,14 @@ export function useDuel(rawAddress) {
         token = sess.token;
       }
 
-      // 3) POST /ready with the bearer token.
+      // 3) POST /ready with the bearer token and chosen formation.
       const res = await fetch(`/api/duels/rooms/${roomCode}/ready`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
+        body: JSON.stringify({ formation }),
       });
 
       const data = await res.json();
@@ -970,8 +972,20 @@ export function useDuel(rawAddress) {
           for (const sq of data.squads) {
             const isMine = sq.player === myAddr;
             if (isMine && (rearrangeInFlightRef.current || pickedRecently)) continue;
+
+            // Rebuild slot positions from the server-reported formation so
+            // the pitch renders the correct shape for each side. The opponent's
+            // formation is unknown until the draft starts and their squad row
+            // surfaces it.
+            const sqFormation = sq.formation || "4-3-3";
             const target = isMine ? setMySlots : setOpponentSlots;
-            target((prev) => hydrateSlots(prev, sq.slots));
+            target((prev) => {
+              // Rebuild base from the correct formation if it changed.
+              const base = prev[0]?._formation === sqFormation
+                ? prev
+                : buildSlots(sqFormation, "balanced").map((s) => ({ ...s, _formation: sqFormation }));
+              return hydrateSlots(base, sq.slots);
+            });
           }
         }
 
@@ -1121,10 +1135,14 @@ export function useDuel(rawAddress) {
     if (assigned === 0) return { avg: "0.0", attack: 0, defense: 0, assigned, total };
 
     const avg = filled.reduce((s, sl) => s + sl.player.rating, 0) / assigned;
-    const attack = filled.reduce((s, sl) => s + (sl.player.attack ?? sl.player.rating), 0) / assigned;
-    const defense = filled.reduce((s, sl) => s + (sl.player.defense ?? sl.player.rating), 0) / assigned;
 
-    return { avg: avg.toFixed(1), attack: Math.round(attack), defense: Math.round(defense), assigned, total };
+    // Use the game engine's position-weighted ratings so the UI reflects
+    // the actual ATK/DEF strengths used during match simulation.
+    const playersWithSlotPos = filled.map((sl) => ({ ...sl.player, slotPos: sl.pos }));
+    const attack = Math.round(attackRating(playersWithSlotPos));
+    const defense = Math.round(defenceRating(playersWithSlotPos));
+
+    return { avg: avg.toFixed(1), attack, defense, assigned, total };
   }, [mySlots]);
 
   const getOpponentStats = useCallback(() => {
@@ -1210,8 +1228,18 @@ export function useDuel(rawAddress) {
         if (Array.isArray(data.squads)) {
           for (const sq of data.squads) {
             const isMine = sq.player === String(address).toLowerCase();
+            const sqFormation = sq.formation || "4-3-3";
             const target = isMine ? setMySlots : setOpponentSlots;
-            target((prev) => hydrateSlots(prev, sq.slots));
+
+            // On reconnect, rebuild the formation from the stored squad so
+            // the pitch renders the correct shape regardless of local state.
+            if (isMine && sqFormation !== "4-3-3") {
+              setFormationKey(sqFormation);
+            }
+            target((prev) => {
+              const base = buildSlots(sqFormation, "balanced").map((s) => ({ ...s, _formation: sqFormation }));
+              return hydrateSlots(base, sq.slots);
+            });
           }
         }
 

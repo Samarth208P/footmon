@@ -86,9 +86,12 @@ export default function DuelMatchScreen({
   const [minute, setMinute] = useState(0);
   const [phase, setPhase] = useState("kickoff"); // kickoff | firstHalf | halfTime | secondHalf | fullTime | reveal
   const [flash, setFlash] = useState(null); // "creator" | "joiner" — flashes score row
+  const [goalCelebration, setGoalCelebration] = useState(null); // "me" | "them" — full-screen flash
   const [reveal, setReveal] = useState(false);
+  const [shaking, setShaking] = useState(false);
   const startRef = useRef(null);
   const flashTimerRef = useRef(null);
+  const goalCelebTimerRef = useRef(null);
   const lastShownSeqRef = useRef(-1);
 
   // Trigger a brief flash on the scoring side and clear it after ~600ms.
@@ -96,6 +99,17 @@ export default function DuelMatchScreen({
     if (flashTimerRef.current) clearTimeout(flashTimerRef.current);
     setFlash(side);
     flashTimerRef.current = setTimeout(() => setFlash(null), 650);
+  };
+
+  // Goal celebration: screen flash + shake effect.
+  const triggerGoalCelebration = (forMe) => {
+    setGoalCelebration(forMe ? "me" : "them");
+    setShaking(true);
+    if (goalCelebTimerRef.current) clearTimeout(goalCelebTimerRef.current);
+    goalCelebTimerRef.current = setTimeout(() => {
+      setGoalCelebration(null);
+      setShaking(false);
+    }, 800);
   };
 
   // Play the clock as soon as we have a timeline.
@@ -130,7 +144,9 @@ export default function DuelMatchScreen({
       lastShownSeqRef.current = e.seq;
       if (e.event_type === "goal") {
         const side = e.team === "home" || e.team === "creator" ? "creator" : "joiner";
+        const forMe = (iAmCreator && side === "creator") || (!iAmCreator && side === "joiner");
         pulseFlash(side);
+        triggerGoalCelebration(forMe);
         playSound("goal");
       }
     }
@@ -148,6 +164,7 @@ export default function DuelMatchScreen({
 
   useEffect(() => () => {
     if (flashTimerRef.current) clearTimeout(flashTimerRef.current);
+    if (goalCelebTimerRef.current) clearTimeout(goalCelebTimerRef.current);
   }, []);
 
   // Skip animation and jump straight to the reveal.
@@ -261,7 +278,21 @@ export default function DuelMatchScreen({
   const clockLabel = phase === "reveal" || phase === "fullTime" ? "FT" : `${creatorMinuteLabel}'`;
 
   return (
-    <div className="duel-match">
+    <div className={`duel-match ${shaking ? "duel-match--shake" : ""}`}>
+      {/* Goal celebration flash overlay */}
+      <AnimatePresence>
+        {goalCelebration && (
+          <motion.div
+            className={`duel-match-goal-flash duel-match-goal-flash--${goalCelebration}`}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: [0, 0.6, 0.3, 0] }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.7, ease: "easeOut" }}
+            aria-hidden="true"
+          />
+        )}
+      </AnimatePresence>
+
       {/* Ambient pitch background */}
       <div className="duel-match-bg" aria-hidden="true">
         <div className="duel-match-bg-glow duel-match-bg-glow--left" />
@@ -309,10 +340,10 @@ export default function DuelMatchScreen({
         {showHalfTimeBanner && (
           <motion.div
             className="duel-match-halftime"
-            initial={{ scale: 0.6, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 1.1, opacity: 0 }}
-            transition={{ duration: 0.35 }}
+            initial={{ scale: 0.3, opacity: 0, rotateX: 90 }}
+            animate={{ scale: 1, opacity: 1, rotateX: 0 }}
+            exit={{ scale: 1.2, opacity: 0, y: -20 }}
+            transition={{ type: "spring", stiffness: 300, damping: 20 }}
           >
             HALF TIME
           </motion.div>
@@ -488,19 +519,29 @@ export default function DuelMatchScreen({
                   : iLost ? "duel-match-reveal-card--lost"
                   : "duel-match-reveal-card--draw"
               }`}
-              initial={{ scale: 0.7, opacity: 0, y: 30 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              transition={{ type: "spring", stiffness: 220, damping: 22, delay: 0.15 }}
+              initial={{ scale: 0.5, opacity: 0, y: 50, rotateX: 15 }}
+              animate={{ scale: 1, opacity: 1, y: 0, rotateX: 0 }}
+              transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.2 }}
             >
-              <div className="duel-match-reveal-tag">
+              <motion.div
+                className="duel-match-reveal-tag"
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4, duration: 0.3 }}
+              >
                 {iWon ? "VICTORY" : iLost ? "DEFEAT" : "DRAW"}
-              </div>
+              </motion.div>
 
-              <div className="duel-match-reveal-score">
+              <motion.div
+                className="duel-match-reveal-score"
+                initial={{ scale: 0.6, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ type: "spring", stiffness: 300, damping: 18, delay: 0.5 }}
+              >
                 <span className="duel-match-reveal-score-num">{myScore}</span>
                 <span className="duel-match-reveal-score-dash">–</span>
                 <span className="duel-match-reveal-score-num">{oppScore}</span>
-              </div>
+              </motion.div>
               {myScore === oppScore && room?.winner && (
                 <div className="duel-match-reveal-pens" style={{ fontSize: "0.75rem", opacity: 0.7, marginTop: "0.25rem" }}>
                   Won on penalties
@@ -558,17 +599,20 @@ function SideBadge({ label, isYou, side, flash, score }) {
   return (
     <motion.div
       className={`duel-match-side duel-match-side--${side} ${flash ? "duel-match-side--flash" : ""}`}
-      animate={flash ? { scale: [1, 1.08, 1] } : { scale: 1 }}
-      transition={{ duration: 0.55 }}
+      animate={flash
+        ? { scale: [1, 1.12, 0.98, 1.04, 1], borderColor: "rgba(52, 211, 153, 0.7)" }
+        : { scale: 1, borderColor: "transparent" }
+      }
+      transition={{ duration: 0.7, ease: "easeOut" }}
     >
       <div className="duel-match-side-tag">{isYou ? "YOU" : "OPPONENT"}</div>
       <div className="duel-match-side-name" title={label}>{label}</div>
       <div className="duel-match-side-score">
         <motion.span
           key={score}
-          initial={{ scale: 1.6, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ type: "spring", stiffness: 320, damping: 18 }}
+          initial={{ scale: 2.2, opacity: 0, y: -10 }}
+          animate={{ scale: 1, opacity: 1, y: 0 }}
+          transition={{ type: "spring", stiffness: 400, damping: 15 }}
         >
           {score}
         </motion.span>
@@ -603,20 +647,25 @@ function ProgressRing({ minute }) {
 }
 
 /**
- * Confetti burst — 24 particles fanning out from the reveal card. CSS handles
- * the visual style; framer-motion picks a randomised trajectory per particle.
+ * Confetti burst — 60 particles fanning out from the reveal card with varied
+ * shapes and physics for a spectacular celebration effect.
  */
 function ConfettiBurst() {
   const pieces = useMemo(() => {
-    return Array.from({ length: 32 }, (_, i) => {
-      const angle = (i / 32) * Math.PI * 2;
-      const radius = 220 + Math.random() * 140;
+    return Array.from({ length: 60 }, (_, i) => {
+      const angle = (i / 60) * Math.PI * 2 + (Math.random() - 0.5) * 0.4;
+      const radius = 180 + Math.random() * 200;
+      const isRibbon = Math.random() > 0.5;
       return {
         id: i,
         x: Math.cos(angle) * radius,
-        y: Math.sin(angle) * radius,
-        delay: Math.random() * 0.15,
+        y: Math.sin(angle) * radius - 60 - Math.random() * 100,
+        delay: Math.random() * 0.25,
         color: pickColor(i),
+        rotate: Math.random() * 720 - 360,
+        width: isRibbon ? 4 + Math.random() * 3 : 7 + Math.random() * 4,
+        height: isRibbon ? 12 + Math.random() * 10 : 7 + Math.random() * 4,
+        borderRadius: isRibbon ? "2px" : "50%",
       };
     });
   }, []);
@@ -627,16 +676,21 @@ function ConfettiBurst() {
         <motion.span
           key={p.id}
           className="duel-match-confetti-piece"
-          style={{ background: p.color }}
-          initial={{ x: 0, y: 0, opacity: 0, scale: 0.4, rotate: 0 }}
+          style={{
+            background: p.color,
+            width: p.width,
+            height: p.height,
+            borderRadius: p.borderRadius,
+          }}
+          initial={{ x: 0, y: 0, opacity: 0, scale: 0.2, rotate: 0 }}
           animate={{
             x: p.x,
             y: p.y,
-            opacity: [0, 1, 1, 0],
-            scale: [0.4, 1, 1, 0.6],
-            rotate: 360 + Math.random() * 360,
+            opacity: [0, 1, 1, 0.8, 0],
+            scale: [0.2, 1.2, 1, 0.8, 0.4],
+            rotate: p.rotate,
           }}
-          transition={{ duration: 1.4, delay: p.delay, ease: "easeOut" }}
+          transition={{ duration: 1.8, delay: p.delay, ease: [0.2, 0.8, 0.4, 1] }}
         />
       ))}
     </div>
@@ -644,6 +698,6 @@ function ConfettiBurst() {
 }
 
 function pickColor(i) {
-  const palette = ["#34d399", "#fbbf24", "#f472b6", "#60a5fa", "#a78bfa", "#f97316"];
+  const palette = ["#34d399", "#fbbf24", "#f472b6", "#60a5fa", "#a78bfa", "#f97316", "#22d3ee", "#e879f9"];
   return palette[i % palette.length];
 }

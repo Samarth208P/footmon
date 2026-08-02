@@ -7,6 +7,6 @@ export default function robots() {
         disallow: ["/api/"],
       },
     ],
-    sitemap: "https://footmon.gg/sitemap.xml",
+    sitemap: "https://footmon.app/sitemap.xml",
   };
 }

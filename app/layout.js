@@ -2,7 +2,7 @@ import "./globals.css";
 import Header from "@/components/Header";
 import Web3ModalProvider from "@/context/Web3Modal";
 
-const SITE_URL = "https://footmon.gg";
+const SITE_URL = "https://footmon.app";
 
 export const metadata = {
   metadataBase: new URL(SITE_URL),

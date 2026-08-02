@@ -47,7 +47,7 @@ const jsonLd = {
   "@context": "https://schema.org",
   "@type": "WebApplication",
   name: "FootMon",
-  url: "https://footmon.gg",
+  url: "https://footmon.app",
   description:
     "Roll for legendary World Cup squads, draft your dream 11, and win MON in daily tournaments and 1v1 staked duels on Monad.",
   applicationCategory: "GameApplication",
@@ -61,9 +61,9 @@ const jsonLd = {
   author: {
     "@type": "Organization",
     name: "FootMon",
-    url: "https://footmon.gg",
+    url: "https://footmon.app",
   },
-  screenshot: "https://footmon.gg/footmon.png",
+  screenshot: "https://footmon.app/footmon.png",
 };
 
 const faqJsonLd = {

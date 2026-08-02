@@ -1,5 +1,5 @@
 export default function sitemap() {
-  const baseUrl = "https://footmon.gg";
+  const baseUrl = "https://footmon.app";
 
   return [
     {

@@ -56,13 +56,19 @@ function randomNonce() {
  * the empty layout from buildSlots(); `serverSlots` is what the server has
  * stored for that squad. We only overwrite when something changed to keep
  * React from re-rendering the pitch on every poll tick.
+ *
+ * Uses a Map keyed by slot_index for O(n) lookups instead of O(n²) .find().
  */
 function hydrateSlots(baseSlots, serverSlots) {
   if (!Array.isArray(serverSlots) || serverSlots.length === 0) return baseSlots;
 
+  // Build index map once → O(n) lookups instead of O(n²) nested .find()
+  const slotMap = new Map();
+  for (const s of serverSlots) slotMap.set(s.slot_index, s);
+
   let changed = false;
   const next = baseSlots.map((slot, idx) => {
-    const row = serverSlots.find((s) => s.slot_index === idx);
+    const row = slotMap.get(idx);
     if (!row) {
       if (slot.player !== null) {
         changed = true;
@@ -81,10 +87,6 @@ function hydrateSlots(baseSlots, serverSlots) {
       player: {
         name: row.player_name,
         rating: Number(row.player_rating ?? 0),
-        // jersey_number is enriched server-side in the room GET route by
-        // joining slots against wc_players. Missing means we lost the
-        // lookup (older slot without nation/year, or the join failed);
-        // the pitch view then falls back to showing the rating.
         jerseyNumber: row.jersey_number != null ? Number(row.jersey_number) : null,
         position: row.player_position ?? slot.pos,
         positions: row.player_position ? [row.player_position] : [slot.pos],
@@ -217,6 +219,11 @@ export function useDuel(rawAddress) {
   // hydrating mySlots and turn state from stale responses that started
   // before the pick was persisted.
   const pickAtRef = useRef(0);
+
+  // Gate: when ANY mutation (pick, roll, rearrange) is in flight, the poll
+  // can skip fetching because the response will be stale by the time it
+  // arrives and will be superseded by the mutation's own response.
+  const mutationInFlightRef = useRef(false);
 
   // Opponent's live roll, streamed via the room GET response so the waiting
   // player can watch what nation/year their opponent has drawn and browse
@@ -583,6 +590,7 @@ export function useDuel(rawAddress) {
   const roll = useCallback(async (mode = "full", payForRoll = null) => {
     if (busy || !isMyTurn || !roomCode) return;
     setBusy(true);
+    mutationInFlightRef.current = true;
 
     const isPaid = rolledThisTurn;
 
@@ -628,6 +636,7 @@ export function useDuel(rawAddress) {
       rolledAtRef.current = Date.now();
       if (data.room) setRoom(data.room);
     } finally {
+      mutationInFlightRef.current = false;
       setBusy(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -661,6 +670,7 @@ export function useDuel(rawAddress) {
     setBusy(true);
 
     try {
+      mutationInFlightRef.current = true;
       const res = await fetch(`/api/duels/rooms/${roomCode}/pick`, {
         method: "POST",
         headers: {
@@ -694,14 +704,32 @@ export function useDuel(rawAddress) {
         setSquad([]);
         setRolledThisTurn(false);
         setSelectedPlayer(null);
+        setFilterPos(null);
         setIsMyTurn(false);
         pickAtRef.current = Date.now();
+
+        // Immediately apply the authoritative server response so the UI
+        // reflects the true next-turn state without waiting for a poll tick.
+        if (data.room) {
+          setRoom(data.room);
+          if (data.room.current_turn) {
+            const nextIsMe = data.room.current_turn === addressRef.current;
+            setIsMyTurn(nextIsMe);
+          }
+          if (data.room.turn_deadline) setTurnDeadline(data.room.turn_deadline);
+          // Transition to match screen immediately if draft just completed.
+          if (data.draftComplete) {
+            setScreen("match");
+            screenRef.current = "match";
+          }
+        }
       } else {
         setError(data.error || "Pick failed");
       }
     } catch (err) {
       setError(err.message);
     } finally {
+      mutationInFlightRef.current = false;
       setBusy(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -737,6 +765,7 @@ export function useDuel(rawAddress) {
     // overwrite our optimistic move and the swap looks like it "snaps
     // back" for ~1.5s before the next poll picks up the persisted state.
     rearrangeInFlightRef.current = true;
+    mutationInFlightRef.current = true;
     let snapshot;
     setMySlots((prev) => {
       snapshot = prev;
@@ -775,6 +804,7 @@ export function useDuel(rawAddress) {
       return { error: err.message };
     } finally {
       rearrangeInFlightRef.current = false;
+      mutationInFlightRef.current = false;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [roomCode]);
@@ -903,6 +933,9 @@ export function useDuel(rawAddress) {
     stopPolling();
 
     const poll = async () => {
+      // Skip the fetch if a mutation (pick/roll/rearrange) is in flight —
+      // its response will be newer than anything we'd get here.
+      if (mutationInFlightRef.current) return;
       try {
         const res = await fetch(`/api/duels/rooms/${code}`, { cache: "no-store" });
         if (!res.ok) return;

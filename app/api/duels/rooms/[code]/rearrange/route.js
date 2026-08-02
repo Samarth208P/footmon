@@ -157,6 +157,10 @@ export async function POST(request, { params }) {
     // Return the freshly ordered squad so the caller can hydrate without
     // waiting for the next poll tick.
     const updatedSlots = await listSquadSlots(squad.id);
+
+    // Enrich with full positions so the client can validate future swaps.
+    await enrichSlotsWithPositions(updatedSlots);
+
     return NextResponse.json({
       slots: updatedSlots,
       fromSlot,
@@ -215,4 +219,56 @@ function pickPositions(map, slotRow) {
   }
   const key = `${slotRow.player_name}|${slotRow.player_nation}|${slotRow.player_year}`;
   return map.get(key) || null;
+}
+
+
+/**
+ * Stamp each slot row with the full positions array from wc_players so the
+ * client has complete position data for future swap validation.
+ */
+async function enrichSlotsWithPositions(slots) {
+  const supabase = getServerClient();
+  if (!supabase || !slots || slots.length === 0) return;
+
+  const needles = slots.filter(
+    (s) => s.player_name && s.player_nation && s.player_year
+  );
+  if (needles.length === 0) return;
+
+  const names = [...new Set(needles.map((n) => n.player_name))];
+  const nations = [...new Set(needles.map((n) => n.player_nation))];
+  const years = [...new Set(needles.map((n) => n.player_year))];
+
+  try {
+    const { data, error } = await supabase
+      .from("wc_players")
+      .select("name, nation_code, year, position, positions")
+      .in("name", names)
+      .in("nation_code", nations)
+      .in("year", years);
+    if (error || !data) return;
+
+    const byKey = new Map();
+    for (const row of data) {
+      const key = `${row.name}|${row.nation_code}|${row.year}`;
+      if (!byKey.has(key)) {
+        const positions = Array.isArray(row.positions) && row.positions.length > 0
+          ? row.positions
+          : row.position
+            ? [row.position]
+            : [];
+        byKey.set(key, positions);
+      }
+    }
+
+    for (const slot of needles) {
+      const key = `${slot.player_name}|${slot.player_nation}|${slot.player_year}`;
+      const positions = byKey.get(key);
+      if (positions && positions.length > 0) {
+        slot.player_positions = positions;
+      }
+    }
+  } catch {
+    /* best-effort */
+  }
 }

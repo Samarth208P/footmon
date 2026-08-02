@@ -750,18 +750,25 @@ h1, h2, h3 { font-family: "Space Grotesk", sans-serif; font-weight: 700; letter-
   box-shadow: var(--shadow);
   flex-shrink: 0;
 }
+.rolls-left-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 0 12px 6px;
+}
 .rolls-left-label {
   font-family: "Space Grotesk", sans-serif;
-  font-size: 0.78rem;
-  font-weight: 700;
-  color: var(--text2);
-  letter-spacing: 0.05em;
+  font-size: 0.66rem;
+  font-weight: 800;
+  color: var(--text3);
+  letter-spacing: 0.14em;
   text-transform: uppercase;
 }
 .reroll-btns {
   display: flex;
   gap: 8px;
-  margin-top: 10px;
+  margin: 0 12px 10px;
 }
 .btn-reroll {
   flex: 1;
@@ -771,21 +778,29 @@ h1, h2, h3 { font-family: "Space Grotesk", sans-serif; font-weight: 700; letter-
   background: var(--surface);
   color: var(--text);
   font-family: inherit;
-  font-size: 0.88rem;
+  font-size: 0.82rem;
   font-weight: 700;
+  letter-spacing: 0.02em;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all 0.15s ease;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
 }
-.btn-reroll:hover {
-  border-color: var(--text);
+.btn-reroll:hover:not(:disabled) {
+  border-color: rgba(167, 139, 250, 0.55);
   color: #fff;
-  background: var(--panel3);
+  background: linear-gradient(135deg, var(--panel3), rgba(167, 139, 250, 0.06));
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(167, 139, 250, 0.12);
 }
 .btn-reroll:active { transform: scale(0.97); }
+.btn-reroll:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
 
 .roll-cost-badge {
   display: none;
@@ -1559,24 +1574,30 @@ h1, h2, h3 { font-family: "Space Grotesk", sans-serif; font-weight: 700; letter-
 }
 .btn-cancel-draft {
   width: 100%;
-  padding: 10px;
+  padding: 10px 12px;
   background: transparent;
-  border: 1.5px solid var(--text3);
+  border: 1.5px solid rgba(239, 68, 68, 0.35);
   border-radius: var(--radius-sm);
-  color: var(--text2);
+  color: rgba(252, 165, 165, 0.85);
   font-family: inherit;
-  font-size: 0.85rem;
-  font-weight: 600;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 .btn-cancel-draft:hover {
-  background: rgba(255, 255, 255, 0.05);
-  color: var(--text);
-  border-color: var(--text2);
+  background: rgba(239, 68, 68, 0.08);
+  color: #fecaca;
+  border-color: rgba(239, 68, 68, 0.55);
 }
 .btn-cancel-draft:active {
   transform: scale(0.98);
+}
+.btn-cancel-draft:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
 }
 
 /* Draft active state */
@@ -2300,15 +2321,30 @@ h1, h2, h3 { font-family: "Space Grotesk", sans-serif; font-weight: 700; letter-
 }
 
 .draft-penalty-note {
-  padding: 10px 12px;
+  padding: 12px 14px;
   border-radius: var(--radius-md);
-  background: rgba(245, 158, 11, 0.14);
-  border: 1px solid rgba(245, 158, 11, 0.45);
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.18), rgba(245, 158, 11, 0.06));
+  border: 1px solid rgba(245, 158, 11, 0.5);
   color: #fbbf24;
   font-size: 0.78rem;
   font-weight: 700;
   letter-spacing: 0.02em;
   text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.08);
+  animation: draft-penalty-pulse 2.4s ease-in-out infinite;
+}
+.draft-penalty-note::before {
+  content: "⚠";
+  font-size: 0.95rem;
+  color: #fbbf24;
+}
+@keyframes draft-penalty-pulse {
+  0%, 100% { border-color: rgba(245, 158, 11, 0.5); }
+  50%      { border-color: rgba(245, 158, 11, 0.85); }
 }
 .duel-actions-box {
   padding: 12px;
@@ -4238,23 +4274,26 @@ body.match-open { overflow: hidden; }
   display: flex;
   gap: 8px;
   align-items: center;
+  flex-wrap: wrap;
 }
 .btn-lobby-action {
-  padding: 8px 16px;
-  border-radius: 9px;
-  font-size: 0.8rem;
-  font-weight: 600;
+  padding: 9px 18px;
+  border-radius: 10px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
   border: 1px solid rgba(255,255,255,0.08);
   cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.2s ease, background 0.2s ease, border-color 0.2s ease;
 }
 .btn-lobby-action--create {
   background: linear-gradient(135deg, var(--monad1), var(--monad2));
   color: #fff;
   border: none;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 6px 16px rgba(138, 92, 246, 0.25);
 }
 .btn-lobby-action--create:hover {
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.45);
+  box-shadow: 0 10px 22px rgba(138, 92, 246, 0.35);
   transform: translateY(-1px);
 }
 .btn-lobby-action--join {
@@ -4263,8 +4302,97 @@ body.match-open { overflow: hidden; }
 }
 .btn-lobby-action--join:hover {
   background: rgba(255,255,255,0.08);
-  border-color: rgba(138,92,246,0.3);
+  border-color: rgba(138,92,246,0.35);
   transform: translateY(-1px);
+}
+.btn-refresh-lobby {
+  padding: 8px 14px;
+  border-radius: 10px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text2);
+  background: transparent;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+.btn-refresh-lobby:hover:not(:disabled) {
+  color: var(--text);
+  border-color: var(--text3);
+  background: rgba(255,255,255,0.04);
+}
+.btn-refresh-lobby:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.challenges-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+}
+.challenges-empty {
+  padding: 40px 24px;
+  text-align: center;
+  color: var(--text3);
+  font-size: 0.9rem;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-md);
+  background: rgba(255,255,255,0.02);
+}
+
+/* ── Challenge Cards ── */
+.challenge-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background: var(--panel2);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-md);
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+.challenge-card:hover {
+  border-color: rgba(138, 92, 246, 0.3);
+  transform: translateY(-1px);
+}
+.challenge-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.challenge-creator {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text);
+}
+.challenge-stake {
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: var(--green);
+}
+.btn-join-challenge {
+  padding: 8px 18px;
+  background: var(--accent);
+  color: var(--surface);
+  border: none;
+  border-radius: var(--radius-sm);
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.15s;
+}
+.btn-join-challenge:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+.btn-join-challenge:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
 }
 
 /* ── Duel modals ── */
@@ -5373,54 +5501,66 @@ body.match-open { overflow: hidden; }
 }
 
 
-/* ── Duel turn countdown + forfeit ──────────────────────────────────────── */
+/* ── Duel turn countdown ────────────────────────────────────────────────── */
 .duel-turn-banner {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 12px;
   flex-wrap: wrap;
+  padding: 10px 14px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: var(--text2);
+  transition: background 200ms ease, border-color 200ms ease, color 200ms ease;
+}
+.duel-turn-banner--active {
+  color: #fff;
+  background: linear-gradient(135deg, rgba(52, 211, 153, 0.18), rgba(52, 211, 153, 0.06));
+  border-color: rgba(52, 211, 153, 0.5);
+  box-shadow: 0 0 20px rgba(52, 211, 153, 0.15);
 }
 
 .duel-turn-clock {
-  padding: 2px 10px;
+  padding: 3px 12px;
   border-radius: 999px;
   background: rgba(255,255,255,0.06);
   border: 1px solid var(--border);
   font-family: "Space Grotesk", sans-serif;
-  font-size: 0.78rem;
-  font-weight: 700;
+  font-size: 0.82rem;
+  font-weight: 800;
   color: var(--text);
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.04em;
+  transition: background 150ms ease, border-color 150ms ease, color 150ms ease;
 }
 
+.duel-turn-banner--active .duel-turn-clock {
+  background: rgba(52, 211, 153, 0.18);
+  border-color: rgba(52, 211, 153, 0.55);
+  color: #d1fae5;
+}
+
+.duel-turn-banner--expired {
+  color: #fecaca;
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.18), rgba(239, 68, 68, 0.06));
+  border-color: rgba(239, 68, 68, 0.5);
+  animation: duel-turn-expired-pulse 1.8s ease-in-out infinite;
+}
 .duel-turn-banner--expired .duel-turn-clock {
-  background: rgba(239, 68, 68, 0.18);
-  border-color: rgba(239, 68, 68, 0.45);
+  background: rgba(239, 68, 68, 0.22);
+  border-color: rgba(239, 68, 68, 0.55);
   color: #fecaca;
 }
 
-.duel-forfeit-btn {
-  padding: 6px 12px;
-  font-family: inherit;
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  color: #fff;
-  background: linear-gradient(135deg, #dc2626, #ef4444);
-  border: 0;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
-  animation: duel-forfeit-pulse 1.4s ease-in-out infinite;
-}
-.duel-forfeit-btn:hover { filter: brightness(1.08); }
-
-/* Scale-only pulse — no red halo. The button already reads urgent. */
-@keyframes duel-forfeit-pulse {
-  0%, 100% { transform: scale(1); }
-  50%      { transform: scale(1.04); }
+@keyframes duel-turn-expired-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.0); }
+  50%      { box-shadow: 0 0 24px 0 rgba(239, 68, 68, 0.25); }
 }
 
 /* ── Daily Prize Badge ─────────────────────────────────────────────────────

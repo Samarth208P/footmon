@@ -86,20 +86,92 @@ export default function DuelGamePage() {
   const [joinCodeInput, setJoinCodeInput] = useState("");
   const [joinPasswordInput, setJoinPasswordInput] = useState("");
 
+  // Join-modal staged flow. We only ever render a password input once a
+  // privacy probe against GET /api/duels/rooms/:code confirms the room is
+  // private. Public rooms and unresolved codes never see the field. See
+  // `.kiro/specs/room-password-prompt-when-none-set/design.md`.
+  //   "idle"              — code entered but no probe result yet
+  //   "probing"           — a probe is in flight
+  //   "awaiting-password" — probe returned a private room; password field visible
+  //   "not-found"         — probe returned 404; show a distinct message
+  //   "error"             — probe returned some other error; show a message
+  const [joinStage, setJoinStage] = useState("idle");
+  const [joinProbeError, setJoinProbeError] = useState(null);
+  const [probedRoom, setProbedRoom] = useState(null); // { room_code, is_private, ... }
+  // Monotonic sequence used to ignore stale probe responses when the user
+  // types faster than the previous probe can resolve.
+  const joinProbeSeqRef = useRef(0);
+
   // Slot rearrangement — track the currently "held" slot so a second click
   // swaps its contents with the destination. null means no swap in flight.
   const [swapFromIdx, setSwapFromIdx] = useState(null);
 
-  // Parse join code from URL on mount
+  // Probe the room by code and drive `joinStage` from the result. Ignores
+  // stale responses via `joinProbeSeqRef` so a fast-typing user doesn't get
+  // a race between the second-to-last and last keystrokes' probes.
+  const runJoinProbe = useCallback(async (rawCode) => {
+    const code = String(rawCode ?? "").trim().toUpperCase();
+    if (!code) {
+      setJoinStage("idle");
+      setProbedRoom(null);
+      setJoinProbeError(null);
+      return { status: "empty" };
+    }
+    const seq = ++joinProbeSeqRef.current;
+    setJoinStage("probing");
+    setJoinProbeError(null);
+    let result;
+    try {
+      result = await duel.fetchRoomByCode(code);
+    } catch (err) {
+      if (seq !== joinProbeSeqRef.current) return { status: "stale" };
+      setProbedRoom(null);
+      setJoinStage("error");
+      setJoinProbeError(err?.message || "Failed to look up room");
+      return { status: "error" };
+    }
+    if (seq !== joinProbeSeqRef.current) return { status: "stale" };
+    if (result?.error) {
+      setProbedRoom(null);
+      if (result.error === "Room not found") {
+        setJoinStage("not-found");
+        return { status: "not-found" };
+      }
+      setJoinStage("error");
+      setJoinProbeError(result.error);
+      return { status: "error" };
+    }
+    const room = result?.room;
+    if (!room || typeof room !== "object") {
+      setProbedRoom(null);
+      setJoinStage("error");
+      setJoinProbeError("Failed to look up room");
+      return { status: "error" };
+    }
+    setProbedRoom(room);
+    // Public rooms stay in "idle" but with `probedRoom` set — that's the
+    // signal handleJoinSubmit uses to submit without a password prompt.
+    setJoinStage(room.is_private ? "awaiting-password" : "idle");
+    return { status: room.is_private ? "private" : "public", room };
+  }, [duel]);
+
+  // Parse join code from URL on mount. When present, prefill the code,
+  // open the modal, and auto-probe so the deep-link case behaves the same
+  // as manual entry (public → no password field, private → password field
+  // appears after probe resolves).
   useEffect(() => {
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
       const joinCode = params.get("join");
       if (joinCode) {
-        setJoinCodeInput(joinCode);
+        const code = String(joinCode).toUpperCase();
+        setJoinCodeInput(code);
         duel.setJoinModalOpen(true);
+        // Fire-and-forget — runJoinProbe drives joinStage itself.
+        runJoinProbe(code);
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Refresh lobby on mount and when returning to lobby
@@ -253,21 +325,109 @@ export default function DuelGamePage() {
     }
   };
 
-  // ── Join room handler ───────────────────────────────────────────────────
-  // No on-chain interaction here either — just server-side join.
-  const handleJoin = async () => {
+  // ── Join room handlers ──────────────────────────────────────────────────
+  // Two-step: the user edits the code (which triggers an auto-probe so the
+  // modal transitions to the right stage) and then clicks Join Duel. On
+  // click, we either submit directly (public room) or submit with the
+  // entered password (private room). Any probe failure surfaces inline —
+  // never as a password fallback.
+
+  // Reset the join modal's staged state. Called on modal close and any
+  // code edit. `joinCodeInput` is intentionally NOT cleared on close so
+  // the field survives a stray click on the overlay.
+  const resetJoinModalState = useCallback(() => {
+    setJoinStage("idle");
+    setJoinProbeError(null);
+    setProbedRoom(null);
+    setJoinPasswordInput("");
+    // Invalidate any in-flight probe so its late response can't move us
+    // out of "idle" after the user has moved on.
+    joinProbeSeqRef.current += 1;
+  }, []);
+
+  const handleJoinModalClose = useCallback(() => {
+    duel.setJoinModalOpen(false);
+    resetJoinModalState();
+  }, [duel, resetJoinModalState]);
+
+  // Code input onChange — reset staged state and fire a fresh probe. The
+  // reset happens synchronously (so the password input disappears the
+  // instant the code changes) and the probe fills it back in once the
+  // room's privacy status is known.
+  const handleJoinCodeChange = useCallback((e) => {
+    const val = String(e?.target?.value ?? "").toUpperCase();
+    setJoinCodeInput(val);
+    setJoinPasswordInput("");
+    setJoinProbeError(null);
+    setProbedRoom(null);
+    setJoinStage("idle");
+    if (val.trim()) {
+      // Fire-and-forget; runJoinProbe drives the stage from the result.
+      runJoinProbe(val);
+    } else {
+      // Empty — bump the seq so any in-flight probe is dropped.
+      joinProbeSeqRef.current += 1;
+    }
+  }, [runJoinProbe]);
+
+  // Join Duel button click. Behavior depends on `joinStage`:
+  //   awaiting-password + matching probed private room → submit with password
+  //   idle + matching probed public room              → submit with no password
+  //   not-found / error                                → retry the probe
+  //   anything else                                    → probe first, then submit if public
+  const handleJoinSubmit = useCallback(async () => {
     const code = joinCodeInput.trim().toUpperCase();
     if (!code) {
       showToast("Enter a room code", "error");
       return;
     }
-    const result = await duel.joinRoom(code, joinPasswordInput || null);
-    if (result.error) {
-      showToast(result.error, "error");
-    } else {
-      showToast("Joined room!", "success");
+    if (duel.busy || joinStage === "probing") return;
+
+    // Private-room confirmation.
+    if (
+      joinStage === "awaiting-password" &&
+      probedRoom &&
+      probedRoom.room_code === code &&
+      probedRoom.is_private
+    ) {
+      const result = await duel.joinRoom(code, joinPasswordInput || null);
+      if (result.error) showToast(result.error, "error");
+      else showToast("Joined room!", "success");
+      return;
     }
-  };
+
+    // Public-room submit — we've already probed and know it's public.
+    if (
+      probedRoom &&
+      probedRoom.room_code === code &&
+      probedRoom.is_private === false
+    ) {
+      const result = await duel.joinRoom(code, null);
+      if (result.error) showToast(result.error, "error");
+      else showToast("Joined room!", "success");
+      return;
+    }
+
+    // Otherwise (idle without a matching probe, or retry from not-found /
+    // error), run a fresh probe. If it comes back public, submit directly;
+    // if it's private, the stage moves to "awaiting-password" and the user
+    // enters the password on the next click; not-found / error stay in
+    // their respective stages with no password fallback.
+    const probeResult = await runJoinProbe(code);
+    if (probeResult.status === "public" && probeResult.room) {
+      const result = await duel.joinRoom(code, null);
+      if (result.error) showToast(result.error, "error");
+      else showToast("Joined room!", "success");
+    }
+  }, [
+    duel,
+    joinCodeInput,
+    joinPasswordInput,
+    joinStage,
+    probedRoom,
+    runJoinProbe,
+    showToast,
+  ]);
 
   // ── Join from lobby ─────────────────────────────────────────────────────
   const handleJoinFromLobby = async (room) => {
@@ -375,18 +535,9 @@ export default function DuelGamePage() {
         setSwapFromIdx(null);
         return;
       }
-      // Optional client-side gate for two filled slots. Empty destination
-      // is trusted through — canPlayerFillSlot only knows the primary
-      // position, but the server has the full positions list.
-      if (slot.player) {
-        const sourceCanFillTarget = canPlayerFillSlot(source.player, slot.pos);
-        const targetCanFillSource = canPlayerFillSlot(slot.player, source.pos);
-        if (!sourceCanFillTarget || !targetCanFillSource) {
-          showToast("Those two players can't swap positions", "error");
-          setSwapFromIdx(null);
-          return;
-        }
-      }
+      // Position validation is handled server-side against the full positions
+      // list from wc_players. The client only has the primary position after
+      // hydration so we skip the client gate to avoid false negatives.
       const from = swapFromIdx;
       setSwapFromIdx(null);
       playSound("swap");
@@ -522,11 +673,11 @@ export default function DuelGamePage() {
 
               {/* Join Modal */}
               {duel.joinModalOpen && (
-                <div className="duel-modal-overlay" onClick={() => duel.setJoinModalOpen(false)}>
+                <div className="duel-modal-overlay" onClick={handleJoinModalClose}>
                   <div className="duel-modal" onClick={(e) => e.stopPropagation()}>
                     <div className="duel-modal-header">
                       <span className="duel-modal-title">Join a Room</span>
-                      <button className="duel-modal-close" onClick={() => duel.setJoinModalOpen(false)}>✕</button>
+                      <button className="duel-modal-close" onClick={handleJoinModalClose}>✕</button>
                     </div>
                     <div className="duel-modal-body">
                       <div className="create-duel-inputs">
@@ -535,20 +686,35 @@ export default function DuelGamePage() {
                           placeholder="Room code (e.g. ABC23456)"
                           maxLength={10}
                           value={joinCodeInput}
-                          onChange={(e) => setJoinCodeInput(e.target.value.toUpperCase())}
+                          onChange={handleJoinCodeChange}
                         />
                       </div>
-                      <input
-                        type="password"
-                        className="duel-password-input"
-                        placeholder="Password (private rooms only)"
-                        value={joinPasswordInput}
-                        onChange={(e) => setJoinPasswordInput(e.target.value)}
-                      />
+                      {/* Password input renders ONLY when the probed room
+                          is confirmed private. Public rooms and unresolved
+                          codes never see this field. */}
+                      {joinStage === "awaiting-password" && (
+                        <input
+                          type="password"
+                          className="duel-password-input"
+                          placeholder="Password (private rooms only)"
+                          value={joinPasswordInput}
+                          onChange={(e) => setJoinPasswordInput(e.target.value)}
+                        />
+                      )}
+                      {joinStage === "not-found" && (
+                        <p className="duel-join-status duel-join-status--error">
+                          No room found with code {joinCodeInput}. Double-check the code and try again.
+                        </p>
+                      )}
+                      {joinStage === "error" && (
+                        <p className="duel-join-status duel-join-status--error">
+                          {joinProbeError || "Something went wrong looking up that room. Try again."}
+                        </p>
+                      )}
                       <button 
                         className="btn-create-duel"
-                        onClick={handleJoin}
-                        disabled={duel.busy}
+                        onClick={handleJoinSubmit}
+                        disabled={duel.busy || joinStage === "probing"}
                       >
                         {duel.busy ? "Joining..." : "Join Duel"}
                       </button>
@@ -743,41 +909,40 @@ export default function DuelGamePage() {
               )}
               <aside className="duel-left">
                 <TurnCountdown deadline={duel.room?.turn_deadline} isMyTurn={duel.isMyTurn}>
-                  {({ secondsLeft, expired }) => (
-                    <div className={`duel-turn-banner ${duel.isMyTurn ? "duel-turn-banner--active" : ""} ${expired ? "duel-turn-banner--expired" : ""}`}>
-                      <span>
-                        {duel.isMyTurn
-                          ? "YOUR TURN"
-                          : `${opponentUsername || "OPPONENT"}'S TURN`}
-                      </span>
-                      {secondsLeft != null && (
-                        <span className="duel-turn-clock">
-                          {expired
-                            ? "0:00"
-                            : `${Math.floor(secondsLeft / 60)}:${String(secondsLeft % 60).padStart(2, "0")}`}
-                        </span>
-                      )}
-                      {expired && !duel.isMyTurn && (
-                        <button
-                          type="button"
-                          className="duel-forfeit-btn"
-                          onClick={async () => {
-                            const r = await duel.claimForfeit();
-                            if (r?.error) showToast(r.error, "error");
-                            else showToast("Opponent forfeited — you win by timeout!", "success");
-                          }}
-                        >
-                          Claim Forfeit ⚡
-                        </button>
-                      )}
-                    </div>
-                  )}
+                  {({ secondsLeft, expired }) => {
+                    // When my clock has expired, we no longer forfeit —
+                    // the server just applies a rating penalty and lets
+                    // me finish picking. Show "OVERTIME" instead of a
+                    // frozen 0:00 so the UX is honest about what happens.
+                    const showOvertime = expired && duel.isMyTurn;
+                    const label = duel.isMyTurn
+                      ? "YOUR TURN"
+                      : `${opponentUsername || "OPPONENT"}'S TURN`;
+                    return (
+                      <div
+                        className={`duel-turn-banner ${duel.isMyTurn ? "duel-turn-banner--active" : ""} ${expired ? "duel-turn-banner--expired" : ""}`}
+                        role="status"
+                        aria-live="polite"
+                      >
+                        <span>{label}</span>
+                        {secondsLeft != null && (
+                          <span className="duel-turn-clock">
+                            {showOvertime
+                              ? "OVERTIME"
+                              : expired
+                                ? "0:00"
+                                : `${Math.floor(secondsLeft / 60)}:${String(secondsLeft % 60).padStart(2, "0")}`}
+                          </span>
+                        )}
+                      </div>
+                    );
+                  }}
                 </TurnCountdown>
 
                 <div className="draft-console">
                   {duel.isMyTurn && duel.myPenaltyMaxRating != null && (
                     <div className="draft-penalty-note">
-                      Timeout penalty — this pick must be rated {duel.myPenaltyMaxRating} or lower.
+                      Timeout penalty — pick a player rated {duel.myPenaltyMaxRating} or lower to continue.
                     </div>
                   )}
                   {duel.isMyTurn && (
@@ -970,7 +1135,16 @@ export default function DuelGamePage() {
                 <div className="duel-actions-box">
                   <button
                     className="btn-cancel-draft"
-                    onClick={duel.cancelRoom}
+                    onClick={() => {
+                      // Mid-draft quit is a self-forfeit: the caller loses
+                      // their stake to the opponent. A quick confirm keeps
+                      // an accidental click from surrendering the pot.
+                      const staked = BigInt(duel.room?.stake ?? "0") > 0n;
+                      const msg = staked
+                        ? "Quit this duel? Your opponent will win the pot."
+                        : "Quit this duel?";
+                      if (window.confirm(msg)) duel.cancelRoom();
+                    }}
                     disabled={duel.busy}
                     style={{ flex: 1 }}
                   >

@@ -28,8 +28,9 @@ export async function GET(request, { params }) {
   }
 
   try {
-    // Lazy timeout enforcement — whichever client polls next drives the
-    // auto-advance, so an offender who tabbed away doesn't stall the draft.
+    // Lazy timeout enforcement — whichever client polls next applies
+    // the rating penalty and refreshes the drafter's deadline. The turn
+    // stays with them so they can finish picking from the same list.
     const room = await advanceExpiredTurn(await getRoomByCode(roomCode));
     if (!room) {
       return NextResponse.json({ error: "Room not found" }, { status: 404 });
@@ -116,7 +117,7 @@ async function enrichSlotsWithJersey(bySquad) {
   try {
     const { data, error } = await supabase
       .from("wc_players")
-      .select("name, nation_code, year, jersey_number")
+      .select("name, nation_code, year, jersey_number, position, positions")
       .in("name", names)
       .in("nation_code", nations)
       .in("year", years);
@@ -127,14 +128,26 @@ async function enrichSlotsWithJersey(bySquad) {
     const byKey = new Map();
     for (const row of data) {
       const key = `${row.name}|${row.nation_code}|${row.year}`;
-      if (!byKey.has(key)) byKey.set(key, row.jersey_number);
+      if (!byKey.has(key)) {
+        const positions = Array.isArray(row.positions) && row.positions.length > 0
+          ? row.positions
+          : row.position
+            ? [row.position]
+            : [];
+        byKey.set(key, { jersey: row.jersey_number, positions });
+      }
     }
 
     for (const needle of needles) {
       const key = `${needle.name}|${needle.nation}|${needle.year}`;
-      const jersey = byKey.get(key);
-      if (typeof jersey === "number" || typeof jersey === "string") {
-        needle.slot.jersey_number = Number(jersey);
+      const info = byKey.get(key);
+      if (info) {
+        if (typeof info.jersey === "number" || typeof info.jersey === "string") {
+          needle.slot.jersey_number = Number(info.jersey);
+        }
+        if (info.positions.length > 0) {
+          needle.slot.player_positions = info.positions;
+        }
       }
     }
   } catch {

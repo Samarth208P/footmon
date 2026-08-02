@@ -3,21 +3,32 @@ import { NextResponse } from "next/server";
 import { appendMatchLog, getRoomByCode, listMatchLogs, updateRoom } from "@/lib/duel-store";
 import { isValidRoomCode, normaliseRoomCode } from "@/lib/room-code";
 import { authoriseRoomRequest } from "@/lib/session";
-import { isTurnExpired } from "@/lib/draft";
 import { recordDuelOutcome, settleDuelOnChain, winnerPayoutWei } from "@/lib/duel-resolution";
 import { getContract, isChainConfigured } from "@/lib/chain";
-import { advanceExpiredTurn } from "@/lib/turn-timer";
 
 export const dynamic = "force-dynamic";
 
 /**
  * POST /api/duels/rooms/:code/forfeit
  *
- * Claims a win when the opponent's turn clock has run out. The SERVER checks the
- * deadline — a client cannot simply assert that its opponent timed out, or it
- * could steal the pot at will.
+ * Self-forfeit. The caller voluntarily gives up the duel. There is no
+ * longer an "opponent's clock expired" path — a turn timeout only applies
+ * a rating penalty and lets the drafter finish picking. The only ways a
+ * duel ends before the draft completes are:
  *
- * Body: { reason?: "timeout" | "disconnect" }
+ *   * status = "open" (waiting)  -> the creator abandons the room before
+ *     anyone joined. Room is marked cancelled and no one wins. The
+ *     on-chain refund is initiated separately by the client's cancelDuel
+ *     contract call, so this endpoint just cleans up server-side state.
+ *
+ *   * status = "full" | "ready"  -> one of the two players bails before
+ *     both have staked. Room is cancelled; the same on-chain refund
+ *     flow applies.
+ *
+ *   * status = "drafting"        -> the caller gives up mid-draft. The
+ *     opponent is declared the winner and the pot settles to them.
+ *
+ * Body: { reason?: "quit" | "timeout" | "disconnect" }
  */
 export async function POST(request, { params }) {
   const { code } = await params;
@@ -33,9 +44,12 @@ export async function POST(request, { params }) {
   } catch {
     /* body is optional */
   }
+  const reason = body?.reason === "timeout" || body?.reason === "disconnect"
+    ? body.reason
+    : "quit";
 
   try {
-    let room = await advanceExpiredTurn(await getRoomByCode(roomCode));
+    let room = await getRoomByCode(roomCode);
     if (!room) {
       return NextResponse.json({ error: "Room not found" }, { status: 404 });
     }
@@ -44,41 +58,48 @@ export async function POST(request, { params }) {
     if (!auth.ok) {
       return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
-    const claimant = auth.address;
+    const caller = auth.address;
 
-    if (room.status === "complete") {
+    if (room.status === "complete" || room.status === "cancelled") {
       return NextResponse.json({ room, alreadyComplete: true });
     }
-    if (!["drafting", "ready", "full"].includes(room.status)) {
+    if (room.creator !== caller && room.joiner !== caller) {
+      return NextResponse.json({ error: "You are not in this duel" }, { status: 403 });
+    }
+
+    // ── Pre-match cancel: no opponent yet or nobody has staked ─────────────
+    // Room dies without a winner. Refunds happen via the contract's
+    // cancelDuel path, which the client already invokes from its cancel
+    // button when a stake was posted.
+    if (["open", "full", "ready"].includes(room.status)) {
+      room = await updateRoom(room.id, {
+        status: "cancelled",
+        current_turn: null,
+        turn_deadline: null,
+        current_roll_nation: null,
+        current_roll_year: null,
+        current_roll_at: null,
+      });
+      return NextResponse.json({
+        room,
+        cancelled: true,
+        reason,
+      });
+    }
+
+    if (room.status !== "drafting") {
       return NextResponse.json(
         { error: `Cannot forfeit while the duel is '${room.status}'` },
         { status: 409 }
       );
     }
-    if (room.creator !== claimant && room.joiner !== claimant) {
-      return NextResponse.json({ error: "You are not in this duel" }, { status: 403 });
-    }
+
+    // ── Mid-draft forfeit: caller loses, opponent wins ────────────────────
     if (!room.joiner) {
       return NextResponse.json({ error: "The duel has no opponent yet" }, { status: 409 });
     }
+    const winner = room.creator === caller ? room.joiner : room.creator;
 
-    const opponent = room.creator === claimant ? room.joiner : room.creator;
-
-    // You may only claim a forfeit against the player who is on the clock.
-    if (room.current_turn && room.current_turn !== opponent) {
-      return NextResponse.json(
-        { error: "It is your turn — you cannot claim a forfeit" },
-        { status: 409 }
-      );
-    }
-    if (!isTurnExpired(room.turn_deadline)) {
-      return NextResponse.json(
-        { error: "The opponent's turn has not expired yet" },
-        { status: 409 }
-      );
-    }
-
-    // ── Record the forfeit, then settle ───────────────────────────────────
     const logs = await listMatchLogs(room.id);
     await appendMatchLog({
       roomId: room.id,
@@ -86,12 +107,12 @@ export async function POST(request, { params }) {
       seq: logs.length,
       minute: 0,
       eventType: "forfeit",
-      team: room.creator === claimant ? "joiner" : "creator",
-      payload: { reason: body?.reason === "disconnect" ? "disconnect" : "timeout", forfeitedBy: opponent },
+      team: room.creator === caller ? "creator" : "joiner",
+      payload: { reason, forfeitedBy: caller },
     });
 
     room = await updateRoom(room.id, {
-      winner: claimant,
+      winner,
       is_draw: false,
       current_turn: null,
       turn_deadline: null,
@@ -104,7 +125,7 @@ export async function POST(request, { params }) {
     if (isChainConfigured()) {
       settlement = await settleDuelOnChain({
         room,
-        winnerAddress: claimant,
+        winnerAddress: winner,
         isDraw: false,
       });
     }
@@ -118,20 +139,18 @@ export async function POST(request, { params }) {
       }
     }
 
-    // Always complete the room and record the outcome — the forfeit is valid
-    // regardless of whether the on-chain payout landed.
     room = await updateRoom(room.id, {
       status: "complete",
       ...(settlement.ok
         ? { resolver_tx: settlement.txHash, resolved_at: new Date().toISOString() }
         : {}),
     });
-    await recordDuelOutcome({ room, winnerAddress: claimant, isDraw: false, payoutWei });
+    await recordDuelOutcome({ room, winnerAddress: winner, isDraw: false, payoutWei });
 
     return NextResponse.json({
       room,
-      forfeitedBy: opponent,
-      winner: claimant,
+      forfeitedBy: caller,
+      winner,
       settled: settlement.ok,
       settlementError: settlement.ok ? null : settlement.error,
       settlementTx: settlement.txHash ?? null,
@@ -139,7 +158,7 @@ export async function POST(request, { params }) {
     });
   } catch (error) {
     return NextResponse.json(
-      { error: "Failed to claim forfeit", details: error.message },
+      { error: "Failed to forfeit", details: error.message },
       { status: 500 }
     );
   }

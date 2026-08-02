@@ -48,9 +48,9 @@ export async function POST(request, { params }) {
 
   try {
     // Lazy timeout enforcement: if the CURRENT drafter has already blown
-    // their 90-second deadline, we skip their turn before validating the
-    // pick. This handles the case where an offender tries to sneak in a
-    // pick milliseconds after their deadline while someone else is polling.
+    // their 90-second deadline, apply the rating penalty and refresh the
+    // deadline. The drafter still gets to make this pick — from the same
+    // nation/year list — but they're now capped at rating ≤ 85.
     let room = await advanceExpiredTurn(await getRoomByCode(roomCode));
     if (!room) {
       return NextResponse.json({ error: "Room not found" }, { status: 404 });
@@ -80,9 +80,10 @@ export async function POST(request, { params }) {
       listSquadSlots(joinerSquad.id),
     ]);
 
-    // Turn ordering is driven by pick_attempts (which counts BOTH successful
-    // picks and skips), not by how many slots are actually filled. That way
-    // a timeout doesn't leave the offender permanently on the clock.
+    // Turn ordering is driven by pick_attempts, incremented only on a
+    // successful pick. Timeouts do NOT increment: they only apply a
+    // rating penalty and leave the current player on the clock to
+    // finish selecting from the same nation/year list.
     const attempts = Number(room.pick_attempts ?? (creatorSlots.length + joinerSlots.length));
     const mine = room.creator === sender ? creatorSlots : joinerSlots;
     const mySquad = room.creator === sender ? creatorSquad : joinerSquad;

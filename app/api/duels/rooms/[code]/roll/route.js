@@ -55,10 +55,10 @@ export async function POST(request, { params }) {
   }
 
   try {
-    // Lazy timeout: if the caller has already blown their 90-second
-    // window, skip their turn before they get to roll. Prevents a slow
-    // drafter from rolling after their deadline and then picking against
-    // the fresh nation/year.
+    // Lazy timeout: if the caller has blown their 90-second window,
+    // apply the rating penalty and refresh their deadline before letting
+    // them roll. The turn stays with them — we just note that any pick
+    // they make must be rated ≤ 85 from here on.
     const room = await advanceExpiredTurn(await getRoomByCode(roomCode));
     if (!room) {
       return NextResponse.json({ error: "Room not found" }, { status: 404 });

@@ -9,7 +9,7 @@ import { attackRating, defenceRating } from "@/lib/match-engine";
 // ── Session persistence ─────────────────────────────────────────────────────
 // We stash the active duel session in localStorage so a page refresh mid-duel
 // doesn't strand the user. The stored blob matches the server's TTL (6h) and
-// is cleared explicitly on resetDuel / forfeit.
+// is cleared explicitly on resetDuel and voluntary quit.
 
 const SESSION_STORAGE_KEY = "footmon.duelSession";
 const SESSION_STORAGE_TTL_MS = 6 * 60 * 60 * 1000; // matches lib/session.js
@@ -90,7 +90,11 @@ function hydrateSlots(baseSlots, serverSlots) {
         rating: Number(row.player_rating ?? 0),
         jerseyNumber: row.jersey_number != null ? Number(row.jersey_number) : null,
         position: row.player_position ?? slot.pos,
-        positions: row.player_position ? [row.player_position] : [slot.pos],
+        positions: Array.isArray(row.player_positions) && row.player_positions.length > 0
+          ? row.player_positions
+          : row.player_position
+            ? [row.player_position]
+            : [slot.pos],
         draftedNation: row.player_nation ?? null,
         draftedYear: row.player_year ?? null,
       },
@@ -137,8 +141,8 @@ export function useDuel(rawAddress) {
   // but every address we persist server-side is lowercased. Normalise once
   // here so downstream equality checks against DB-sourced fields
   // (current_turn, creator, joiner, squad.player, ...) actually match —
-  // without this, isMyTurn is permanently stuck at false and the Roll /
-  // Claim Forfeit buttons behave as if the opponent is always on the clock.
+  // without this, isMyTurn is permanently stuck at false and the Roll
+  // button behaves as if the opponent is always on the clock.
   const address = rawAddress ? String(rawAddress).toLowerCase() : null;
 
   // Screen state
@@ -861,47 +865,13 @@ export function useDuel(rawAddress) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [roomCode]);
 
-  // ── Claim forfeit when the opponent's turn clock has run out ────────────
-
-  const claimForfeit = useCallback(async () => {
-    if (!roomCode || !address) return { error: "No room" };
-    const token = sessionTokenRef.current;
-    if (!token) return { error: "No session token" };
-
-    try {
-      const res = await fetch(`/api/duels/rooms/${roomCode}/forfeit`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ reason: "timeout" }),
-      });
-      const data = await res.json();
-      if (!res.ok) return { error: data.error || "Failed to claim forfeit" };
-
-      // The forfeit endpoint moves the room to 'complete'. Reuse the match
-      // result shape so the DuelMatchScreen can render the reveal directly.
-      setMatchResult({
-        room: data.room,
-        matchLogs: [],
-        settled: Boolean(data.settled),
-        settlementError: data.settlementError || null,
-        settlementTx: data.settlementTx || null,
-        payoutWei: data.payoutWei || "0",
-        forfeit: true,
-      });
-      if (data.room) setRoom(data.room);
-      setScreen("match");
-      screenRef.current = "match";
-      return { room: data.room };
-    } catch (err) {
-      return { error: err.message };
-    }
-  }, [roomCode, address]);
-
-  // ── Cancel / forfeit ────────────────────────────────────────────────────
-
+  // ── Cancel / self-forfeit ───────────────────────────────────────────────
+  //
+  // There is no "claim forfeit against opponent" path any more. A turn
+  // timeout only applies a rating penalty and lets the drafter keep
+  // picking from the same list. This action is always initiated by the
+  // caller against themselves — during waiting/ready it cancels the
+  // room, during the draft it forfeits the pot to the opponent.
   const cancelRoom = useCallback(async () => {
     if (!roomCode || !address) return;
     setBusy(true);
@@ -914,6 +884,7 @@ export function useDuel(rawAddress) {
       const res = await fetch(`/api/duels/rooms/${roomCode}/forfeit`, {
         method: "POST",
         headers,
+        body: JSON.stringify({ reason: "quit" }),
       });
 
       if (res.ok) {
@@ -1320,7 +1291,6 @@ export function useDuel(rawAddress) {
     rearrangeSlots,
     simulateMatch,
     matchResult,
-    claimForfeit,
     cancelRoom,
     resetDuel,
 

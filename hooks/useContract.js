@@ -120,7 +120,22 @@ export function useContract() {
 
   const createDuel = useCallback(async (duelId, stakeMon) => {
     const c = signerContractRef.current;
-    if (!c) throw new Error("Connect wallet first");
+    const rc = readContractRef.current;
+    if (!c || !rc) throw new Error("Connect wallet first");
+
+    // Idempotent: if we already escrowed (duel exists on-chain), skip the tx.
+    // This handles the retry case where the tx succeeded but /ready failed.
+    try {
+      const duel = await rc.getDuel(duelId);
+      const status = Number(duel.status);
+      if (status === 1 || status === 2) {
+        // Already created (OPEN) or both sides in (FULL) — no need to tx again.
+        return { txHash: null, stakeWei: duel.stake.toString(), alreadyEscrowed: true };
+      }
+    } catch {
+      // getDuel failed — proceed with the create attempt.
+    }
+
     const value = parseEther(String(stakeMon));
     const tx = await c.createDuel(duelId, { value });
     const receipt = await tx.wait();
@@ -132,7 +147,15 @@ export function useContract() {
     const rc = readContractRef.current;
     if (!c || !rc) throw new Error("Connect wallet first");
     const duel = await rc.getDuel(duelId);
-    if (Number(duel.status) !== 1) throw new Error("Duel is not open");
+    const status = Number(duel.status);
+
+    // Idempotent: if both sides already escrowed (FULL), skip the tx.
+    // This handles the retry case where joinDuel succeeded but /ready failed.
+    if (status === 2) {
+      return { txHash: null, stakeWei: duel.stake.toString(), alreadyEscrowed: true };
+    }
+    if (status !== 1) throw new Error("Duel is not open");
+
     const tx = await c.joinDuel(duelId, { value: duel.stake });
     const receipt = await tx.wait();
     return { txHash: receipt?.hash ?? tx.hash, stakeWei: duel.stake.toString() };

@@ -178,9 +178,12 @@ export default function DuelMatchScreen({
 
   const myScore = iAmCreator ? finalScore.creator : finalScore.joiner;
   const oppScore = iAmCreator ? finalScore.joiner : finalScore.creator;
-  const iWon = phase === "reveal" && myScore > oppScore;
-  const iLost = phase === "reveal" && myScore < oppScore;
-  const isDraw = phase === "reveal" && myScore === oppScore;
+  // Prefer room.winner over raw score comparison — a penalty shootout
+  // produces a decisive winner even when the regulation score is level.
+  const winnerAddr = room?.winner ? String(room.winner).toLowerCase() : null;
+  const iWon = phase === "reveal" && winnerAddr === myAddressLc;
+  const iLost = phase === "reveal" && winnerAddr != null && winnerAddr !== myAddressLc;
+  const isDraw = phase === "reveal" && !room?.winner;
 
   // Play the reveal cue exactly once when we transition into the reveal
   // phase. A ref guard avoids retriggers on subsequent renders of the same
@@ -206,7 +209,7 @@ export default function DuelMatchScreen({
   // markers (kickoff / half_time / full_time / forfeit) alongside the goals
   // so the commentary feed reads like a proper match report.
   const visibleEvents = useMemo(() => {
-    const kinds = new Set(["goal", "kickoff", "half_time", "full_time", "forfeit"]);
+    const kinds = new Set(["goal", "kickoff", "half_time", "full_time", "forfeit", "pens_start", "penalty", "pens_end"]);
     return timeline.filter(
       (e) => kinds.has(e.event_type) && (e.minute ?? 0) <= minute
     );
@@ -373,6 +376,64 @@ export default function DuelMatchScreen({
                   );
                 }
 
+                if (kind === "pens_start") {
+                  return (
+                    <motion.div
+                      key={e.seq}
+                      className="duel-match-feed-row duel-match-feed-row--marker"
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                    >
+                      <span className="duel-match-feed-min">90&apos;</span>
+                      <span className="duel-match-feed-icon">⚡</span>
+                      <span className="duel-match-feed-scorer">Penalty shootout!</span>
+                    </motion.div>
+                  );
+                }
+
+                if (kind === "penalty") {
+                  const scored = e.payload?.scored;
+                  const penSide = e.team === "home" || e.team === "creator" ? "creator" : "joiner";
+                  const forMe = (iAmCreator && penSide === "creator") || (!iAmCreator && penSide === "joiner");
+                  const takerName = e.scorer_name || "Unknown";
+                  return (
+                    <motion.div
+                      key={e.seq}
+                      className={`duel-match-feed-row ${forMe ? "duel-match-feed-row--me" : "duel-match-feed-row--them"}`}
+                      initial={{ x: forMe ? -24 : 24, opacity: 0 }}
+                      animate={{ x: 0, opacity: 1 }}
+                      transition={{ duration: 0.25, ease: "easeOut" }}
+                    >
+                      <span className="duel-match-feed-min">PEN</span>
+                      <span className="duel-match-feed-icon">{scored ? "✅" : "❌"}</span>
+                      <span className="duel-match-feed-scorer">
+                        {takerName} — {scored ? "SCORED" : "MISSED"}
+                      </span>
+                      <span className="duel-match-feed-team">{forMe ? "YOU" : "OPP"}</span>
+                    </motion.div>
+                  );
+                }
+
+                if (kind === "pens_end") {
+                  const homePens = e.payload?.homePens ?? 0;
+                  const awayPens = e.payload?.awayPens ?? 0;
+                  const myPens = iAmCreator ? homePens : awayPens;
+                  const oppPens = iAmCreator ? awayPens : homePens;
+                  return (
+                    <motion.div
+                      key={e.seq}
+                      className="duel-match-feed-row duel-match-feed-row--marker"
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                    >
+                      <span className="duel-match-feed-icon">🏆</span>
+                      <span className="duel-match-feed-scorer">
+                        Penalties: {myPens}–{oppPens}
+                      </span>
+                    </motion.div>
+                  );
+                }
+
                 // kickoff / half_time / full_time — narrative markers.
                 const label =
                   kind === "kickoff" ? "Kickoff — game on."
@@ -440,6 +501,11 @@ export default function DuelMatchScreen({
                 <span className="duel-match-reveal-score-dash">–</span>
                 <span className="duel-match-reveal-score-num">{oppScore}</span>
               </div>
+              {myScore === oppScore && room?.winner && (
+                <div className="duel-match-reveal-pens" style={{ fontSize: "0.75rem", opacity: 0.7, marginTop: "0.25rem" }}>
+                  Won on penalties
+                </div>
+              )}
 
               <div className="duel-match-reveal-teams">
                 <span className="duel-match-reveal-team">{myLabel}</span>

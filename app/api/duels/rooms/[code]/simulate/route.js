@@ -74,14 +74,16 @@ export async function POST(request, { params }) {
       }
     }
 
-    if (settlement.ok) {
-      room = await updateRoom(room.id, {
-        status: "complete",
-        resolver_tx: settlement.txHash,
-        resolved_at: new Date().toISOString(),
-      });
-      await recordDuelOutcome({ room, winnerAddress, isDraw, payoutWei });
-    }
+    // Always complete the room and record the outcome — the game result is
+    // valid regardless of whether the on-chain payout landed. Settlement
+    // status is tracked separately via resolver_tx / resolved_at for retry.
+    room = await updateRoom(room.id, {
+      status: "complete",
+      ...(settlement.ok
+        ? { resolver_tx: settlement.txHash, resolved_at: new Date().toISOString() }
+        : {}),
+    });
+    await recordDuelOutcome({ room, winnerAddress, isDraw, payoutWei });
 
     const matchLogs = await listMatchLogs(room.id);
 

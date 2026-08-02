@@ -456,7 +456,7 @@ export default function DuelGamePage() {
                           <span className="challenge-creator">
                             {room.creator_username || `${room.creator.slice(0, 6)}...${room.creator.slice(-4)}`}
                           </span>
-                          <span className="challenge-stake">{room.stake} MON</span>
+                          <span className="challenge-stake">{weiToMon(room.stake)} MON</span>
                         </div>
                         <button 
                           className="btn-join-challenge"

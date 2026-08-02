@@ -106,17 +106,28 @@ export async function POST(request, { params }) {
     const fromPos = slotPositionFor(fromSlot);
     const toPos = slotPositionFor(toSlot);
 
-    // Look up each moving player's true positions list from wc_players so
-    // we can validate that they can actually play the new formation slot.
-    const positionsMap = await loadPositions(
-      [fromRow, toRow].filter(Boolean).map((r) => ({
-        name: r.player_name,
-        nation: r.player_nation,
-        year: r.player_year,
-      }))
-    );
+    // Fast path: skip wc_players lookup if primary positions already work.
+    const fromPrimaryFits = canFillSlot(toSlot, [fromRow.player_position]);
+    const toPrimaryFits = !toRow || canFillSlot(fromSlot, [toRow.player_position]);
 
-    const fromPositions = pickPositions(positionsMap, fromRow) || [fromRow.player_position];
+    let fromPositions;
+    let toPositions;
+
+    if (fromPrimaryFits && toPrimaryFits) {
+      fromPositions = [fromRow.player_position];
+      toPositions = toRow ? [toRow.player_position] : null;
+    } else {
+      const positionsMap = await loadPositions(
+        [fromRow, toRow].filter(Boolean).map((r) => ({
+          name: r.player_name,
+          nation: r.player_nation,
+          year: r.player_year,
+        }))
+      );
+      fromPositions = pickPositions(positionsMap, fromRow) || [fromRow.player_position];
+      toPositions = toRow ? (pickPositions(positionsMap, toRow) || [toRow.player_position]) : null;
+    }
+
     if (!canFillSlot(toSlot, fromPositions)) {
       return NextResponse.json(
         { error: `${fromRow.player_name} can't play ${toPos}` },
@@ -124,14 +135,11 @@ export async function POST(request, { params }) {
       );
     }
 
-    if (toRow) {
-      const toPositions = pickPositions(positionsMap, toRow) || [toRow.player_position];
-      if (!canFillSlot(fromSlot, toPositions)) {
-        return NextResponse.json(
-          { error: `${toRow.player_name} can't play ${fromPos}` },
-          { status: 400 }
-        );
-      }
+    if (toRow && toPositions && !canFillSlot(fromSlot, toPositions)) {
+      return NextResponse.json(
+        { error: `${toRow.player_name} can't play ${fromPos}` },
+        { status: 400 }
+      );
     }
 
     await rearrangeSquadSlots({

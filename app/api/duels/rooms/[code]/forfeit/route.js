@@ -6,6 +6,7 @@ import { authoriseRoomRequest } from "@/lib/session";
 import { isTurnExpired } from "@/lib/draft";
 import { recordDuelOutcome, settleDuelOnChain, winnerPayoutWei } from "@/lib/duel-resolution";
 import { getContract, isChainConfigured } from "@/lib/chain";
+import { advanceExpiredTurn } from "@/lib/turn-timer";
 
 export const dynamic = "force-dynamic";
 
@@ -34,7 +35,7 @@ export async function POST(request, { params }) {
   }
 
   try {
-    let room = await getRoomByCode(roomCode);
+    let room = await advanceExpiredTurn(await getRoomByCode(roomCode));
     if (!room) {
       return NextResponse.json({ error: "Room not found" }, { status: 404 });
     }
@@ -115,13 +116,17 @@ export async function POST(request, { params }) {
       } catch {
         payoutWei = "0";
       }
-      room = await updateRoom(room.id, {
-        status: "complete",
-        resolver_tx: settlement.txHash,
-        resolved_at: new Date().toISOString(),
-      });
-      await recordDuelOutcome({ room, winnerAddress: claimant, isDraw: false, payoutWei });
     }
+
+    // Always complete the room and record the outcome — the forfeit is valid
+    // regardless of whether the on-chain payout landed.
+    room = await updateRoom(room.id, {
+      status: "complete",
+      ...(settlement.ok
+        ? { resolver_tx: settlement.txHash, resolved_at: new Date().toISOString() }
+        : {}),
+    });
+    await recordDuelOutcome({ room, winnerAddress: claimant, isDraw: false, payoutWei });
 
     return NextResponse.json({
       room,

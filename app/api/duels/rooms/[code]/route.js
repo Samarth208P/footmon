@@ -44,7 +44,14 @@ export async function GET(request, { params }) {
       return NextResponse.json({ room });
     }
 
-    const squads = await listSquads(room.id);
+    // Run squad loading and current-roll fetch in parallel.
+    const [squads, currentRoll] = await Promise.all([
+      listSquads(room.id),
+      (room.status === "drafting" && room.current_roll_nation && room.current_roll_year)
+        ? loadCurrentRollSquad(room.current_roll_nation, Number(room.current_roll_year))
+        : Promise.resolve(null),
+    ]);
+
     const bySquad = await Promise.all(
       squads.map(async (s) => ({
         player: s.player,
@@ -55,24 +62,7 @@ export async function GET(request, { params }) {
       }))
     );
 
-    // Jersey numbers live on wc_players, not on duel_squad_slots. We look
-    // them up per (name, nation, year) so both players can render the
-    // opponent's pitch with real shirt numbers instead of raw ratings.
-    // Older slot rows that predate the chemistry migration will have
-    // player_nation/year = null; those simply won't get enriched, which
-    // is fine — the client falls back to the rating.
     await enrichSlotsWithJersey(bySquad);
-
-    // Fetch the drafter's currently-rolled squad so the OPPONENT can see
-    // what they're picking from. Only makes sense during 'drafting'; other
-    // statuses have no live wheel to show.
-    let currentRoll = null;
-    if (room.status === "drafting" && room.current_roll_nation && room.current_roll_year) {
-      currentRoll = await loadCurrentRollSquad(
-        room.current_roll_nation,
-        Number(room.current_roll_year)
-      );
-    }
 
     const { searchParams } = new URL(request.url);
     const withLogs = searchParams.get("state") === "1";

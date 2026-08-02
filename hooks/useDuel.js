@@ -213,6 +213,11 @@ export function useDuel(rawAddress) {
   // reading of the old slot layout.
   const rearrangeInFlightRef = useRef(false);
 
+  // Timestamp of the last successful pick. Polling uses it to skip
+  // hydrating mySlots and turn state from stale responses that started
+  // before the pick was persisted.
+  const pickAtRef = useRef(0);
+
   // Opponent's live roll, streamed via the room GET response so the waiting
   // player can watch what nation/year their opponent has drawn and browse
   // their available players read-only.
@@ -226,6 +231,33 @@ export function useDuel(rawAddress) {
   // Turn state
   const [isMyTurn, setIsMyTurn] = useState(false);
   const [turnDeadline, setTurnDeadline] = useState(null);
+
+  // ── Instant roll cleanup on turn transitions ──────────────────────────
+  // When isMyTurn changes, immediately clear the roll data belonging to
+  // the "other" context so the UI doesn't flash stale opponent data in
+  // the draft panel. Without this, up to 1.5s of overlap can occur between
+  // turns (the time until the next poll clears the state).
+  const prevIsMyTurnForRollRef = useRef(isMyTurn);
+  useEffect(() => {
+    const was = prevIsMyTurnForRollRef.current;
+    prevIsMyTurnForRollRef.current = isMyTurn;
+    if (was === isMyTurn) return;
+
+    if (isMyTurn) {
+      // Turn just came to me — clear opponent's roll immediately.
+      setOpponentRoll(null);
+    } else {
+      // Turn just passed to opponent — clear my stale roll so it doesn't
+      // flash when the panel switches to spectator mode.
+      setNationCode(null);
+      setNationName(null);
+      setYear(null);
+      setSquad([]);
+      setRolledThisTurn(false);
+      setSelectedPlayer(null);
+      setFilterPos(null);
+    }
+  }, [isMyTurn]);
 
   // Match result — populated once /simulate returns the recorded goal-by-goal
   // timeline. Shape: { room, matchLogs, payoutWei, settled, settlementError }.
@@ -663,6 +695,7 @@ export function useDuel(rawAddress) {
         setRolledThisTurn(false);
         setSelectedPlayer(null);
         setIsMyTurn(false);
+        pickAtRef.current = Date.now();
       } else {
         setError(data.error || "Pick failed");
       }
@@ -684,6 +717,9 @@ export function useDuel(rawAddress) {
     if (!Number.isInteger(fromSlot) || !Number.isInteger(toSlot)) {
       return { error: "Invalid slot" };
     }
+    // Reject if a swap is already in flight — prevents concurrent rearranges
+    // from fighting each other and causing visual flicker on the pitch.
+    if (rearrangeInFlightRef.current) return { error: "Swap in progress" };
 
     let token = sessionTokenRef.current;
     if (!token) {
@@ -897,9 +933,10 @@ export function useDuel(rawAddress) {
         // paint the pre-swap layout back on top of the optimistic move,
         // producing a ~1.5s "snap back" that looked like broken latency.
         if (Array.isArray(data.squads)) {
+          const pickedRecently = Date.now() - pickAtRef.current < 3000;
           for (const sq of data.squads) {
             const isMine = sq.player === myAddr;
-            if (isMine && rearrangeInFlightRef.current) continue;
+            if (isMine && (rearrangeInFlightRef.current || pickedRecently)) continue;
             const target = isMine ? setMySlots : setOpponentSlots;
             target((prev) => hydrateSlots(prev, sq.slots));
           }
@@ -932,9 +969,11 @@ export function useDuel(rawAddress) {
           setScreen("match");
         }
 
-        // Turn state.
+        // Turn state. Skip if a pick just landed — the stale poll response
+        // might still carry the old current_turn from before the pick.
+        const pickedRecentlyForTurn = Date.now() - pickAtRef.current < 3000;
         const nowMyTurn = r.current_turn ? r.current_turn === myAddr : false;
-        if (r.current_turn) {
+        if (r.current_turn && !pickedRecentlyForTurn) {
           setIsMyTurn(nowMyTurn);
         }
         if (r.turn_deadline) {
@@ -989,13 +1028,22 @@ export function useDuel(rawAddress) {
       }
     };
 
+    // Adaptive: poll fast (800ms) during drafting for responsive turns,
+    // slower (2500ms) during idle phases to save bandwidth.
+    const schedulePoll = () => {
+      const interval = screenRef.current === "draft" ? 800 : 2500;
+      pollRef.current = setTimeout(() => {
+        poll();
+        schedulePoll();
+      }, interval);
+    };
     poll();
-    pollRef.current = setInterval(poll, 1500);
+    schedulePoll();
   }, []);
 
   const stopPolling = useCallback(() => {
     if (pollRef.current) {
-      clearInterval(pollRef.current);
+      clearTimeout(pollRef.current);
       pollRef.current = null;
     }
   }, []);

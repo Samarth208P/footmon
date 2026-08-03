@@ -30,7 +30,7 @@ export default function PlayScreen({ game, contract, isConnected, onSubmit, onLe
       return;
     }
     try {
-      const payFn = rolledThisTurn && contract.isAvailable() ? contract.payForRoll : null;
+      const payFn = contract.isAvailable() ? contract.payForRoll : null;
       await roll("full", payFn);
     } catch (err) {
       showToast?.(err.message, "error");
@@ -122,12 +122,12 @@ export default function PlayScreen({ game, contract, isConnected, onSubmit, onLe
               {isSquadComplete
                 ? "Your XI is complete. Face 7 opponents — one loss ends the run."
                 : rolledThisTurn
-                  ? <>Free roll used. Reroll costs <strong>{REROLL_PRICE_MON} MON</strong>.</>
-                  : `Pick ${stats.assigned + 1} of 11 — this roll is free.`}
+                  ? <>Reroll costs <strong>{REROLL_PRICE_MON} MON</strong>.</>
+                  : `Pick ${stats.assigned + 1} of 11. Roll costs 0.01 MON.`}
             </p>
             <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: 8 }}>
               <button className="btn-play-roll" onClick={handleRoll} disabled={busy}>
-                {busy ? "Rolling ⚽" : isSquadComplete ? "Enter Tournament ⚽" : rolledThisTurn ? `Reroll 🎲 (${REROLL_PRICE_MON} MON)` : "Roll 🎲"}
+                {busy ? "Rolling ⚽" : isSquadComplete ? "Enter Tournament ⚽" : `Roll 🎲 (${REROLL_PRICE_MON} MON)`}
               </button>
               <button className="btn-cancel-draft" onClick={resetDraft}>Cancel &amp; Restart</button>
             </div>

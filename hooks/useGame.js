@@ -50,7 +50,7 @@ export function useGame() {
     if (busy) return;
     setBusy(true);
 
-    const isPaid = mode !== "full" || rolledThisTurn;
+    const isPaid = true;
 
     try {
       if (isPaid) {

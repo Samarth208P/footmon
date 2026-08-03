@@ -598,7 +598,7 @@ export function useDuel(rawAddress) {
     setBusy(true);
     mutationInFlightRef.current = true;
 
-    const isPaid = rolledThisTurn;
+    const isPaid = mode !== "full" || rolledThisTurn;
 
     try {
       if (isPaid) {

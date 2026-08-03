@@ -33,12 +33,34 @@ export function useContract() {
   }, []);
 
   const getSignerContract = useCallback(async () => {
-    if (!CONTRACT_ADDRESS || !isConnected || !walletProvider) {
-      throw new Error("Wallet not connected or contract unavailable");
+    // 1. Try React AppKit state
+    if (CONTRACT_ADDRESS && isConnected && walletProvider) {
+      try {
+        const provider = new BrowserProvider(walletProvider);
+        const signer = await provider.getSigner();
+        return new Contract(CONTRACT_ADDRESS, FOOTMON_ABI, signer);
+      } catch (err) {
+        console.warn("[useContract] Failed to create contract from walletProvider, trying fallback...", err);
+      }
     }
-    const provider = new BrowserProvider(walletProvider);
-    const signer = await provider.getSigner();
-    return new Contract(CONTRACT_ADDRESS, FOOTMON_ABI, signer);
+
+    // 2. Try global window fallback (synced by Web3Modal provider)
+    if (typeof window !== "undefined" && window.__APPKIT_SIGNER__ && CONTRACT_ADDRESS) {
+      return new Contract(CONTRACT_ADDRESS, FOOTMON_ABI, window.__APPKIT_SIGNER__);
+    }
+
+    // 3. Try window.ethereum direct fallback (EIP-1193)
+    if (typeof window !== "undefined" && window.ethereum && CONTRACT_ADDRESS && isConnected) {
+      try {
+        const provider = new BrowserProvider(window.ethereum);
+        const signer = await provider.getSigner();
+        return new Contract(CONTRACT_ADDRESS, FOOTMON_ABI, signer);
+      } catch (err) {
+        console.warn("[useContract] Failed to create contract from window.ethereum...", err);
+      }
+    }
+
+    throw new Error("Wallet not connected or contract unavailable");
   }, [isConnected, walletProvider]);
 
   // Refresh prize pool data periodically
@@ -71,7 +93,9 @@ export function useContract() {
   }, [refreshData]);
 
   const isAvailable = useCallback(() => {
-    return !!CONTRACT_ADDRESS && isConnected && !!walletProvider;
+    const hasGlobalSigner = typeof window !== "undefined" && !!window.__APPKIT_SIGNER__;
+    const hasInjected = typeof window !== "undefined" && !!window.ethereum;
+    return !!CONTRACT_ADDRESS && isConnected && (!!walletProvider || hasGlobalSigner || hasInjected);
   }, [isConnected, walletProvider]);
 
   // ── Write functions ─────────────────────────────────────────────────────

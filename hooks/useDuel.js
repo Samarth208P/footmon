@@ -601,7 +601,8 @@ export function useDuel(rawAddress) {
     const isPaid = rolledThisTurn;
 
     try {
-      if (isPaid && payForRoll) {
+      if (isPaid) {
+        if (!payForRoll) throw new Error("Wallet not connected or contract unavailable");
         await payForRoll(REROLL_PRICE_MON);
       }
 

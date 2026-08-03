@@ -111,7 +111,7 @@ export default function DailyPrizeBadge({ variant = "hero" }) {
 
   const prizeText = loaded && prizePool != null
     ? `${parseFloat(prizePool).toFixed(3)} MON`
-    : "— MON";
+    : "0 MON";
 
   const countdown = formatCountdown(timeUntilPayout);
 

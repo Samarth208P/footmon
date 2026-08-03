@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { ratingColor } from "@/lib/constants";
 import { play as playSound } from "@/lib/sound";
+import PenaltyShootout from "./PenaltyShootout";
 
 // Real-time seconds to play out one 90-minute match. Duels are the
 // wagered format so the pacing is deliberately unhurried — each virtual
@@ -84,7 +85,8 @@ export default function DuelMatchScreen({
 
   // ── Virtual clock ─────────────────────────────────────────────────────────
   const [minute, setMinute] = useState(0);
-  const [phase, setPhase] = useState("kickoff"); // kickoff | firstHalf | halfTime | secondHalf | fullTime | reveal
+  const [phase, setPhase] = useState("kickoff"); // kickoff | firstHalf | halfTime | secondHalf | pens | fullTime | reveal
+  const [penIndex, setPenIndex] = useState(0); // how many kicks are revealed
   const [flash, setFlash] = useState(null); // "creator" | "joiner" — flashes score row
   const [goalCelebration, setGoalCelebration] = useState(null); // "me" | "them" — full-screen flash
   const [reveal, setReveal] = useState(false);
@@ -113,6 +115,49 @@ export default function DuelMatchScreen({
   };
 
   // Play the clock as soon as we have a timeline.
+  
+  const currentPens = useMemo(() => {
+    const kickEvents = timeline.filter((e) => e.event_type === "penalty");
+    if (kickEvents.length === 0) return null;
+
+    const endEvent = timeline.find((e) => e.event_type === "pens_end");
+    const creatorScore = endEvent?.payload?.homePens ?? kickEvents.filter((e) => e.payload?.scored && (e.team === "home" || e.team === "creator")).length;
+    const joinerScore = endEvent?.payload?.awayPens ?? kickEvents.filter((e) => e.payload?.scored && (e.team === "away" || e.team === "joiner")).length;
+
+    const myPensScore = iAmCreator ? creatorScore : joinerScore;
+    const oppPensScore = iAmCreator ? joinerScore : creatorScore;
+    const winner = endEvent?.payload?.winner ?? (creatorScore > joinerScore ? "creator" : "joiner");
+
+    const kicks = kickEvents.map((e) => {
+      const isCreatorSide = e.team === "home" || e.team === "creator";
+      const isMySide = (iAmCreator && isCreatorSide) || (!iAmCreator && !isCreatorSide);
+      return {
+        side: isMySide ? "home" : "away",
+        kickNumber: e.payload?.kickNumber ?? 0,
+        suddenDeath: !!e.payload?.suddenDeath,
+        scored: !!e.payload?.scored,
+        taker: { name: e.scorer_name ?? "—" },
+      };
+    });
+
+    const winnerSide = (iAmCreator && winner === "creator") || (!iAmCreator && winner === "joiner") ? "home" : "away";
+
+    return { homeScore: myPensScore, awayScore: oppPensScore, winner: winnerSide, kicks };
+  }, [timeline, iAmCreator]);
+
+  const penTally = useMemo(() => {
+    if (!currentPens) return { you: 0, them: 0 };
+    let y = 0, t = 0;
+    for (let i = 0; i < Math.min(penIndex, currentPens.kicks.length); i++) {
+      const k = currentPens.kicks[i];
+      if (k.scored) {
+        if (k.side === "home") y++;
+        else t++;
+      }
+    }
+    return { you: y, them: t };
+  }, [currentPens, penIndex]);
+
   useEffect(() => {
     if (!hasTimeline || phase === "fullTime" || phase === "reveal") return;
     startRef.current = null;
@@ -126,7 +171,12 @@ export default function DuelMatchScreen({
 
       if (virtual >= 45 && phase === "kickoff") setPhase("firstHalf");
       if (virtual >= 90) {
-        setPhase("fullTime");
+        if (currentPens) {
+          setPhase("pens");
+          setPenIndex(0);
+        } else {
+          setPhase("fullTime");
+        }
         return;
       }
       rafId = requestAnimationFrame(tick);
@@ -152,6 +202,17 @@ export default function DuelMatchScreen({
     }
   }, [minute, timeline]);
 
+  // Penalty shootout animation: reveal one kick at a time.
+  useEffect(() => {
+    if (phase !== "pens" || !currentPens) return;
+    if (penIndex >= currentPens.kicks.length) {
+      const id = setTimeout(() => setPhase("fullTime"), 1600);
+      return () => clearTimeout(id);
+    }
+    const id = setTimeout(() => setPenIndex((i) => i + 1), 650);
+    return () => clearTimeout(id);
+  }, [phase, penIndex, currentPens]);
+
   // After full-time, hold a beat before revealing the winner banner.
   useEffect(() => {
     if (phase !== "fullTime") return;
@@ -170,6 +231,9 @@ export default function DuelMatchScreen({
   // Skip animation and jump straight to the reveal.
   const skipToEnd = () => {
     setMinute(90);
+    if (currentPens) {
+      setPenIndex(currentPens.kicks.length);
+    }
     setPhase("reveal");
     setReveal(true);
   };
@@ -350,7 +414,18 @@ export default function DuelMatchScreen({
         )}
       </AnimatePresence>
 
-      {/* Event feed — kickoff, goals, whistle blows, full time */}
+      {/* Shootout panel — live animation, or the goal feed if we're still in regulation */}
+      {phase === "pens" || (phase === "reveal" && currentPens) ? (
+        <PenaltyShootout
+          pens={currentPens}
+          revealed={penIndex}
+          youLabel={myLabel}
+          themLabel={oppLabel}
+          youScore={penTally.you}
+          themScore={penTally.them}
+          done={penIndex >= currentPens.kicks.length}
+        />
+      ) : (
       <div className="duel-match-feed">
         <div className="duel-match-feed-title">Commentary</div>
         <div className="duel-match-feed-scroll">
@@ -493,6 +568,7 @@ export default function DuelMatchScreen({
           </AnimatePresence>
         </div>
       </div>
+      )}
 
       {/* Skip button — hidden once we're revealing */}
       {phase !== "reveal" && phase !== "fullTime" && hasTimeline && (

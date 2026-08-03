@@ -34,7 +34,7 @@ export function useContract() {
 
   const getSignerContract = useCallback(async () => {
     // 1. Try React AppKit state
-    if (CONTRACT_ADDRESS && isConnected && walletProvider) {
+    if (CONTRACT_ADDRESS && walletProvider) {
       try {
         const provider = new BrowserProvider(walletProvider);
         const signer = await provider.getSigner();
@@ -50,7 +50,7 @@ export function useContract() {
     }
 
     // 3. Try window.ethereum direct fallback (EIP-1193)
-    if (typeof window !== "undefined" && window.ethereum && CONTRACT_ADDRESS && isConnected) {
+    if (typeof window !== "undefined" && window.ethereum && CONTRACT_ADDRESS) {
       try {
         const provider = new BrowserProvider(window.ethereum);
         const signer = await provider.getSigner();
@@ -60,8 +60,15 @@ export function useContract() {
       }
     }
 
+    console.error("[useContract] getSignerContract failed. Debug state:", {
+      CONTRACT_ADDRESS: !!CONTRACT_ADDRESS,
+      isConnected,
+      walletProvider: !!walletProvider,
+      hasGlobalSigner: typeof window !== "undefined" && !!window.__APPKIT_SIGNER__,
+      hasInjected: typeof window !== "undefined" && !!window.ethereum,
+    });
     throw new Error("Wallet not connected or contract unavailable");
-  }, [isConnected, walletProvider]);
+  }, [walletProvider]);
 
   // Refresh prize pool data periodically
   const refreshData = useCallback(async () => {

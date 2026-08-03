@@ -50,8 +50,8 @@ contract FootMon {
 
     Entry[] public entries;
 
-    mapping(address => bool)    public hasEntry;
-    mapping(address => uint256) public entryIndex;    // 1-indexed into entries[]
+    mapping(uint256 => mapping(address => bool))    public hasEntry;
+    mapping(uint256 => mapping(address => uint256)) public entryIndex;    // 1-indexed into entries[]
     mapping(address => uint256) public pendingClaims; // pull-payment winners
 
     // ─── Duel State ──────────────────────────────────────────────────────────
@@ -166,7 +166,7 @@ contract FootMon {
         require(year >= 1970 && year <= 2030, "FootMon: invalid year");
         require(bytes(nation).length > 0,     "FootMon: empty nation");
 
-        if (!hasEntry[msg.sender]) {
+        if (!hasEntry[roundNumber][msg.sender]) {
             entries.push(Entry({
                 player:    msg.sender,
                 score:     score,
@@ -175,10 +175,10 @@ contract FootMon {
                 year:      year,
                 formation: formation
             }));
-            entryIndex[msg.sender] = entries.length; // 1-indexed
-            hasEntry[msg.sender]   = true;
+            entryIndex[roundNumber][msg.sender] = entries.length; // 1-indexed
+            hasEntry[roundNumber][msg.sender]   = true;
         } else {
-            uint256 idx = entryIndex[msg.sender] - 1;
+            uint256 idx = entryIndex[roundNumber][msg.sender] - 1;
             // Only update if this is a higher score
             if (score > entries[idx].score) {
                 entries[idx].score     = score;
@@ -202,12 +202,21 @@ contract FootMon {
      *         Prize is credited to winner's pendingClaims — NOT pushed.
      */
     function distributePrize() external {
+        uint256 currentDayIST = (block.timestamp + 19800) / 86400;
+        uint256 lastDayIST = (lastPayoutTime + 19800) / 86400;
         require(
-            block.timestamp >= lastPayoutTime + payoutInterval,
+            currentDayIST > lastDayIST,
             "FootMon: interval not elapsed"
         );
-        require(entries.length > 0, "FootMon: no entries");
         require(prizePool > 0,      "FootMon: empty prize pool");
+
+        if (entries.length == 0) {
+            houseBalance += prizePool;
+            prizePool = 0;
+            lastPayoutTime = block.timestamp;
+            roundNumber++;
+            return;
+        }
 
         uint256 winnerIdx = 0;
         for (uint256 i = 1; i < entries.length; i++) {
@@ -231,6 +240,8 @@ contract FootMon {
 
         pendingClaims[winner] += prize;
         totalPendingClaims    += prize;
+
+        delete entries;
 
         emit PrizeAllocated(winner, prize, round);
     }

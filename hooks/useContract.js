@@ -49,9 +49,10 @@ export function useContract() {
       return new Contract(CONTRACT_ADDRESS, FOOTMON_ABI, window.__APPKIT_SIGNER__);
     }
 
-    // 3. Try window.ethereum direct fallback (EIP-1193)
+    // 3. Try window.ethereum direct fallback (EIP-1193) — request accounts first
     if (typeof window !== "undefined" && window.ethereum && CONTRACT_ADDRESS) {
       try {
+        await window.ethereum.request({ method: "eth_requestAccounts" });
         const provider = new BrowserProvider(window.ethereum);
         const signer = await provider.getSigner();
         return new Contract(CONTRACT_ADDRESS, FOOTMON_ABI, signer);

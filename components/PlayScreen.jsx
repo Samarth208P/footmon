@@ -31,7 +31,7 @@ export default function PlayScreen({ game, contract, isConnected, onSubmit, onLe
       onSubmit?.();
       return;
     }
-    if (rolledThisTurn && !isConnected) {
+    if (rolledThisTurn && (!isConnected || !contract.isAvailable())) {
       open();
       return;
     }
@@ -45,7 +45,7 @@ export default function PlayScreen({ game, contract, isConnected, onSubmit, onLe
 
   const handleReroll = useCallback(async (mode) => {
     if (busy) return;
-    if (!isConnected) {
+    if (!isConnected || !contract.isAvailable()) {
       open();
       return;
     }

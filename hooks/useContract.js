@@ -19,7 +19,7 @@ export function useContract() {
   const [roundNumber, setRoundNumber] = useState(1);
   const [pendingClaim, setPendingClaim] = useState("0");
 
-  const signerContractRef = useRef(null);
+  const [signerContract, setSignerContract] = useState(null);
   const readContractRef = useRef(null);
 
   // Read-only contract (always available via public RPC)
@@ -33,21 +33,26 @@ export function useContract() {
     }
   }, []);
 
-  // Signer contract (available when wallet connected)
   useEffect(() => {
     if (!CONTRACT_ADDRESS || !isConnected || !walletProvider) {
-      signerContractRef.current = null;
+      setSignerContract(null);
       return;
     }
+    let active = true;
     (async () => {
       try {
         const provider = new BrowserProvider(walletProvider);
         const signer = await provider.getSigner();
-        signerContractRef.current = new Contract(CONTRACT_ADDRESS, FOOTMON_ABI, signer);
+        if (active) {
+          setSignerContract(new Contract(CONTRACT_ADDRESS, FOOTMON_ABI, signer));
+        }
       } catch (err) {
         console.error("[useContract] Failed to create signer contract:", err);
       }
     })();
+    return () => {
+      active = false;
+    };
   }, [isConnected, walletProvider, address]);
 
   // Refresh prize pool data periodically
@@ -80,46 +85,46 @@ export function useContract() {
   }, [refreshData]);
 
   const isAvailable = useCallback(() => {
-    return !!CONTRACT_ADDRESS && isConnected && !!signerContractRef.current;
-  }, [isConnected]);
+    return !!CONTRACT_ADDRESS && isConnected && !!signerContract;
+  }, [isConnected, signerContract]);
 
   // ── Write functions ─────────────────────────────────────────────────────
 
   const payForRoll = useCallback(async (amountMon = REROLL_PRICE_MON) => {
-    const c = signerContractRef.current;
+    const c = signerContract;
     if (!c) throw new Error("Connect wallet first");
     const value = parseEther(String(amountMon));
     const tx = await c.payForRoll({ value });
     await tx.wait();
-  }, []);
+  }, [signerContract]);
 
   const submitScore = useCallback(async (avgRating, nation, year, formation) => {
-    const c = signerContractRef.current;
+    const c = signerContract;
     if (!c) throw new Error("Connect wallet first");
     const score = Math.round(avgRating * 100);
     const tx = await c.submitScore(score, nation, year, formation);
     await tx.wait();
-  }, []);
+  }, [signerContract]);
 
   const distributePrize = useCallback(async () => {
-    const c = signerContractRef.current;
+    const c = signerContract;
     if (!c) throw new Error("Connect wallet first");
     const tx = await c.distributePrize();
     await tx.wait();
-  }, []);
+  }, [signerContract]);
 
   const claimPrize = useCallback(async () => {
-    const c = signerContractRef.current;
+    const c = signerContract;
     if (!c) throw new Error("Connect wallet first");
     const tx = await c.claimPrize();
     await tx.wait();
     await refreshData();
-  }, [refreshData]);
+  }, [signerContract, refreshData]);
 
   // ── Duel functions ──────────────────────────────────────────────────────
 
   const createDuel = useCallback(async (duelId, stakeMon) => {
-    const c = signerContractRef.current;
+    const c = signerContract;
     const rc = readContractRef.current;
     if (!c || !rc) throw new Error("Connect wallet first");
 
@@ -132,7 +137,7 @@ export function useContract() {
         // Already created (OPEN) or both sides in (FULL) — no need to tx again.
         return { txHash: null, stakeWei: duel.stake.toString(), alreadyEscrowed: true };
       }
-    } catch {
+    } catch (err) {
       // getDuel failed — proceed with the create attempt.
     }
 
@@ -140,10 +145,10 @@ export function useContract() {
     const tx = await c.createDuel(duelId, { value });
     const receipt = await tx.wait();
     return { txHash: receipt?.hash ?? tx.hash, stakeWei: value.toString() };
-  }, []);
+  }, [signerContract]);
 
   const joinDuel = useCallback(async (duelId) => {
-    const c = signerContractRef.current;
+    const c = signerContract;
     const rc = readContractRef.current;
     if (!c || !rc) throw new Error("Connect wallet first");
     const duel = await rc.getDuel(duelId);
@@ -159,23 +164,23 @@ export function useContract() {
     const tx = await c.joinDuel(duelId, { value: duel.stake });
     const receipt = await tx.wait();
     return { txHash: receipt?.hash ?? tx.hash, stakeWei: duel.stake.toString() };
-  }, []);
+  }, [signerContract]);
 
   const cancelDuel = useCallback(async (duelId) => {
-    const c = signerContractRef.current;
+    const c = signerContract;
     if (!c) throw new Error("Connect wallet first");
     const tx = await c.cancelDuel(duelId);
     const receipt = await tx.wait();
     return receipt?.hash ?? tx.hash;
-  }, []);
+  }, [signerContract]);
 
   const claimDuelPrize = useCallback(async () => {
-    const c = signerContractRef.current;
+    const c = signerContract;
     if (!c) throw new Error("Connect wallet first");
     const tx = await c.claimDuelPrize();
     await tx.wait();
     await refreshData();
-  }, [refreshData]);
+  }, [signerContract, refreshData]);
 
   // ── Read helpers ────────────────────────────────────────────────────────
 

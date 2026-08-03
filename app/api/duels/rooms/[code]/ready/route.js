@@ -93,7 +93,7 @@ export async function POST(request, { params }) {
     // ready cannot proceed without a verified stake.
     if (!isChainConfigured()) {
       return NextResponse.json(
-        { error: "CONTRACT_ADDRESS is not configured on the server" },
+        { error: "NEXT_PUBLIC_CONTRACT_ADDRESS is not configured on the server" },
         { status: 503 }
       );
     }

@@ -18,7 +18,7 @@ import {FootMon} from "../FootMon.sol";
  */
 contract VerifyFootMon is Script {
     function run() external view {
-        FootMon footmon  = FootMon(payable(vm.envAddress("CONTRACT_ADDRESS")));
+        FootMon footmon  = FootMon(payable(vm.envAddress("NEXT_PUBLIC_CONTRACT_ADDRESS")));
         address resolver = vm.envAddress("RESOLVER_ADDRESS");
         address owner    = vm.envAddress("OWNER_ADDRESS");
 

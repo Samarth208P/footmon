@@ -65,7 +65,7 @@ export async function GET() {
     problems.push("SESSION_SECRET is missing or shorter than 32 characters — duels cannot start.");
   }
   if (!checks.contractAddress) {
-    problems.push("CONTRACT_ADDRESS is not a valid address — escrow is unavailable.");
+    problems.push("NEXT_PUBLIC_CONTRACT_ADDRESS is not a valid address — escrow is unavailable.");
   }
   if (!checks.resolverKey) {
     problems.push("RESOLVER_PRIVATE_KEY is missing — duels cannot be settled on-chain.");

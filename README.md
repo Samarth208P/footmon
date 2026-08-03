@@ -27,7 +27,7 @@ See [`.env.example`](.env.example). Placeholder names only there — never commi
 | `SESSION_SECRET` | HMAC secret (≥32 chars) for duel session tokens |
 | `RESOLVER_PRIVATE_KEY` | Server signer that settles duels. Never `NEXT_PUBLIC_*`. |
 | `DEPLOYER_PRIVATE_KEY` | Contract owner. Kept separate from the resolver. |
-| `CONTRACT_ADDRESS` | Deployed FootMon address |
+| `NEXT_PUBLIC_CONTRACT_ADDRESS` | Deployed FootMon address |
 | `MONAD_RPC_URL` | Monad Testnet RPC (chain 10143) |
 
 > **A publishable key in the `SUPABASE_SERVICE_ROLE_KEY` slot will not work.** It is RLS-constrained, so every server write fails and the app silently degrades to in-memory storage. `lib/supabase-server.js` throws loudly if it detects this.

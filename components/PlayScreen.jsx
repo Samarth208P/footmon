@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
+import { useAppKit } from "@reown/appkit/react";
 import { getFlagUrl, canPlayerFillSlot, ratingColor, REROLL_PRICE_MON } from "@/lib/constants";
 import PitchView from "./PitchView";
 import ShinyText from "./ShinyText";
@@ -18,6 +19,7 @@ export default function PlayScreen({ game, contract, isConnected, onSubmit, onLe
     setSelectedPlayer, setSelectedPlacedSlotIdx,
     setFilterPos, resetDraft, getTeamStats, getSubmitScore,
   } = game;
+  const { open } = useAppKit();
 
   const stats = getTeamStats();
   const submitScore = getSubmitScore();
@@ -29,23 +31,31 @@ export default function PlayScreen({ game, contract, isConnected, onSubmit, onLe
       onSubmit?.();
       return;
     }
+    if (rolledThisTurn && !isConnected) {
+      open();
+      return;
+    }
     try {
-      const payFn = contract.isAvailable() ? contract.payForRoll : null;
+      const payFn = rolledThisTurn && contract.isAvailable() ? contract.payForRoll : null;
       await roll("full", payFn);
     } catch (err) {
       showToast?.(err.message, "error");
     }
-  }, [busy, isSquadComplete, rolledThisTurn, contract, roll, onSubmit, showToast]);
+  }, [busy, isSquadComplete, rolledThisTurn, isConnected, open, contract, roll, onSubmit, showToast]);
 
   const handleReroll = useCallback(async (mode) => {
     if (busy) return;
+    if (!isConnected) {
+      open();
+      return;
+    }
     try {
       const payFn = contract.isAvailable() ? contract.payForRoll : null;
       await roll(mode, payFn);
     } catch (err) {
       showToast?.(err.message, "error");
     }
-  }, [busy, contract, roll, showToast]);
+  }, [busy, isConnected, open, contract, roll, showToast]);
 
   // ── Player click ────────────────────────────────────────────────────────
   const handlePlayerClick = (player) => {
@@ -122,12 +132,12 @@ export default function PlayScreen({ game, contract, isConnected, onSubmit, onLe
               {isSquadComplete
                 ? "Your XI is complete. Face 7 opponents — one loss ends the run."
                 : rolledThisTurn
-                  ? <>Reroll costs <strong>{REROLL_PRICE_MON} MON</strong>.</>
-                  : `Pick ${stats.assigned + 1} of 11. Roll costs 0.01 MON.`}
+                  ? <>Free roll used. Reroll costs <strong>{REROLL_PRICE_MON} MON</strong>.</>
+                  : `Pick ${stats.assigned + 1} of 11 — this roll is free.`}
             </p>
             <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: 8 }}>
               <button className="btn-play-roll" onClick={handleRoll} disabled={busy}>
-                {busy ? "Rolling ⚽" : isSquadComplete ? "Enter Tournament ⚽" : `Roll 🎲 (${REROLL_PRICE_MON} MON)`}
+                {busy ? "Rolling ⚽" : isSquadComplete ? "Enter Tournament ⚽" : rolledThisTurn ? `Reroll 🎲 (${REROLL_PRICE_MON} MON)` : "Roll 🎲"}
               </button>
               <button className="btn-cancel-draft" onClick={resetDraft}>Cancel &amp; Restart</button>
             </div>

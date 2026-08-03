@@ -474,7 +474,7 @@ export default function DuelGamePage() {
     if (duel.busy || !duel.isMyTurn) return;
     playSound("roll");
     try {
-      const payFn = contract.isAvailable() ? contract.payForRoll : null;
+      const payFn = duel.rolledThisTurn && contract.isAvailable() ? contract.payForRoll : null;
       await duel.roll("full", payFn);
     } catch (err) {
       showToast(err.message, "error");
@@ -992,7 +992,7 @@ export default function DuelGamePage() {
                           <h3 className="draft-empty-title">Draft Next Player</h3>
                           <p className="draft-empty-desc">
                             {duel.isMyTurn
-                              ? "All rolls cost 0.01 MON."
+                              ? "Roll to draw a nation and year. Rerolls cost 0.01 MON."
                               : "Wait for your opponent to roll their wheel..."}
                           </p>
                           {duel.isMyTurn && (
@@ -1001,7 +1001,7 @@ export default function DuelGamePage() {
                               onClick={handleRoll}
                               disabled={duel.busy}
                             >
-                              {duel.busy ? "Rolling ⚽" : `Roll 🎲 (${REROLL_PRICE_MON} MON)`}
+                              {duel.busy ? "Rolling ⚽" : "Roll 🎲"}
                             </button>
                           )}
                         </div>

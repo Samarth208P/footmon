@@ -5,6 +5,7 @@ import { useAppKitAccount } from "@reown/appkit/react";
 import { useContract } from "@/hooks/useContract";
 import { useGame } from "@/hooks/useGame";
 import { useProfile } from "@/hooks/useProfile";
+import { useRerollCredits } from "@/hooks/useRerollCredits";
 import WalletGate from "./WalletGate";
 import FormationScreen from "./FormationScreen";
 import PlayScreen from "./PlayScreen";
@@ -50,6 +51,10 @@ export default function GamePage() {
     setToasts((prev) => [...prev, { id, msg, type }]);
     setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), 3500);
   }, []);
+
+  // Reroll credits — must come after showToast
+  const rerollCredits = useRerollCredits(contract, showToast);
+
 
   // ── Tournament flow ─────────────────────────────────────────────────────
   //
@@ -227,6 +232,7 @@ export default function GamePage() {
             <PlayScreen
               game={game}
               contract={contract}
+              rerollCredits={rerollCredits}
               isConnected={isConnected}
               onSubmit={handleEnterTournament}
               onLeaderboard={() => setLbOpen(true)}

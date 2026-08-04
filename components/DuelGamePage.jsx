@@ -5,6 +5,7 @@ import { useAppKitAccount } from "@reown/appkit/react";
 import { useContract } from "@/hooks/useContract";
 import { useDuel } from "@/hooks/useDuel";
 import { useProfile } from "@/hooks/useProfile";
+import { useRerollCredits } from "@/hooks/useRerollCredits";
 import WalletGate from "./WalletGate";
 import PitchView from "./PitchView";
 import ProfileClaimModal from "./ProfileClaimModal";
@@ -299,6 +300,8 @@ export default function DuelGamePage() {
     setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), 3500);
   }, []);
 
+  const rerollCredits = useRerollCredits(contract, showToast);
+
   // ── Create room handler ─────────────────────────────────────────────────
   // No on-chain interaction here. The stake is escrowed later, once BOTH
   // players are in the room and hit "Ready".
@@ -474,10 +477,18 @@ export default function DuelGamePage() {
     if (duel.busy || !duel.isMyTurn) return;
     playSound("roll");
     try {
-      const payFn = duel.rolledThisTurn
-        ? (amt) => contract.payForRoll(amt, (msg) => showToast(msg, "error"))
-        : null;
-      await duel.roll("full", payFn);
+      if (duel.rolledThisTurn) {
+        // Paid reroll — try credits first, wallet popup as fallback
+        const creditSpent = await rerollCredits.spendCredit();
+        if (creditSpent) {
+          await duel.roll("full", null); // no payment needed
+        } else {
+          const payFn = (amt) => contract.payForRoll(amt, (msg) => showToast(msg, "error"));
+          await duel.roll("full", payFn);
+        }
+      } else {
+        await duel.roll("full", null); // first roll is always free
+      }
     } catch (err) {
       showToast(err.message, "error");
     }
@@ -487,8 +498,14 @@ export default function DuelGamePage() {
     if (duel.busy || !duel.isMyTurn) return;
     playSound("reroll");
     try {
-      const payFn = (amt) => contract.payForRoll(amt, (msg) => showToast(msg, "error"));
-      await duel.roll(mode, payFn);
+      // Always paid — try credits first, fall back to wallet popup
+      const creditSpent = await rerollCredits.spendCredit();
+      if (creditSpent) {
+        await duel.roll(mode, null);
+      } else {
+        const payFn = (amt) => contract.payForRoll(amt, (msg) => showToast(msg, "error"));
+        await duel.roll(mode, payFn);
+      }
     } catch (err) {
       showToast(err.message, "error");
     }

@@ -10,7 +10,7 @@ import { AnimatedItem } from "./AnimatedList";
 /**
  * The play/draft screen — roll, pick players, assign to pitch slots.
  */
-export default function PlayScreen({ game, contract, isConnected, onSubmit, onLeaderboard, showToast }) {
+export default function PlayScreen({ game, contract, rerollCredits, isConnected, onSubmit, onLeaderboard, showToast }) {
   const {
     slots, nationCode, nationName, year, squad, filteredSquad,
     rolledThisTurn, selectedPlayer, selectedPlacedSlotIdx,
@@ -36,14 +36,22 @@ export default function PlayScreen({ game, contract, isConnected, onSubmit, onLe
       return;
     }
     try {
-      const payFn = rolledThisTurn
-        ? (amt) => contract.payForRoll(amt, (msg) => showToast?.(msg, "error"))
-        : null;
-      await roll("full", payFn);
+      if (rolledThisTurn) {
+        // Paid reroll — try credits first, wallet popup as fallback
+        const creditSpent = await rerollCredits?.spendCredit();
+        if (creditSpent) {
+          await roll("full", null);
+        } else {
+          const payFn = (amt) => contract.payForRoll(amt, (msg) => showToast?.(msg, "error"));
+          await roll("full", payFn);
+        }
+      } else {
+        await roll("full", null); // first roll always free
+      }
     } catch (err) {
       showToast?.(err.message, "error");
     }
-  }, [busy, isSquadComplete, rolledThisTurn, isConnected, open, contract, roll, onSubmit, showToast]);
+  }, [busy, isSquadComplete, rolledThisTurn, isConnected, open, contract, rerollCredits, roll, onSubmit, showToast]);
 
   const handleReroll = useCallback(async (mode) => {
     if (busy) return;
@@ -52,12 +60,18 @@ export default function PlayScreen({ game, contract, isConnected, onSubmit, onLe
       return;
     }
     try {
-      const payFn = (amt) => contract.payForRoll(amt, (msg) => showToast?.(msg, "error"));
-      await roll(mode, payFn);
+      // Always paid — try credits first, fall back to wallet popup
+      const creditSpent = await rerollCredits?.spendCredit();
+      if (creditSpent) {
+        await roll(mode, null);
+      } else {
+        const payFn = (amt) => contract.payForRoll(amt, (msg) => showToast?.(msg, "error"));
+        await roll(mode, payFn);
+      }
     } catch (err) {
       showToast?.(err.message, "error");
     }
-  }, [busy, isConnected, open, contract, roll, showToast]);
+  }, [busy, isConnected, open, contract, rerollCredits, roll, showToast]);
 
   // ── Player click ────────────────────────────────────────────────────────
   const handlePlayerClick = (player) => {

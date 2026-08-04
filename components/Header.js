@@ -9,6 +9,7 @@ import GooeyNav from "./GooeyNav";
 const NAV_ITEMS = [
   { label: "Play Solo", href: "/play" },
   { label: "1v1 Duel", href: "/play/duel" },
+  { label: "Marketplace ⚡", href: "/marketplace" },
 ];
 
 export default function Header() {
@@ -22,6 +23,7 @@ export default function Header() {
   // (e.g. the landing page) neither tab is highlighted — passing -1 keeps
   // GooeyNav's active pill hidden entirely.
   const activeIndex = useMemo(() => {
+    if (pathname.startsWith("/marketplace")) return 2;
     if (pathname.startsWith("/play/duel")) return 1;
     if (pathname.startsWith("/play")) return 0;
     return -1;

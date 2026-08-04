@@ -130,6 +130,16 @@ export function useContract() {
     });
   }, [getSignerContract]);
 
+  const buyRerollCredits = useCallback(async (amountMon, onTxFail) => {
+    const c = await getSignerContract();
+    const value = parseEther(String(amountMon));
+    const tx = await c.buyRerollCredits({ value });
+    tx.wait().catch((err) => {
+      console.error("[useContract] buyRerollCredits tx reverted:", err);
+      if (onTxFail) onTxFail("Reroll credit purchase failed on-chain.");
+    });
+  }, [getSignerContract]);
+
   const submitScore = useCallback(async (avgRating, nation, year, formation) => {
     const c = await getSignerContract();
     const score = Math.round(avgRating * 100);
@@ -246,6 +256,7 @@ export function useContract() {
     pendingClaim,
     refreshData,
     payForRoll,
+    buyRerollCredits,
     submitScore,
     distributePrize,
     claimPrize,

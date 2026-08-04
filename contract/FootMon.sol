@@ -151,6 +151,20 @@ contract FootMon {
     }
 
     /**
+     * @notice Purchase a bundle of reroll credits.
+     *         100% of this payment goes to the owner; the prize pool is funded
+     *         later by the server's daily settlement based on actual rerolls.
+     */
+    function buyRerollCredits() external payable {
+        require(msg.value > 0, "FootMon: zero value");
+
+        (bool ok,) = payable(owner).call{value: msg.value}("");
+        require(ok, "FootMon: owner transfer failed");
+
+        emit RollPurchased(msg.sender, msg.value);
+    }
+
+    /**
      * @notice Submit (or update if better) your team score.
      * @param score     avgRating × 100, range 1-10000
      * @param nation    ISO-3 country code

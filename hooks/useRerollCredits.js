@@ -79,7 +79,7 @@ export function useRerollCredits(contract, showToast) {
     const bundle = REROLL_BUNDLES.find((b) => b.id === bundleId);
     if (!bundle) throw new Error(`Unknown bundle: ${bundleId}`);
     if (!isConnected) throw new Error("Wallet not connected");
-    if (!contract?.payForRoll) throw new Error("Contract not available");
+    if (!contract?.buyRerollCredits) throw new Error("Contract not available");
 
     setBuying(true);
     try {
@@ -87,7 +87,7 @@ export function useRerollCredits(contract, showToast) {
       const signer = await getSigner();
       const c = new Contract(CONTRACT_ADDRESS, FOOTMON_ABI, signer);
       const value = parseEther(bundle.priceMon);
-      const tx = await c.payForRoll({ value });
+      const tx = await c.buyRerollCredits({ value });
 
       // Show immediate feedback
       showToast?.(`Processing ${bundle.rerolls} rerolls purchase…`, "info");

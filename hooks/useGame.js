@@ -53,8 +53,7 @@ export function useGame() {
     const isPaid = mode !== "full" || rolledThisTurn;
 
     try {
-      if (isPaid) {
-        if (!payForRoll) throw new Error("Wallet not connected or contract unavailable");
+      if (isPaid && payForRoll) {
         await payForRoll(REROLL_PRICE_MON);
       }
 

@@ -8,6 +8,8 @@ import WalletGate from "@/components/WalletGate";
 import Toast from "@/components/Toast";
 import Link from "next/link";
 
+import RerollIcon from "@/components/RerollIcon";
+
 export default function MarketplaceClient() {
   const { isConnected } = useAppKitAccount();
   const contract = useContract();
@@ -21,132 +23,233 @@ export default function MarketplaceClient() {
 
   const { credits, buying, buyBundle, refetch } = useRerollCredits(contract, showToast);
   const [buyingId, setBuyingId] = useState(null);
+  const [isRefetching, setIsRefetching] = useState(false);
 
   const handleBuy = async (bundleId) => {
     setBuyingId(bundleId);
     try {
       await buyBundle(bundleId);
     } catch {
-      // Error handles in hook with showToast
+      // Error handled in hook with showToast
     } finally {
       setBuyingId(null);
     }
   };
 
+  const handleRefresh = async () => {
+    setIsRefetching(true);
+    await refetch();
+    setTimeout(() => setIsRefetching(false), 500);
+  };
+
   return (
-    <main className="marketplace-shell" style={{ minHeight: "calc(100vh - 80px)", padding: "2rem 1rem", maxWidth: "1200px", margin: "0 auto" }}>
+    <main style={{ minHeight: "calc(100vh - 80px)", padding: "1.5rem 1rem 3rem 1rem", maxWidth: "960px", margin: "0 auto" }}>
       <Toast toasts={toasts} setToasts={setToasts} />
 
-      {/* Header section */}
-      <div className="marketplace-header" style={{ textAlign: "center", marginBottom: "2.5rem" }}>
-        <div style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", padding: "0.4rem 1rem", background: "rgba(240, 192, 64, 0.12)", border: "1px solid rgba(240, 192, 64, 0.3)", borderRadius: "999px", color: "#f0c040", fontWeight: "600", fontSize: "0.9rem", marginBottom: "1rem" }}>
-          ⚡ Fast Rerolls • Zero Wallet Signature Popups
+      {/* Header */}
+      <div style={{ textAlign: "center", marginBottom: "2rem" }}>
+        <div
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "0.4rem",
+            padding: "0.28rem 0.8rem",
+            background: "rgba(109, 92, 255, 0.1)",
+            border: "1px solid rgba(109, 92, 255, 0.25)",
+            borderRadius: "999px",
+            color: "#a78bfa",
+            fontWeight: "600",
+            fontSize: "0.8rem",
+            marginBottom: "0.75rem",
+            letterSpacing: "0.02em",
+          }}
+        >
+          <RerollIcon size={14} color="#a78bfa" /> Fast Rerolls • Zero Signature Popups
         </div>
-        <h1 style={{ fontSize: "2.5rem", fontWeight: "800", background: "linear-gradient(135deg, #ffffff 0%, #a5b4fc 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", margin: "0.5rem 0" }}>
-          Reroll Credit Marketplace
+
+        <h1
+          style={{
+            fontSize: "2.1rem",
+            fontWeight: "700",
+            color: "#ffffff",
+            margin: "0.15rem 0 0.5rem 0",
+            letterSpacing: "-0.02em",
+            fontFamily: "'Space Grotesk', sans-serif",
+          }}
+        >
+          Reroll Marketplace
         </h1>
-        <p style={{ color: "#94a3b8", maxWidth: "600px", margin: "0 auto", fontSize: "1rem", lineHeight: "1.5" }}>
-          Pre-purchase reroll bundles to skip repeated wallet signature prompts. Reroll instantly in both Solo Mode and 1v1 Staked Duels!
+
+        <p style={{ color: "#94a3b8", maxWidth: "520px", margin: "0 auto 1.25rem auto", fontSize: "0.88rem", lineHeight: "1.5" }}>
+          Pre-purchase reroll credit bundles for instant card rerolls in Solo Tournaments and 1v1 Staked Duels.
         </p>
 
         {/* Live balance indicator */}
-        <div style={{ marginTop: "1.5rem", display: "inline-flex", alignItems: "center", gap: "1rem", padding: "0.8rem 1.5rem", background: "rgba(15, 23, 42, 0.75)", backdropFilter: "blur(12px)", border: "1px solid rgba(255, 255, 255, 0.1)", borderRadius: "16px", boxShadow: "0 8px 24px rgba(0,0,0,0.3)" }}>
-          <div style={{ textAlign: "left" }}>
-            <span style={{ fontSize: "0.8rem", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: "700" }}>Your Credit Balance</span>
-            <div style={{ fontSize: "1.5rem", fontWeight: "800", color: "#4cdf6f", display: "flex", alignItems: "center", gap: "0.4rem" }}>
-              ⚡ {credits} <span style={{ fontSize: "0.9rem", color: "#94a3b8", fontWeight: "500" }}>Credits</span>
-            </div>
-          </div>
-          <button 
-            onClick={refetch}
-            style={{ background: "none", border: "1px solid rgba(255,255,255,0.15)", color: "#cbd5e1", borderRadius: "8px", padding: "0.4rem 0.8rem", cursor: "pointer", fontSize: "0.85rem", transition: "all 0.2s" }}
+        <div
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "0.6rem",
+            padding: "0.4rem 1rem",
+            background: "rgba(19, 21, 28, 0.85)",
+            border: "1px solid rgba(255, 255, 255, 0.1)",
+            borderRadius: "999px",
+            boxShadow: "0 4px 16px rgba(0, 0, 0, 0.25)",
+          }}
+        >
+          <span style={{ fontSize: "0.8rem", color: "#94a3b8" }}>
+            Balance:
+          </span>
+          <span style={{ fontSize: "1rem", fontWeight: "700", color: "#ffffff", display: "flex", alignItems: "center", gap: "0.35rem" }}>
+            <RerollIcon size={16} color="#8b7aff" /> {credits} <span style={{ fontSize: "0.8rem", color: "#64748b", fontWeight: "500" }}>Credits</span>
+          </span>
+          <button
+            onClick={handleRefresh}
+            title="Refresh Balance"
+            style={{
+              background: "none",
+              border: "none",
+              color: "#64748b",
+              cursor: "pointer",
+              fontSize: "0.85rem",
+              padding: "0.15rem",
+              display: "flex",
+              alignItems: "center",
+              transform: isRefetching ? "rotate(180deg)" : "none",
+              transition: "transform 0.4s ease, color 0.2s ease",
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = "#ffffff")}
+            onMouseLeave={(e) => (e.currentTarget.style.color = "#64748b")}
           >
-            Refresh ↺
+            ↺
           </button>
         </div>
       </div>
 
-      {/* Wallet Gate */}
+      {/* Wallet Gate & Cards */}
       <WalletGate isConnected={isConnected}>
-        {/* Bundles Grid */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "1.5rem" }}>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+            gap: "1rem",
+          }}
+        >
           {REROLL_BUNDLES.map((bundle) => {
             const isPopular = bundle.id === "value";
-            const isBestValue = bundle.id === "elite";
+            const isElite = bundle.id === "elite";
+            const isFeatured = isPopular || isElite;
             const perRoll = (parseFloat(bundle.priceMon) / bundle.rerolls).toFixed(4);
 
             return (
               <div
                 key={bundle.id}
                 style={{
-                  position: "relative",
-                  background: isBestValue 
-                    ? "linear-gradient(145deg, rgba(30, 27, 75, 0.8), rgba(15, 23, 42, 0.9))" 
-                    : "rgba(15, 23, 42, 0.6)",
+                  background: "rgba(19, 21, 28, 0.75)",
                   backdropFilter: "blur(12px)",
-                  border: isBestValue
-                    ? "2px solid #818cf8"
-                    : isPopular
-                    ? "1px solid #f0c040"
-                    : "1px solid rgba(255, 255, 255, 0.08)",
-                  borderRadius: "20px",
-                  padding: "1.75rem",
+                  border: isFeatured
+                    ? "1px solid rgba(129, 140, 248, 0.4)"
+                    : "1px solid rgba(255, 255, 255, 0.09)",
+                  borderRadius: "14px",
+                  padding: "1.15rem 1.25rem",
                   display: "flex",
                   flexDirection: "column",
                   justifyContent: "space-between",
-                  boxShadow: isBestValue ? "0 12px 32px rgba(99, 102, 241, 0.25)" : "0 8px 24px rgba(0,0,0,0.2)",
-                  transition: "transform 0.2s ease, box-shadow 0.2s ease",
+                  transition: "transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease",
+                  position: "relative",
+                  boxShadow: isFeatured ? "0 6px 20px rgba(99, 102, 241, 0.15)" : "0 4px 14px rgba(0, 0, 0, 0.2)",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = "translateY(-2px)";
+                  e.currentTarget.style.borderColor = isFeatured
+                    ? "rgba(129, 140, 248, 0.65)"
+                    : "rgba(109, 92, 255, 0.4)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = "none";
+                  e.currentTarget.style.borderColor = isFeatured
+                    ? "rgba(129, 140, 248, 0.4)"
+                    : "rgba(255, 255, 255, 0.09)";
                 }}
               >
-                {/* Badge */}
-                {(bundle.discount > 0 || isBestValue || isPopular) && (
-                  <div style={{ position: "absolute", top: "-12px", right: "20px", background: isBestValue ? "linear-gradient(135deg, #6366f1, #a855f7)" : isPopular ? "#f0c040" : "#22c55e", color: isPopular ? "#000" : "#fff", fontSize: "0.75rem", fontWeight: "800", padding: "0.25rem 0.75rem", borderRadius: "999px", textTransform: "uppercase", letterSpacing: "0.05em", boxShadow: "0 4px 12px rgba(0,0,0,0.3)" }}>
-                    {isBestValue ? "Best Value" : isPopular ? "Popular" : `Save ${bundle.discount}%`}
-                  </div>
-                )}
-
                 <div>
-                  <h3 style={{ fontSize: "1.25rem", fontWeight: "700", color: "#f8fafc", margin: "0 0 0.5rem 0" }}>
-                    {bundle.label}
-                  </h3>
-                  <div style={{ fontSize: "2.2rem", fontWeight: "800", color: "#ffffff", margin: "0.5rem 0" }}>
-                    ⚡ {bundle.rerolls} <span style={{ fontSize: "1rem", color: "#94a3b8", fontWeight: "500" }}>Rerolls</span>
+                  {/* Card Header row */}
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.6rem" }}>
+                    <h3 style={{ fontSize: "1rem", fontWeight: "700", color: "#ffffff", margin: 0, fontFamily: "'Space Grotesk', sans-serif" }}>
+                      {bundle.label}
+                    </h3>
+
+                    {/* Clean Badge */}
+                    {isPopular && (
+                      <span style={{ fontSize: "0.7rem", fontWeight: "600", color: "#fbbf24", background: "rgba(245, 158, 11, 0.15)", border: "1px solid rgba(245, 158, 11, 0.3)", padding: "0.15rem 0.5rem", borderRadius: "999px" }}>
+                        Popular
+                      </span>
+                    )}
+                    {isElite && (
+                      <span style={{ fontSize: "0.7rem", fontWeight: "600", color: "#a5b4fc", background: "rgba(99, 102, 241, 0.18)", border: "1px solid rgba(99, 102, 241, 0.35)", padding: "0.15rem 0.5rem", borderRadius: "999px" }}>
+                        Best Value
+                      </span>
+                    )}
+                    {!isPopular && !isElite && bundle.discount > 0 && (
+                      <span style={{ fontSize: "0.7rem", fontWeight: "600", color: "#34d399", background: "rgba(52, 211, 153, 0.12)", border: "1px solid rgba(52, 211, 153, 0.25)", padding: "0.15rem 0.5rem", borderRadius: "999px" }}>
+                        Save {bundle.discount}%
+                      </span>
+                    )}
                   </div>
 
-                  <div style={{ display: "flex", alignItems: "baseline", gap: "0.5rem", margin: "1rem 0" }}>
-                    <span style={{ fontSize: "1.75rem", fontWeight: "800", color: "#f0c040" }}>
+                  {/* Quantity */}
+                  <div style={{ margin: "0.4rem 0" }}>
+                    <div style={{ fontSize: "1.6rem", fontWeight: "800", color: "#ffffff", display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                      <RerollIcon size={20} color="#8b7aff" /> {bundle.rerolls}
+                      <span style={{ fontSize: "0.85rem", color: "#94a3b8", fontWeight: "500" }}>Rerolls</span>
+                    </div>
+                  </div>
+
+                  {/* Pricing */}
+                  <div style={{ display: "flex", alignItems: "baseline", gap: "0.5rem", marginTop: "0.5rem" }}>
+                    <span style={{ fontSize: "1.3rem", fontWeight: "700", color: "#ffffff" }}>
                       {bundle.priceMon} MON
                     </span>
                     {bundle.discount > 0 && (
-                      <span style={{ fontSize: "0.85rem", color: "#64748b", textDecoration: "line-through" }}>
+                      <span style={{ fontSize: "0.8rem", color: "#64748b", textDecoration: "line-through" }}>
                         {(bundle.rerolls * 0.01).toFixed(2)} MON
                       </span>
                     )}
                   </div>
 
-                  <p style={{ fontSize: "0.85rem", color: "#94a3b8", margin: "0 0 1.5rem 0" }}>
-                    ~{perRoll} MON per roll • <span style={{ color: "#4cdf6f" }}>0.005 MON to Daily Prize Pot</span>
-                  </p>
+                  {/* Subtext info */}
+                  <div style={{ marginTop: "0.35rem", marginBottom: "1rem", fontSize: "0.78rem", color: "#64748b" }}>
+                    <span>~{perRoll} MON per roll</span>
+                  </div>
                 </div>
 
+                {/* Purchase Button - Uniform Solid Active Styling */}
                 <button
                   onClick={() => handleBuy(bundle.id)}
                   disabled={buying}
                   style={{
                     width: "100%",
-                    padding: "0.85rem 1rem",
-                    borderRadius: "12px",
+                    padding: "0.6rem 0.85rem",
+                    borderRadius: "8px",
                     border: "none",
-                    background: isBestValue
-                      ? "linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)"
-                      : "linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)",
+                    background: "linear-gradient(135deg, #6d5cff 0%, #4f46e5 100%)",
                     color: "#ffffff",
-                    fontWeight: "700",
-                    fontSize: "1rem",
+                    fontWeight: "600",
+                    fontSize: "0.88rem",
                     cursor: buying ? "not-allowed" : "pointer",
                     opacity: buying ? 0.6 : 1,
                     transition: "all 0.2s ease",
-                    boxShadow: "0 4px 14px rgba(0,0,0,0.3)",
+                    boxShadow: "0 3px 10px rgba(109, 92, 255, 0.25)",
+                  }}
+                  onMouseEnter={(e) => {
+                    if (buying) return;
+                    e.currentTarget.style.opacity = "0.9";
+                    e.currentTarget.style.transform = "scale(1.01)";
+                  }}
+                  onMouseLeave={(e) => {
+                    if (buying) return;
+                    e.currentTarget.style.opacity = "1";
+                    e.currentTarget.style.transform = "scale(1)";
                   }}
                 >
                   {buyingId === bundle.id ? "Processing..." : `Buy ${bundle.rerolls} Credits`}
@@ -158,16 +261,55 @@ export default function MarketplaceClient() {
       </WalletGate>
 
       {/* Info Footer */}
-      <div style={{ marginTop: "3rem", padding: "1.5rem", background: "rgba(15, 23, 42, 0.4)", border: "1px solid rgba(255, 255, 255, 0.05)", borderRadius: "16px", display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: "1rem" }}>
+      <div
+        style={{
+          marginTop: "2rem",
+          padding: "1rem 1.25rem",
+          background: "rgba(19, 21, 28, 0.6)",
+          border: "1px solid rgba(255, 255, 255, 0.07)",
+          borderRadius: "12px",
+          display: "flex",
+          flexWrap: "wrap",
+          justifyContent: "space-between",
+          alignItems: "center",
+          gap: "0.75rem",
+        }}
+      >
         <div>
-          <h4 style={{ color: "#f8fafc", margin: "0 0 0.25rem 0", fontSize: "1rem" }}>Ready to draft?</h4>
-          <p style={{ color: "#94a3b8", margin: "0", fontSize: "0.875rem" }}>Use your credits right now in solo tournament runs or 1v1 duels.</p>
+          <h4 style={{ color: "#f8fafc", margin: "0 0 0.15rem 0", fontSize: "0.9rem", fontWeight: "600" }}>Ready to draft?</h4>
+          <p style={{ color: "#64748b", margin: 0, fontSize: "0.8rem" }}>Use your credits right now in solo tournaments or 1v1 staked duels.</p>
         </div>
-        <div style={{ display: "flex", gap: "0.75rem" }}>
-          <Link href="/play" style={{ padding: "0.6rem 1.2rem", background: "rgba(255, 255, 255, 0.08)", color: "#fff", borderRadius: "10px", textDecoration: "none", fontWeight: "600", fontSize: "0.9rem" }}>
+        <div style={{ display: "flex", gap: "0.6rem" }}>
+          <Link
+            href="/play"
+            style={{
+              padding: "0.45rem 0.85rem",
+              background: "rgba(255, 255, 255, 0.06)",
+              border: "1px solid rgba(255, 255, 255, 0.1)",
+              color: "#f8fafc",
+              borderRadius: "7px",
+              textDecoration: "none",
+              fontWeight: "600",
+              fontSize: "0.8rem",
+              transition: "all 0.2s ease",
+            }}
+          >
             Play Solo
           </Link>
-          <Link href="/play/duel" style={{ padding: "0.6rem 1.2rem", background: "#6366f1", color: "#fff", borderRadius: "10px", textDecoration: "none", fontWeight: "600", fontSize: "0.9rem" }}>
+          <Link
+            href="/play/duel"
+            style={{
+              padding: "0.45rem 0.85rem",
+              background: "#6d5cff",
+              color: "#ffffff",
+              borderRadius: "7px",
+              textDecoration: "none",
+              fontWeight: "600",
+              fontSize: "0.8rem",
+              transition: "all 0.2s ease",
+              boxShadow: "0 2px 8px rgba(109, 92, 255, 0.25)",
+            }}
+          >
             1v1 Duel
           </Link>
         </div>

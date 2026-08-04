@@ -9,7 +9,7 @@ import GooeyNav from "./GooeyNav";
 const NAV_ITEMS = [
   { label: "Play Solo", href: "/play" },
   { label: "1v1 Duel", href: "/play/duel" },
-  { label: "Marketplace ⚡", href: "/marketplace" },
+  { label: "Marketplace", href: "/marketplace" },
 ];
 
 export default function Header() {

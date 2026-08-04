@@ -185,7 +185,7 @@ export default function PlayScreen({ game, contract, rerollCredits, isConnected,
             <div className="reroll-section">
               <div className="reroll-header">
                 <span className="rolls-left-label">
-                  {rerollCredits?.credits > 0 ? "Using reroll credits" : `${REROLL_PRICE_MON} MON per reroll`}
+                  {rerollCredits?.credits > 0 ? `Using reroll credits (${rerollCredits.credits} remaining)` : `${REROLL_PRICE_MON} MON per reroll`}
                 </span>
                 <span className="roll-cost-badge">
                   {rerollCredits?.credits > 0 ? `${rerollCredits.credits} left` : `${REROLL_PRICE_MON} MON`}

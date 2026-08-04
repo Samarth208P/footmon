@@ -968,7 +968,7 @@ export default function DuelGamePage() {
                     <>
                       <div className="rolls-left-row">
                         <span className="rolls-left-label">
-                          {rerollCredits?.credits > 0 ? "USING REROLL CREDITS" : `REROLLS: ${REROLL_PRICE_MON} MON EACH`}
+                          {rerollCredits?.credits > 0 ? `USING REROLL CREDITS (${rerollCredits.credits} REMAINING)` : `REROLLS: ${REROLL_PRICE_MON} MON EACH`}
                         </span>
                         <div className="roll-cost-badge">
                           {rerollCredits?.credits > 0 ? `${rerollCredits.credits} left` : `${REROLL_PRICE_MON} MON`}

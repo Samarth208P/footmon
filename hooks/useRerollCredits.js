@@ -129,67 +129,23 @@ export function useRerollCredits(contract, showToast) {
   // ── Spend 1 credit ─────────────────────────────────────────────────────
 
   /**
-   * Signs a tiny off-chain message (no gas, no popup) and asks the server
-   * to deduct 1 credit.
+   * Directly asks the server to deduct 1 credit for the wallet.
    *
    * @returns {Promise<boolean>} true = credit spent, false = no credits left
    */
   const spendCredit = useCallback(async () => {
     if (!address || credits <= 0) return false;
     setSpending(true);
-    const storageKey = `footmon_wallet_session_${address.toLowerCase()}`;
-    const cachedToken = typeof window !== "undefined" ? window.sessionStorage.getItem(storageKey) : null;
 
     try {
-      let payload = {
-        wallet: address.toLowerCase(),
-      };
-
-      if (cachedToken) {
-        payload.sessionToken = cachedToken;
-      } else {
-        const signer = await getSigner();
-        const timestamp = Date.now();
-        const message = `footmon-reroll:${timestamp}`;
-        const signature = await signer.signMessage(message);
-        payload.signature = signature;
-        payload.timestamp = timestamp;
-      }
-
-      let res = await fetch("/api/credits/spend", {
+      const res = await fetch("/api/credits/spend", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({ wallet: address.toLowerCase() }),
       });
-
-      // If the session token was invalid or expired (401), clear cache and prompt for a signature retry
-      if (res.status === 401 && cachedToken) {
-        if (typeof window !== "undefined") {
-          window.sessionStorage.removeItem(storageKey);
-        }
-        const signer = await getSigner();
-        const timestamp = Date.now();
-        const message = `footmon-reroll:${timestamp}`;
-        const signature = await signer.signMessage(message);
-        payload = {
-          wallet: address.toLowerCase(),
-          signature,
-          timestamp,
-        };
-        res = await fetch("/api/credits/spend", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-      }
 
       const data = await res.json();
       if (!res.ok || !data.success) return false;
-
-      // Cache the session token for subsequent rerolls
-      if (data.sessionToken && typeof window !== "undefined") {
-        window.sessionStorage.setItem(storageKey, data.sessionToken);
-      }
 
       // Optimistically decrement local state
       setCredits((c) => Math.max(0, c - 1));
@@ -200,7 +156,7 @@ export function useRerollCredits(contract, showToast) {
     } finally {
       setSpending(false);
     }
-  }, [address, credits, getSigner]);
+  }, [address, credits]);
 
   return {
     credits,

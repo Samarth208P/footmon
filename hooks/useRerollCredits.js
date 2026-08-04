@@ -137,24 +137,59 @@ export function useRerollCredits(contract, showToast) {
   const spendCredit = useCallback(async () => {
     if (!address || credits <= 0) return false;
     setSpending(true);
-    try {
-      const signer = await getSigner();
-      const timestamp = Date.now();
-      const message = `footmon-reroll:${timestamp}`;
-      // eth_sign — instant, zero gas, no popup needed
-      const signature = await signer.signMessage(message);
+    const storageKey = `footmon_wallet_session_${address.toLowerCase()}`;
+    const cachedToken = typeof window !== "undefined" ? window.sessionStorage.getItem(storageKey) : null;
 
-      const res = await fetch("/api/credits/spend", {
+    try {
+      let payload = {
+        wallet: address.toLowerCase(),
+      };
+
+      if (cachedToken) {
+        payload.sessionToken = cachedToken;
+      } else {
+        const signer = await getSigner();
+        const timestamp = Date.now();
+        const message = `footmon-reroll:${timestamp}`;
+        const signature = await signer.signMessage(message);
+        payload.signature = signature;
+        payload.timestamp = timestamp;
+      }
+
+      let res = await fetch("/api/credits/spend", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+        body: JSON.stringify(payload),
+      });
+
+      // If the session token was invalid or expired (401), clear cache and prompt for a signature retry
+      if (res.status === 401 && cachedToken) {
+        if (typeof window !== "undefined") {
+          window.sessionStorage.removeItem(storageKey);
+        }
+        const signer = await getSigner();
+        const timestamp = Date.now();
+        const message = `footmon-reroll:${timestamp}`;
+        const signature = await signer.signMessage(message);
+        payload = {
           wallet: address.toLowerCase(),
           signature,
           timestamp,
-        }),
-      });
+        };
+        res = await fetch("/api/credits/spend", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+      }
+
       const data = await res.json();
       if (!res.ok || !data.success) return false;
+
+      // Cache the session token for subsequent rerolls
+      if (data.sessionToken && typeof window !== "undefined") {
+        window.sessionStorage.setItem(storageKey, data.sessionToken);
+      }
 
       // Optimistically decrement local state
       setCredits((c) => Math.max(0, c - 1));

@@ -148,12 +148,22 @@ export default function PlayScreen({ game, contract, rerollCredits, isConnected,
               {isSquadComplete
                 ? "Your XI is complete. Face 7 opponents — one loss ends the run."
                 : rolledThisTurn
-                  ? <>Free roll used. Reroll costs <strong>{REROLL_PRICE_MON} MON</strong>.</>
+                  ? (rerollCredits?.credits > 0
+                    ? <>Reroll using credit (<strong>{rerollCredits.credits} remaining</strong>).</>
+                    : <>Free roll used. Reroll costs <strong>{REROLL_PRICE_MON} MON</strong>.</>)
                   : `Pick ${stats.assigned + 1} of 11 — this roll is free.`}
             </p>
             <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: 8 }}>
               <button className="btn-play-roll" onClick={handleRoll} disabled={busy}>
-                {busy ? "Rolling ⚽" : isSquadComplete ? "Enter Tournament ⚽" : rolledThisTurn ? `Reroll 🎲 (${REROLL_PRICE_MON} MON)` : "Roll 🎲"}
+                {busy
+                  ? "Rolling ⚽"
+                  : isSquadComplete
+                    ? "Enter Tournament ⚽"
+                    : rolledThisTurn
+                      ? (rerollCredits?.credits > 0
+                        ? `Reroll 🎲 (${rerollCredits.credits} left)`
+                        : `Reroll 🎲 (${REROLL_PRICE_MON} MON)`)
+                      : "Roll 🎲"}
               </button>
               <button className="btn-cancel-draft" onClick={resetDraft}>Cancel &amp; Restart</button>
             </div>
@@ -174,8 +184,12 @@ export default function PlayScreen({ game, contract, rerollCredits, isConnected,
             {/* Reroll */}
             <div className="reroll-section">
               <div className="reroll-header">
-                <span className="rolls-left-label">{REROLL_PRICE_MON} MON per reroll</span>
-                <span className="roll-cost-badge">{REROLL_PRICE_MON} MON</span>
+                <span className="rolls-left-label">
+                  {rerollCredits?.credits > 0 ? "Using reroll credits" : `${REROLL_PRICE_MON} MON per reroll`}
+                </span>
+                <span className="roll-cost-badge">
+                  {rerollCredits?.credits > 0 ? `${rerollCredits.credits} left` : `${REROLL_PRICE_MON} MON`}
+                </span>
               </div>
               <div className="reroll-btns">
                 <button className="btn-reroll" onClick={() => handleReroll("nation")} disabled={busy}>↺ Nation</button>

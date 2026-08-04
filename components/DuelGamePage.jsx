@@ -967,8 +967,12 @@ export default function DuelGamePage() {
                   {duel.isMyTurn && (
                     <>
                       <div className="rolls-left-row">
-                        <span className="rolls-left-label">REROLLS: {REROLL_PRICE_MON} MON EACH</span>
-                        <div className="roll-cost-badge">{REROLL_PRICE_MON} MON</div>
+                        <span className="rolls-left-label">
+                          {rerollCredits?.credits > 0 ? "USING REROLL CREDITS" : `REROLLS: ${REROLL_PRICE_MON} MON EACH`}
+                        </span>
+                        <div className="roll-cost-badge">
+                          {rerollCredits?.credits > 0 ? `${rerollCredits.credits} left` : `${REROLL_PRICE_MON} MON`}
+                        </div>
                       </div>
                       <div className="reroll-btns">
                         <button
@@ -1011,7 +1015,9 @@ export default function DuelGamePage() {
                           <h3 className="draft-empty-title">Draft Next Player</h3>
                           <p className="draft-empty-desc">
                             {duel.isMyTurn
-                              ? "Roll to draw a nation and year. Rerolls cost 0.01 MON."
+                              ? (rerollCredits?.credits > 0
+                                ? `Roll to draw a nation and year. Rerolls cost 1 credit (${rerollCredits.credits} remaining).`
+                                : "Roll to draw a nation and year. Rerolls cost 0.01 MON.")
                               : "Wait for your opponent to roll their wheel..."}
                           </p>
                           {duel.isMyTurn && (

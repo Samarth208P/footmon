@@ -3714,13 +3714,13 @@ body.match-open { overflow: hidden; }
   background: 
     radial-gradient(
       circle at center,
-      rgba(138, 92, 246, 0.08) 0%,
+      rgba(138, 92, 246, 0.12) 0%,
       transparent 80%
     ),
     linear-gradient(
       180deg,
-      rgba(8, 9, 13, 0.55) 0%,
-      rgba(8, 9, 13, 0.85) 60%,
+      rgba(8, 9, 13, 0.65) 0%,
+      rgba(8, 9, 13, 0.9) 60%,
       rgba(8, 9, 13, 0.98) 100%
     );
 }
@@ -3757,7 +3757,7 @@ body.match-open { overflow: hidden; }
   background-clip: text;
 }
 .hero-sub {
-  color: var(--text3);
+  color: rgba(255, 255, 255, 0.82);
   font-size: 1.05rem;
   line-height: 1.6;
   margin: 0 0 32px;
@@ -3816,7 +3816,7 @@ body.match-open { overflow: hidden; }
 }
 .hero-stat-label {
   font-size: 0.7rem;
-  color: var(--text3);
+  color: rgba(255, 255, 255, 0.55);
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }

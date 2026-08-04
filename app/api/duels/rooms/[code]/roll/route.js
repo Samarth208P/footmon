@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { getRoomByCode, updateRoom } from "@/lib/duel-store";
+import { getRoomByCode, updateRoom, incrementDailyRerolls } from "@/lib/duel-store";
 import { isValidRoomCode, normaliseRoomCode } from "@/lib/room-code";
 import { authoriseRoomRequest } from "@/lib/session";
 import { getServerClient } from "@/lib/supabase-server";
@@ -48,6 +48,15 @@ export async function POST(request, { params }) {
     /* body is optional; mode defaults to "full" */
   }
   const mode = body?.mode === "nation" || body?.mode === "year" ? body.mode : "full";
+  const isReroll = body?.isReroll === true;
+
+  if (isReroll) {
+    try {
+      await incrementDailyRerolls();
+    } catch (err) {
+      console.error("Failed to increment daily rerolls count:", err);
+    }
+  }
 
   const supabase = getServerClient();
   if (!supabase) {

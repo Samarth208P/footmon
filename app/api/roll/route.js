@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getServerClient } from "@/lib/supabase-server";
+import { incrementDailyRerolls } from "@/lib/duel-store";
 
 export const dynamic = "force-dynamic";
 
@@ -21,8 +22,18 @@ export async function GET(request) {
   const lockNation = searchParams.get("lockNation");
   const excludeNation = searchParams.get("excludeNation");
   const excludeYear = searchParams.get("excludeYear") ? Number(searchParams.get("excludeYear")) : null;
+  const isReroll = searchParams.get("isReroll") === "true";
+
+  if (isReroll) {
+    try {
+      await incrementDailyRerolls();
+    } catch (err) {
+      console.error("Failed to increment daily rerolls count:", err);
+    }
+  }
 
   const supabase = getServerClient();
+
   if (!supabase) {
     return NextResponse.json(
       { error: "Database not configured" },

@@ -622,12 +622,13 @@ export function useDuel(rawAddress) {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ mode }),
+        body: JSON.stringify({ mode, isReroll: isPaid }),
       });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
         throw new Error(body.error || `Roll failed (${res.status})`);
       }
+
 
       const data = await res.json();
       setYear(data.year);

@@ -65,9 +65,13 @@ export function useGame() {
         if (nationCode) params.set("lockNation", nationCode);
         if (year) params.set("excludeYear", year);
       }
+      if (isPaid) {
+        params.set("isReroll", "true");
+      }
 
       const url = `/api/roll${params.toString() ? "?" + params : ""}`;
       const res = await fetch(url, { cache: "no-store" });
+
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
         throw new Error(body.error || `Roll failed (${res.status})`);

@@ -36,17 +36,28 @@ export default function DailyPrizeBadge({ variant = "hero" }) {
     let cancelled = false;
 
     const refresh = async () => {
-      const rc = readContractRef.current;
-      if (!rc) return;
       try {
-        const [pool, time, count] = await Promise.all([
-          rc.prizePool(),
-          rc.getTimeUntilPayout(),
-          rc.getEntriesCount(),
-        ]);
+        const resPrize = await fetch("/api/tournament/prize-pool", { cache: "no-store" }).catch(() => null);
+        let apiPrizePool = null;
+        let apiTime = null;
+        if (resPrize && resPrize.ok) {
+          const prizeData = await resPrize.json();
+          apiPrizePool = prizeData.prizePool;
+          apiTime = prizeData.timeUntilPayout;
+        }
+
         if (cancelled) return;
-        setPrizePool(formatEther(pool));
-        setTimeUntilPayout(Number(time));
+        if (apiPrizePool !== null) setPrizePool(apiPrizePool);
+        if (apiTime !== null) setTimeUntilPayout(apiTime);
+
+        const rc = readContractRef.current;
+        if (!rc) {
+          setLoaded(true);
+          return;
+        }
+
+        const count = await rc.getEntriesCount();
+        if (cancelled) return;
 
         // Find the current leader
         const entryCount = Number(count);
@@ -88,6 +99,7 @@ export default function DailyPrizeBadge({ variant = "hero" }) {
       } catch {
         // Contract might not be deployed / RPC hiccup — stay quiet.
       }
+
     };
 
     // Small delay so the RPC contract ref has a chance to initialise.

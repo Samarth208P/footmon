@@ -91,6 +91,19 @@ export default function LandingPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
       />
       <section className="landing-hero">
+        <div className="hero-bg-container">
+          <video
+            autoPlay
+            loop
+            muted
+            playsInline
+            className="hero-video-bg"
+            poster="/hero-bg.png"
+          >
+            <source src="/hero-bg.mp4" type="video/mp4" />
+          </video>
+          <div className="hero-overlay" />
+        </div>
         <div className="hero-content">
           <div className="hero-badge">&#9917; LIVE ON MONAD TESTNET</div>
           <h1 className="hero-title">Draft the Greatest XI.<br />Win Real MON.</h1>

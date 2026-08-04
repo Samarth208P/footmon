@@ -130,19 +130,35 @@ export default function LandingPage() {
 
       <section className="landing-eras" aria-label="Supported World Cup eras">
         <p className="eras-title">Legendary squads from 1970 → 2026</p>
-        <div className="eras-track">
-          {ERAS.concat(ERAS).map((era, i) => (
-            <span key={i} className="era-chip">
-              <img
-                className="era-flag"
-                src={getFlagUrl(era.code)}
-                alt=""
-                width={18}
-                height={13}
-              />
-              {era.label}
-            </span>
-          ))}
+        <div className="eras-marquee">
+          <div className="eras-track">
+            {[...ERAS, ...ERAS, ...ERAS].map((era, i) => (
+              <span key={`t1-${i}`} className="era-chip">
+                <img
+                  className="era-flag"
+                  src={getFlagUrl(era.code)}
+                  alt=""
+                  width={18}
+                  height={13}
+                />
+                {era.label}
+              </span>
+            ))}
+          </div>
+          <div className="eras-track" aria-hidden="true">
+            {[...ERAS, ...ERAS, ...ERAS].map((era, i) => (
+              <span key={`t2-${i}`} className="era-chip">
+                <img
+                  className="era-flag"
+                  src={getFlagUrl(era.code)}
+                  alt=""
+                  width={18}
+                  height={13}
+                />
+                {era.label}
+              </span>
+            ))}
+          </div>
         </div>
       </section>
 

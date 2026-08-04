@@ -5756,20 +5756,27 @@ body.match-open { overflow: hidden; }
   text-transform: uppercase;
   margin: 0 0 14px;
 }
+.eras-marquee {
+  display: flex;
+  overflow: hidden;
+  width: 100%;
+  user-select: none;
+}
 .eras-track {
   display: flex;
   gap: 12px;
   align-items: center;
   width: max-content;
-  padding: 0 24px 16px;
+  padding: 0 12px 16px 0;
   animation: eras-scroll 32s linear infinite;
+  flex-shrink: 0;
 }
 .landing-eras:hover .eras-track {
   animation-play-state: paused;
 }
 @keyframes eras-scroll {
   from { transform: translateX(0); }
-  to   { transform: translateX(-50%); }
+  to   { transform: translateX(-100%); }
 }
 .era-chip {
   display: inline-flex;
@@ -5982,7 +5989,7 @@ body.match-open { overflow: hidden; }
 /* Mobile tuning for the new landing sections */
 @media (max-width: 768px) {
   .landing-eras { padding: 20px 0 4px; }
-  .eras-track { gap: 10px; padding: 0 16px 12px; }
+  .eras-track { gap: 10px; padding: 0 10px 12px 0; }
   .era-chip { padding: 6px 12px; font-size: 0.78rem; }
 
   .econ-grid { gap: 14px; }

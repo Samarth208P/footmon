@@ -36,7 +36,9 @@ export default function PlayScreen({ game, contract, isConnected, onSubmit, onLe
       return;
     }
     try {
-      const payFn = rolledThisTurn ? contract.payForRoll : null;
+      const payFn = rolledThisTurn
+        ? (amt) => contract.payForRoll(amt, (msg) => showToast?.(msg, "error"))
+        : null;
       await roll("full", payFn);
     } catch (err) {
       showToast?.(err.message, "error");
@@ -50,7 +52,8 @@ export default function PlayScreen({ game, contract, isConnected, onSubmit, onLe
       return;
     }
     try {
-      await roll(mode, contract.payForRoll);
+      const payFn = (amt) => contract.payForRoll(amt, (msg) => showToast?.(msg, "error"));
+      await roll(mode, payFn);
     } catch (err) {
       showToast?.(err.message, "error");
     }

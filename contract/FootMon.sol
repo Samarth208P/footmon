@@ -82,6 +82,7 @@ contract FootMon {
                          string nation, uint16 year, string formation);
     event PrizeAllocated(address indexed winner, uint256 amount, uint256 round);
     event PrizeClaimed  (address indexed winner, uint256 amount);
+    event PrizePoolFunded(address indexed sender, uint256 amount);
     event ConfigUpdated (string param, uint256 value);
 
     event DuelCreated  (bytes32 indexed duelId, address indexed creator, uint256 stake);
@@ -623,8 +624,20 @@ contract FootMon {
         require(ok, "FootMon: withdraw failed");
     }
 
+    /**
+     * @notice Top up the prize pool directly. Used by the server's daily
+     *         settlement to credit 0.005 MON per credit-based reroll used.
+     *         Open to anyone: a transparent way to add prize money.
+     */
+    function fundPrizePool() external payable {
+        require(msg.value > 0, "FootMon: zero value");
+        prizePool += msg.value;
+        emit PrizePoolFunded(msg.sender, msg.value);
+    }
+
     /** @notice Direct MON deposits add to prize pool. */
     receive() external payable {
         prizePool += msg.value;
+        emit PrizePoolFunded(msg.sender, msg.value);
     }
 }

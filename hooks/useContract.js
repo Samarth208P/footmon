@@ -108,11 +108,26 @@ export function useContract() {
 
   // ── Write functions ─────────────────────────────────────────────────────
 
-  const payForRoll = useCallback(async (amountMon = REROLL_PRICE_MON) => {
+  /**
+   * Pay for a reroll. Wallet signing is awaited (so rejection / insufficient
+   * funds still throw and block the reroll). Mining is fire-and-forget so the
+   * roll result is returned to the user instantly without waiting for the
+   * block to confirm. An optional `onTxFail` callback is invoked if the tx
+   * later reverts on-chain.
+   *
+   * @param {string} amountMon - Amount in MON to send
+   * @param {function} [onTxFail] - Called with an error message if tx reverts
+   */
+  const payForRoll = useCallback(async (amountMon = REROLL_PRICE_MON, onTxFail) => {
     const c = await getSignerContract();
     const value = parseEther(String(amountMon));
+    // This line waits for the wallet popup and throws on rejection / low balance.
     const tx = await c.payForRoll({ value });
-    await tx.wait();
+    // Mine in the background — don't block the roll result.
+    tx.wait().catch((err) => {
+      console.error("[useContract] payForRoll tx reverted:", err);
+      if (onTxFail) onTxFail("Reroll payment failed on-chain — your MON was not charged.");
+    });
   }, [getSignerContract]);
 
   const submitScore = useCallback(async (avgRating, nation, year, formation) => {

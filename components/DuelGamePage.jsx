@@ -474,7 +474,9 @@ export default function DuelGamePage() {
     if (duel.busy || !duel.isMyTurn) return;
     playSound("roll");
     try {
-      const payFn = duel.rolledThisTurn ? contract.payForRoll : null;
+      const payFn = duel.rolledThisTurn
+        ? (amt) => contract.payForRoll(amt, (msg) => showToast(msg, "error"))
+        : null;
       await duel.roll("full", payFn);
     } catch (err) {
       showToast(err.message, "error");
@@ -485,7 +487,8 @@ export default function DuelGamePage() {
     if (duel.busy || !duel.isMyTurn) return;
     playSound("reroll");
     try {
-      await duel.roll(mode, contract.payForRoll);
+      const payFn = (amt) => contract.payForRoll(amt, (msg) => showToast(msg, "error"));
+      await duel.roll(mode, payFn);
     } catch (err) {
       showToast(err.message, "error");
     }

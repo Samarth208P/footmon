@@ -158,14 +158,36 @@ async function loadDaily(contract) {
   for (let i = 0; i < count; i++) batch.push(contract.getEntry(i));
   const raw = await Promise.all(batch);
 
-  const entries = raw.map((e) => ({
-    player: e.player,
-    score: Number(e.score) / 100,
-    timestamp: Number(e.timestamp),
-    nation: e.nation,
-    year: Number(e.year),
-    formation: e.formation,
-  }));
+  let dbRuns = [];
+  try {
+    const res = await fetch("/api/leaderboard?board=tournament&limit=100", { cache: "no-store" });
+    if (res.ok) {
+      const json = await res.json();
+      dbRuns = json.tournament || [];
+    }
+  } catch (err) {
+    console.error("Failed to fetch database runs for daily board enrichment:", err);
+  }
+
+  const entries = raw.map((e) => {
+    const playerAddr = String(e.player).toLowerCase();
+    const dbMatch = dbRuns.find((r) => String(r.address).toLowerCase() === playerAddr);
+
+    return {
+      player: e.player,
+      score: Number(e.score) / 100,
+      timestamp: Number(e.timestamp),
+      nation: e.nation,
+      year: Number(e.year),
+      formation: e.formation,
+      goals_for: dbMatch ? dbMatch.goals_for : 0,
+      goals_against: dbMatch ? dbMatch.goals_against : 0,
+      goalsFor: dbMatch ? dbMatch.goals_for : 0,
+      goalsAgainst: dbMatch ? dbMatch.goals_against : 0,
+      goal_diff: dbMatch ? dbMatch.goal_diff : 0,
+      goalDiff: dbMatch ? dbMatch.goal_diff : 0,
+    };
+  });
 
   entries.sort((a, b) =>
     b.score !== a.score ? b.score - a.score : a.timestamp - b.timestamp

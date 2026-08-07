@@ -4183,6 +4183,44 @@ body.match-open { overflow: hidden; }
   align-items: center;
   gap: 10px;
 }
+
+/* Premium Claim Winnings Button in Header */
+.claim-winnings-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 8px 16px;
+  border-radius: 9999px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  letter-spacing: 0.02em;
+}
+
+.claim-winnings-btn:hover:not(:disabled) {
+  transform: translateY(-1.5px);
+  background: linear-gradient(135deg, #b066ff 0%, #8b4eff 100%);
+  box-shadow: 0 6px 16px rgba(124, 58, 237, 0.45), 0 0 8px rgba(168, 85, 247, 0.3);
+}
+
+.claim-winnings-btn:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(124, 58, 237, 0.3);
+}
+
+.claim-winnings-btn:disabled {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.4);
+  border-color: rgba(255, 255, 255, 0.03);
+  cursor: not-allowed;
+  box-shadow: none;
+}
 .header-username {
   font-size: 0.85rem;
   font-weight: 600;

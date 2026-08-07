@@ -74,16 +74,6 @@ create index if not exists credit_spends_unsettled_idx
 
 create index if not exists credit_spends_wallet_idx on public.credit_spends (wallet);
 
--- ── prize_settlements ────────────────────────────────────────────────────────
--- Audit log of each daily settlement run.
-
-create table if not exists public.prize_settlements (
-  id              uuid primary key default gen_random_uuid(),
-  credits_spent   integer not null check (credits_spent >= 0),
-  amount_mon      numeric(30, 8) not null check (amount_mon >= 0),
-  tx_hash         text,   -- null if amount was 0 (nothing to settle)
-  settled_at      timestamptz not null default timezone('utc', now())
-);
 
 -- ── atomic_spend_credit ──────────────────────────────────────────────────────
 -- Atomically decrements credits by 1 if balance > 0, logs the spend, and
@@ -126,7 +116,6 @@ create trigger reroll_credits_touch before update on public.reroll_credits
 alter table public.reroll_credits   enable row level security;
 alter table public.credit_purchases enable row level security;
 alter table public.credit_spends    enable row level security;
-alter table public.prize_settlements enable row level security;
 
 -- anon can read their own credit balance (wallet is known to them)
 drop policy if exists reroll_credits_read on public.reroll_credits;
@@ -137,20 +126,15 @@ drop policy if exists credit_purchases_read on public.credit_purchases;
 create policy credit_purchases_read on public.credit_purchases for select using (true);
 
 -- spends: no anon read (privacy + prevents gaming the settlement)
--- prize_settlements: public read (transparency)
-drop policy if exists prize_settlements_read on public.prize_settlements;
-create policy prize_settlements_read on public.prize_settlements for select using (true);
 
 -- ── Grants ───────────────────────────────────────────────────────────────────
 
 grant select on public.reroll_credits    to anon, authenticated;
 grant select on public.credit_purchases  to anon, authenticated;
-grant select on public.prize_settlements to anon, authenticated;
 
 grant all on public.reroll_credits    to service_role;
 grant all on public.credit_purchases  to service_role;
 grant all on public.credit_spends     to service_role;
-grant all on public.prize_settlements to service_role;
 
 -- atomic_spend_credit is security definer; service_role executes it via RPC.
 grant execute on function public.atomic_spend_credit(text) to service_role;

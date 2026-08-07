@@ -371,26 +371,16 @@ contract FootMon {
         totalEscrowed -= pot;
         houseBalance  += houseCut;
 
-        // Bounded gas so a griefing contract-wallet can't consume the whole
-        // resolver tx budget. 60 000 is comfortable for typical fallback /
-        // receive handlers on a smart-account wallet.
-        (bool ok,) = payable(winner).call{value: payout, gas: 60000}("");
-        if (!ok) {
-            // Push failed — record it and let the winner pull instead.
-            pendingClaims[winner] += payout;
-            totalPendingClaims    += payout;
-        }
+        // Credit to pendingClaims for manual pull-payment claim.
+        pendingClaims[winner] += payout;
+        totalPendingClaims    += payout;
 
         emit DuelResolved(duelId, winner, payout, houseCut);
     }
 
     /**
-     * @notice Resolver declares a draw and PUSHES each player's stake back
-     *         to them in the same transaction. The house takes no rake on
-     *         a draw.
-     * @dev Same push-with-fallback pattern as resolveDuel. Each side is
-     *      handled independently so one failing wallet can't strand the
-     *      other player's refund.
+     * @notice Resolver declares a draw and CREDITS each player's stake back
+     *         to their pendingClaims (pull-payment pattern). The house takes no rake.
      */
     function resolveDuelDraw(bytes32 duelId) external onlyResolver nonReentrant {
         Duel storage duel = duels[duelId];
@@ -403,17 +393,11 @@ contract FootMon {
         duel.status = DuelStatus.Resolved;
         totalEscrowed -= stake * 2;
 
-        (bool okC,) = payable(creator).call{value: stake, gas: 60000}("");
-        if (!okC) {
-            pendingClaims[creator] += stake;
-            totalPendingClaims     += stake;
-        }
+        pendingClaims[creator] += stake;
+        totalPendingClaims     += stake;
 
-        (bool okJ,) = payable(joiner).call{value: stake, gas: 60000}("");
-        if (!okJ) {
-            pendingClaims[joiner] += stake;
-            totalPendingClaims    += stake;
-        }
+        pendingClaims[joiner] += stake;
+        totalPendingClaims    += stake;
 
         emit DuelDrawn(duelId, stake);
     }

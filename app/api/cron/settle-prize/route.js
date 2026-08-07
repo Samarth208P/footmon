@@ -45,15 +45,29 @@ export async function GET(request) {
       });
     }
 
-    // 2. Determine yesterday's date string in IST
-    const yesterdayIST = new Date(Date.now() + (5.5 * 60 * 60 * 1000) - (24 * 60 * 60 * 1000));
-    const yyyy = yesterdayIST.getUTCFullYear();
-    const mm = String(yesterdayIST.getUTCMonth() + 1).padStart(2, '0');
-    const dd = String(yesterdayIST.getUTCDate()).padStart(2, '0');
-    const yesterdayStr = `${yyyy}-${mm}-${dd}`;
+    // 2. Determine the day of the last payout in IST, and sum all rerolls since that day
+    const lastPayoutDateIST = new Date((lastPayout + 19800) * 1000);
+    const lpY = lastPayoutDateIST.getUTCFullYear();
+    const lpM = String(lastPayoutDateIST.getUTCMonth() + 1).padStart(2, '0');
+    const lpD = String(lastPayoutDateIST.getUTCDate()).padStart(2, '0');
+    const lastPayoutDayStr = `${lpY}-${lpM}-${lpD}`;
 
-    // 3. Get yesterday's rerolls count
-    const rerollsCount = await getDailyRerollsCountForDay(yesterdayStr);
+    let rerollsCount = 0;
+    try {
+      const serverSupabase = require("@/lib/supabase-server").getServerClient();
+      if (serverSupabase) {
+        const { data: rerollsData } = await serverSupabase
+          .from("daily_rerolls")
+          .select("day, count")
+          .gte("day", lastPayoutDayStr);
+        if (rerollsData) {
+          rerollsCount = rerollsData.reduce((sum, item) => sum + Number(item.count || 0), 0);
+        }
+      }
+    } catch (err) {
+      console.error("Failed to query daily_rerolls from Supabase:", err);
+    }
+
     const targetPrizePoolEth = rerollsCount * 0.005;
     const targetPrizePoolWei = parseEther(targetPrizePoolEth.toFixed(8));
 
@@ -88,39 +102,28 @@ export async function GET(request) {
       }
     }
 
-    // Log the settlement to Supabase prize_settlements audit log!
-    let loggedRow = null;
+    // Mark unsettled credit_spends as settled
     try {
       const serverSupabase = require("@/lib/supabase-server").getServerClient();
       if (serverSupabase) {
-        const { data, error } = await serverSupabase
-          .from("prize_settlements")
-          .insert({
-            credits_spent: rerollsCount,
-            amount_mon: targetPrizePoolEth,
-            tx_hash: txHash,
-          })
-          .select()
-          .single();
-        if (!error) {
-          loggedRow = data;
-        }
+        await serverSupabase
+          .from("credit_spends")
+          .update({ settled: true })
+          .eq("settled", false);
       }
     } catch (dbErr) {
-      console.error("Failed to log prize settlement to DB:", dbErr);
+      console.error("Failed to update credit_spends in DB:", dbErr);
     }
 
     return NextResponse.json({
       status: "success",
-      day: yesterdayStr,
+      day: lastPayoutDayStr,
       entriesCount: entriesNum,
       rerollsCount,
       prizePoolMon: targetPrizePoolEth,
       fundedAmountWei: fundedAmount,
       txHash,
-      loggedRow,
     });
-
   } catch (error) {
     console.error("[/api/cron/settle-prize] Error:", error);
     return NextResponse.json(

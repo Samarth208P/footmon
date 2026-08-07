@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useAppKitAccount } from "@reown/appkit/react";
 import { useState, useEffect, useMemo } from "react";
 import GooeyNav from "./GooeyNav";
+import { useContract } from "@/hooks/useContract";
 
 const NAV_ITEMS = [
   { label: "Play Solo", href: "/play" },
@@ -17,6 +18,21 @@ export default function Header() {
   const pathname = usePathname() || "";
   const { address, isConnected } = useAppKitAccount();
   const [username, setUsername] = useState(null);
+
+  const { pendingClaim, claimPrize } = useContract();
+  const [claiming, setClaiming] = useState(false);
+
+  const handleClaim = async () => {
+    if (claiming) return;
+    setClaiming(true);
+    try {
+      await claimPrize();
+    } catch (err) {
+      console.error("Failed to claim winnings:", err);
+    } finally {
+      setClaiming(false);
+    }
+  };
 
   // Match the current URL to a nav item. Anything under /play/duel is the
   // Duel tab; anything else under /play is Solo. On routes outside /play
@@ -73,6 +89,15 @@ export default function Header() {
         </div>
 
         <div className="header-right">
+          {isConnected && Number(pendingClaim) > 0 && (
+            <button
+              onClick={handleClaim}
+              disabled={claiming}
+              className="claim-winnings-btn"
+            >
+              {claiming ? "Claiming..." : `Claim Winnings (${Number(pendingClaim).toFixed(2)} MON)`}
+            </button>
+          )}
           {isConnected && username && (
             <span className="header-username">{username}</span>
           )}

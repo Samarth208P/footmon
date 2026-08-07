@@ -635,7 +635,7 @@ export default function DuelMatchScreen({
                   <div className="duel-match-payout-amt">+{payoutMon} MON</div>
                   <div className="duel-match-payout-note">
                     {isSettled
-                      ? `Prize delivered · ${payoutMon} MON is in your wallet.`
+                      ? `Winnings secured · Claim ${payoutMon} MON from the header.`
                       : settlementError
                         ? `Result recorded, payout couldn't settle: ${settlementError}. We'll retry shortly.`
                         : "Settling on-chain, hold tight…"}
@@ -651,7 +651,7 @@ export default function DuelMatchScreen({
               {isDraw && (
                 <div className="duel-match-payout">
                   <div className="duel-match-payout-note">
-                    Draw — both stakes have been returned to your wallets.
+                    Draw — stake returned. Claim it from the header.
                   </div>
                 </div>
               )}

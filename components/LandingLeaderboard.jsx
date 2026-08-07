@@ -8,17 +8,10 @@ import {
   FOOTMON_ABI,
   MONAD_CHAIN,
   ratingColor,
-  getFlagUrl,
 } from "@/lib/constants";
 
 /**
  * Public leaderboard section for the landing page.
- *
- * Unlike the in-game LeaderboardOverlay (which needs a connected wallet to
- * read the on-chain daily board), this component works for anonymous
- * visitors — tournament/duel boards come from /api/leaderboard, and the
- * daily on-chain board is read via a public RPC using the same pattern as
- * DailyPrizeBadge.
  */
 
 const TOP_N = 8;
@@ -27,17 +20,12 @@ const TABS = [
   {
     id: "tournament",
     label: "Tournament",
-    blurb: "Seven matches, one loss ends the run. Ranked by wins, then goal difference.",
+    blurb: "On-chain squad ratings. Top score at payout time wins today's MON prize pool.",
   },
   {
     id: "duel",
     label: "Duels",
     blurb: "1v1 staked duels. Ranked by wins, then goal difference.",
-  },
-  {
-    id: "daily",
-    label: "Daily",
-    blurb: "On-chain squad ratings. Top score at payout time wins today's MON prize pool.",
   },
 ];
 
@@ -46,17 +34,11 @@ export default function LandingLeaderboard() {
   const [byTab, setByTab] = useState({
     tournament: { loading: true, entries: [], error: null },
     duel: { loading: true, entries: [], error: null },
-    daily: { loading: true, entries: [], error: null },
   });
 
-  // Cache: address (lowercase) → username. Populated on demand when the daily
-  // tab loads, so we can render friendly names instead of shortened addresses.
   const usernameCacheRef = useRef(new Map());
-
-  // Read-only contract instance for the daily on-chain leaderboard. Uses the
-  // same JsonRpcProvider trick as DailyPrizeBadge so anonymous visitors can
-  // still see the board.
   const readContractRef = useRef(null);
+
   useEffect(() => {
     if (!CONTRACT_ADDRESS) return;
     try {
@@ -75,13 +57,13 @@ export default function LandingLeaderboard() {
 
       try {
         let entries = [];
-        if (tab === "tournament" || tab === "duel") {
-          const res = await fetch(`/api/leaderboard?board=${tab}&limit=${TOP_N}`, {
+        if (tab === "duel") {
+          const res = await fetch(`/api/leaderboard?board=duel&limit=${TOP_N}`, {
             cache: "no-store",
           });
           if (!res.ok) throw new Error(`HTTP ${res.status}`);
           const json = await res.json();
-          entries = (json[tab] || []).slice(0, TOP_N);
+          entries = (json.duel || []).slice(0, TOP_N);
         } else {
           entries = await loadDaily(readContractRef.current);
           await prefetchUsernames(entries.map((e) => e.player), usernameCacheRef.current);
@@ -106,7 +88,7 @@ export default function LandingLeaderboard() {
     };
   }, [tab]);
 
-  const current = byTab[tab];
+  const current = byTab[tab] || { loading: false, entries: [], error: null };
   const cta = tab === "duel"
     ? { href: "/play/duel", label: "Play a Duel" }
     : { href: "/play", label: "Play Solo" };
@@ -144,11 +126,9 @@ export default function LandingLeaderboard() {
           ) : current.entries.length === 0 ? (
             <LandingEmpty tab={tab} />
           ) : tab === "tournament" ? (
-            <TournamentTable entries={current.entries} />
-          ) : tab === "duel" ? (
-            <DuelTable entries={current.entries} />
+            <TournamentTable entries={current.entries} usernameCache={usernameCacheRef.current} />
           ) : (
-            <DailyTable entries={current.entries} usernameCache={usernameCacheRef.current} />
+            <DuelTable entries={current.entries} />
           )}
         </div>
 
@@ -264,9 +244,9 @@ function LandingEmpty({ tab }) {
   );
 }
 
-// ── Tables (compact landing variants; reuse existing lb-* classes) ─────────
+// ── Tables ──────────────────────────────────────────────────────────────────
 
-function TournamentTable({ entries }) {
+function TournamentTable({ entries, usernameCache }) {
   return (
     <div className="landing-lb-scroll">
       <table className="lb-table">
@@ -274,29 +254,24 @@ function TournamentTable({ entries }) {
           <tr>
             <th>Rank</th>
             <th>Player</th>
-            <th>Wins</th>
             <th>GD</th>
             <th>Rating</th>
           </tr>
         </thead>
         <tbody>
           {entries.map((e, i) => {
-            const champion = Number(e.wins) === 7;
+            const gd = (Number(e.goalsFor ?? e.goals_for ?? 0)) - (Number(e.goalsAgainst ?? e.goals_against ?? 0));
             return (
-              <tr key={i} className={`lb-row ${champion ? "lb-row--champ" : ""}`}>
-                <td className="lb-rank">{rankMedal(Number(e.rank))}</td>
+              <tr key={i} className="lb-row">
+                <td className="lb-rank">{rankMedal(i + 1)}</td>
                 <td className="lb-player">
-                  <span className="lb-name">{e.username}</span>
-                  {champion && <span className="lb-badge">Champion</span>}
+                  <span className="lb-name">{displayNameFor(e.player, usernameCache)}</span>
                 </td>
-                <td>
-                  <span className="lb-wins-pill">{e.wins}/7</span>
+                <td className="lb-gd" data-sign={gd >= 0 ? "pos" : "neg"}>
+                  {formatDiff(gd)}
                 </td>
-                <td className="lb-gd" data-sign={Number(e.goal_diff) >= 0 ? "pos" : "neg"}>
-                  {formatDiff(e.goal_diff)}
-                </td>
-                <td className="lb-score" style={{ color: ratingColor(Number(e.team_rating)) }}>
-                  {Number(e.team_rating).toFixed(1)}
+                <td className="lb-score" style={{ color: ratingColor(e.score) }}>
+                  {e.score.toFixed(2)}
                 </td>
               </tr>
             );
@@ -337,47 +312,6 @@ function DuelTable({ entries }) {
               </td>
               <td className="lb-won">
                 {parseFloat(formatEther(String(e.mon_won ?? "0"))).toFixed(3)} MON
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-}
-
-function DailyTable({ entries, usernameCache }) {
-  return (
-    <div className="landing-lb-scroll">
-      <table className="lb-table">
-        <thead>
-          <tr>
-            <th>Rank</th>
-            <th>Player</th>
-            <th>Nation · Year</th>
-            <th>Rating</th>
-          </tr>
-        </thead>
-        <tbody>
-          {entries.map((e, i) => (
-            <tr key={i} className="lb-row">
-              <td className="lb-rank">{rankMedal(i + 1)}</td>
-              <td className="lb-player">
-                <span className="lb-name">{displayNameFor(e.player, usernameCache)}</span>
-              </td>
-              <td className="lb-nation">
-                <img
-                  className="lb-flag"
-                  src={getFlagUrl(e.nation)}
-                  alt=""
-                  width={18}
-                  height={13}
-                />
-                {" "}
-                {e.nation} {e.year}
-              </td>
-              <td className="lb-score" style={{ color: ratingColor(e.score) }}>
-                {e.score.toFixed(2)}
               </td>
             </tr>
           ))}
